@@ -1,0 +1,2350 @@
+'use client';
+
+import { use, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { db, Animal } from '@/lib/db';
+import { supabase } from '@/lib/supabaseClient';
+
+import { logger } from '@/lib/logger';
+import { syncWithCloud, uploadMediaBlob, pruneRevisions } from '@/lib/syncManager';
+import { isOpfsSupported, saveToOpfs, removeFromOpfs } from '@/lib/opfsStorage';
+import HelpBottomSheet from '@/components/HelpBottomSheet';
+import VideoRecorderModal from '@/components/VideoRecorderModal';
+import { helpContent } from '@/lib/helpContent';
+import { 
+  ArrowLeft, 
+  Wifi, 
+  WifiOff, 
+  Camera, 
+  Upload,
+  Video, 
+  Trash2, 
+  Save, 
+  CheckCircle,
+  AlertTriangle,
+  FileImage,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Mic,
+  Square,
+  Cloud,
+  CloudOff,
+  HelpCircle
+} from 'lucide-react';
+
+export default function EditCatPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const catId = parseInt(resolvedParams.id);
+  const router = useRouter();
+
+  const [isOnline, setIsOnline] = useState(true);
+  const [activeSection, setActiveSection] = useState<'basic' | 'medical' | 'behavior' | 'media' | 'revisions'>('basic');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [helpKey, setHelpKey] = useState<string | null>(null);
+  
+  // Loading & Entity State
+  const [loading, setLoading] = useState(true);
+  const [existingAnimal, setExistingAnimal] = useState<Animal | null>(null);
+
+  // Form State
+  const [name, setName] = useState('');
+  const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
+  const [ageYears, setAgeYears] = useState(0);
+  const [ageMode, setAgeMode] = useState<'range' | 'exact' | 'birthyear'>('range');
+  const [ageMin, setAgeMin] = useState(2);
+  const [ageMax, setAgeMax] = useState(3);
+  const [ageExact, setAgeExact] = useState(2);
+  const [birthYear, setBirthYear] = useState(2024);
+  const [birthMonth, setBirthMonth] = useState<number | undefined>(undefined);
+  const [birthDay, setBirthDay] = useState<number | undefined>(undefined);
+  
+  const [shelterMonth, setShelterMonth] = useState('06');
+  const [shelterYear, setShelterYear] = useState('2026');
+  const [roomName, setRoomName] = useState('');
+  const [cageName, setCageName] = useState('');
+
+  const [audioDraftUrl, setAudioDraftUrl] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  const [reasonForShelter, setReasonForShelter] = useState('');
+  const [restrictions, setRestrictions] = useState('');
+  const [notesMiscellaneous, setNotesMiscellaneous] = useState('');
+  const [isPublished, setIsPublished] = useState(true);
+  const [isEmergency, setIsEmergency] = useState(false);
+
+  // Versioning States
+  const [staffName, setStaffName] = useState('');
+  const [revisions, setRevisions] = useState<any[]>([]);
+  const [loadingRevisions, setLoadingRevisions] = useState(false);
+  const [expandedRevisionId, setExpandedRevisionId] = useState<number | null>(null);
+
+  const getChangedFields = (revData: any) => {
+    const changes: { label: string; oldVal: string; newVal: string }[] = [];
+    const compare = (label: string, oldVal: any, newVal: any) => {
+      const formattedOld = oldVal === true ? 'Ja' : oldVal === false ? 'Nein' : String(oldVal ?? '-').trim();
+      const formattedNew = newVal === true ? 'Ja' : newVal === false ? 'Nein' : String(newVal ?? '-').trim();
+      if (formattedOld !== formattedNew) {
+        changes.push({ label, oldVal: formattedOld, newVal: formattedNew });
+      }
+    };
+
+    compare('Name', revData.name, name);
+    compare('Raum', revData.room_name, roomName);
+    compare('Käfig', revData.cage_name, cageName);
+    compare('Geschlecht', revData.gender, gender);
+    
+    // Age comparisons
+    compare('Alter-Modus', revData.age_mode, ageMode);
+    if (ageMode === 'range') {
+      compare('Mindestalter (Jahre)', revData.age_min, ageMin);
+      compare('Maximalalter (Jahre)', revData.age_max, ageMax);
+    } else if (ageMode === 'exact') {
+      compare('Exaktes Alter (Jahre)', revData.age_years, ageExact);
+    } else if (ageMode === 'birthyear') {
+      compare('Geburtsjahr', revData.birth_year, birthYear);
+      compare('Geburtsmonat', revData.birth_month, birthMonth);
+      compare('Geburtstag', revData.birth_day, birthDay);
+    }
+
+    compare('Aufnahmedatum (Jahr-Monat)', revData.shelter_admission_date, `${shelterYear}-${shelterMonth}`);
+    compare('Grund für Aufnahme', revData.reason_for_shelter, reasonForShelter);
+    compare('Einschränkungen', revData.restrictions, restrictions);
+    compare('Interne Notizen / Beschreibung', revData.notes_miscellaneous, notesMiscellaneous);
+    compare('Öffentlich sichtbar', revData.is_published, isPublished);
+    compare('Dringender Notfall', revData.is_emergency, isEmergency);
+    
+    compare('Kastriert', revData.is_castrated, isCastrated);
+    compare('Gechipt', revData.is_chipped, isChipped);
+    compare('Tollwut-Impfung', revData.has_rabies_vaccine, hasRabiesVaccine);
+    compare('Katzenschnupfen-Impfung', revData.has_cat_flu_vaccine, hasCatFluVaccine);
+    compare('Entwurmt', revData.is_dewormed, isDewormed);
+    compare('EU-Heimtierausweis', revData.has_eu_passport, hasEuPassport);
+    
+    compare('Katzen-Verträglichkeit', revData.compat_cats, compatCats);
+    compare('Hunde-Verträglichkeit', revData.compat_dogs, compatDogs);
+    compare('Kinder-Verträglichkeit', revData.compat_children, compatChildren);
+    
+    compare('Neugierig', revData.trait_curious, traitCurious);
+    compare('Verspielt', revData.trait_playful, traitPlayful);
+    compare('Aggressiv', revData.trait_aggressive, traitAggressive);
+    compare('Ängstlich', revData.trait_fearful, traitFearful);
+    compare('Verschmust', revData.trait_cuddly, traitCuddly);
+    
+    return changes;
+  };
+
+
+
+  const loadRevisions = async () => {
+    if (isNaN(catId)) return;
+    try {
+      setLoadingRevisions(true);
+      const revList = await db.animalRevisions
+        .where('animal_id')
+        .equals(catId)
+        .toArray();
+      revList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setRevisions(revList);
+    } catch (err) {
+      console.error('Failed to load animal revisions:', err);
+    } finally {
+      setLoadingRevisions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'revisions') {
+      loadRevisions();
+    }
+  }, [activeSection, catId]);
+
+  // Medical Toggles
+  const [isCastrated, setIsCastrated] = useState(true);
+  const [isChipped, setIsChipped] = useState(true);
+  const [hasRabiesVaccine, setHasRabiesVaccine] = useState(true);
+  const [hasCatFluVaccine, setHasCatFluVaccine] = useState(true);
+  const [isDewormed, setIsDewormed] = useState(true);
+  const [hasEuPassport, setHasEuPassport] = useState(false);
+
+  // Temperament Selects
+  const [compatCats, setCompatCats] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [compatDogs, setCompatDogs] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [compatChildren, setCompatChildren] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [traitCurious, setTraitCurious] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [traitPlayful, setTraitPlayful] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [traitAggressive, setTraitAggressive] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [traitFearful, setTraitFearful] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+  const [traitCuddly, setTraitCuddly] = useState<'JA' | 'NEIN' | 'unbekannt'>('unbekannt');
+
+  // Media
+  const [photos, setPhotos] = useState<string[]>([]); // mixture of remote and local URLs
+  const [passportPhotos, setPassportPhotos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<{ 
+    name: string; 
+    blob?: Blob; 
+    opfsKey?: string; 
+    isSynced?: boolean; 
+    url?: string;
+    isUploading?: boolean;
+  }[]>([]);
+
+  // Device & Storage Diagnostics State
+  const [opfsSupported, setOpfsSupported] = useState(false);
+  const [storagePersistent, setStoragePersistent] = useState(false);
+
+  // Permission Checks State
+  const [cameraStatus, setCameraStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [micStatus, setMicStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [deviceCheckRun, setDeviceCheckRun] = useState(false);
+  const [deviceCheckLoading, setDeviceCheckLoading] = useState(false);
+
+  const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'warn'; text: string } | null>(null);
+
+  const photoCameraInputRef = useRef<HTMLInputElement>(null);
+  const photoGalleryInputRef = useRef<HTMLInputElement>(null);
+  const passportCameraInputRef = useRef<HTMLInputElement>(null);
+  const passportGalleryInputRef = useRef<HTMLInputElement>(null);
+  const videoCameraInputRef = useRef<HTMLInputElement>(null);
+  const videoGalleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Video recording & compression states
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [compressingVideoName, setCompressingVideoName] = useState<string | null>(null);
+  const [compressionProgress, setCompressionProgress] = useState(0);
+
+  // Diagnostics check on mount
+  useEffect(() => {
+    setOpfsSupported(isOpfsSupported());
+    if (typeof window !== 'undefined') {
+      const savedName = localStorage.getItem('bmd_staff_name');
+      if (savedName) {
+        setStaffName(savedName);
+      }
+      if (navigator.storage && navigator.storage.persisted) {
+        navigator.storage.persisted().then((persisted) => {
+          setStoragePersistent(persisted);
+        });
+      }
+    }
+  }, []);
+
+
+  // Authenticate Check
+  useEffect(() => {
+    const session = localStorage.getItem('bmd_session');
+    if (session !== 'authenticated') {
+      router.push('/login');
+    }
+  }, [router]);
+
+  // Online status listening
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  // Fetch Cat Details
+  useEffect(() => {
+    async function fetchAnimal() {
+      try {
+        setLoading(true);
+        if (isNaN(catId)) return;
+        const animal = await db.animals.get(catId);
+        if (animal) {
+          setExistingAnimal(animal);
+          setName(animal.name || '');
+          setGender(animal.gender || 'Weiblich');
+          setAgeYears(animal.age_years || 0);
+          setAgeMode(animal.age_mode || 'range');
+          if (animal.age_mode === 'range') {
+            setAgeMin(animal.age_min ?? 2);
+            setAgeMax(animal.age_max ?? 3);
+          }
+          if (animal.age_mode === 'exact') {
+            setAgeExact(animal.age_years ?? 2);
+          }
+          if (animal.age_mode === 'birthyear') {
+            setBirthYear(animal.birth_year ?? 2024);
+            setBirthMonth(animal.birth_month);
+            setBirthDay(animal.birth_day);
+          }
+          if (animal.shelter_admission_date) {
+            const parts = animal.shelter_admission_date.split('-');
+            if (parts.length === 2) {
+              setShelterYear(parts[0]);
+              setShelterMonth(parts[1]);
+            }
+          }
+          setRoomName(animal.room_name || '');
+          setCageName(animal.cage_name || '');
+          setReasonForShelter(animal.reason_for_shelter || '');
+          setRestrictions(animal.restrictions || '');
+          setNotesMiscellaneous(animal.notes_miscellaneous || '');
+          setIsPublished(animal.is_published ?? true);
+          setIsEmergency(animal.is_emergency ?? false);
+
+          setIsCastrated(animal.is_castrated ?? true);
+          setIsChipped(animal.is_chipped ?? true);
+          setHasRabiesVaccine(animal.has_rabies_vaccine ?? true);
+          setHasCatFluVaccine(animal.has_cat_flu_vaccine ?? true);
+          setIsDewormed(animal.is_dewormed ?? true);
+          setHasEuPassport(animal.has_eu_passport ?? false);
+
+          setCompatCats(animal.compat_cats || 'unbekannt');
+          setCompatDogs(animal.compat_dogs || 'unbekannt');
+          setCompatChildren(animal.compat_children || 'unbekannt');
+          setTraitCurious(animal.trait_curious || 'unbekannt');
+          setTraitPlayful(animal.trait_playful || 'unbekannt');
+          setTraitAggressive(animal.trait_aggressive || 'unbekannt');
+          setTraitFearful(animal.trait_fearful || 'unbekannt');
+          setTraitCuddly(animal.trait_cuddly || 'unbekannt');
+
+          setPhotos(animal.media_urls || []);
+          setPassportPhotos(animal.passport_urls || []);
+
+          // Load videos
+          const mappedVideos: typeof videos = [];
+          if (animal.video_urls && animal.video_urls.length > 0) {
+            animal.video_urls.forEach((url) => {
+              mappedVideos.push({ name: url.split('/').pop() || 'Video', isSynced: true, url });
+            });
+          }
+          if (animal.local_videos && animal.local_videos.length > 0) {
+            animal.local_videos.forEach((lv) => {
+              mappedVideos.push({ name: lv.name, blob: lv.blob, opfsKey: lv.opfsKey, isSynced: false });
+            });
+          }
+          setVideos(mappedVideos);
+
+          if (animal.audio_draft_url) {
+            setAudioDraftUrl(animal.audio_draft_url);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to retrieve animal details:', err);
+        logger.error('AnimalEdit', `Fehler beim Laden des Tiers mit ID ${catId}`, err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAnimal();
+  }, [catId]);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const base64ToBlob = (base64: string): Blob => {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  const runDeviceCheck = async (requestAccess: boolean) => {
+    setDeviceCheckLoading(true);
+    setDeviceCheckRun(true);
+    
+    let camPermission: 'prompt' | 'granted' | 'denied' = 'prompt';
+    let micPermission: 'prompt' | 'granted' | 'denied' = 'prompt';
+
+    // 1. Check Camera
+    try {
+      if (requestAccess) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        camPermission = 'granted';
+      } else {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const hasVideoLabels = devices.some(device => device.kind === 'videoinput' && device.label !== '');
+        camPermission = hasVideoLabels ? 'granted' : 'prompt';
+      }
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        camPermission = 'denied';
+      } else {
+        camPermission = 'prompt';
+      }
+    }
+
+    // 2. Check Microphone
+    try {
+      if (requestAccess) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        micPermission = 'granted';
+      } else {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const hasAudioLabels = devices.some(device => device.kind === 'audioinput' && device.label !== '');
+        micPermission = hasAudioLabels ? 'granted' : 'prompt';
+      }
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        micPermission = 'denied';
+      } else {
+        micPermission = 'prompt';
+      }
+    }
+
+    setCameraStatus(camPermission);
+    setMicStatus(micPermission);
+    setDeviceCheckLoading(false);
+  };
+
+  // Automatically check permissions when user selects the "Medien" tab
+  useEffect(() => {
+    if (activeSection === 'media') {
+      runDeviceCheck(true);
+    }
+  }, [activeSection]);
+
+  // Compress Image (Resizes to max 1024px and outputs JPEG at 0.75 quality)
+  const compressImage = (file: File, maxWidth = 1024, maxHeight = 1024, quality = 0.75): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const isTestEnv = typeof window !== 'undefined' && 
+        (window.navigator.userAgent.includes('Node.js') || window.navigator.userAgent.includes('jsdom') || process.env.NODE_ENV === 'test');
+      
+      if (isTestEnv || !file.type.startsWith('image/')) {
+        return fileToBase64(file).then(resolve).catch(reject);
+      }
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          fileToBase64(file).then(resolve).catch(reject);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => {
+        fileToBase64(file).then(resolve).catch(reject);
+      };
+    });
+  };
+
+  const checkVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration);
+      };
+      video.onerror = () => {
+        resolve(-1);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Upload Photos (max 20)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setAlertMessage(null);
+    const files = Array.from(e.target.files);
+
+    if (photos.length + files.length > 20) {
+      setAlertMessage({ type: 'error', text: 'Maximal 20 Bilder pro Tier erlaubt.' });
+      return;
+    }
+
+    // Pre-upload validation checks
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        setAlertMessage({ 
+          type: 'error', 
+          text: `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG, HEIC).` 
+        });
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        setAlertMessage({ 
+          type: 'error', 
+          text: `Das Foto "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB etwas zu groß. Wir bitten dich, Fotos unter 15 MB auszuwählen.` 
+        });
+        return;
+      }
+    }
+
+    try {
+      const compressedBase64s = await Promise.all(
+        files.map(file => compressImage(file))
+      );
+      setPhotos(prev => [...prev, ...compressedBase64s]);
+    } catch (err) {
+      console.error(err);
+      setAlertMessage({ type: 'error', text: 'Ein Fehler ist beim Verkleinern der Fotos aufgetreten.' });
+    }
+  };
+
+  // Upload Passport Photos (max 5)
+  const handlePassportPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setAlertMessage(null);
+    const files = Array.from(e.target.files);
+
+    if (passportPhotos.length + files.length > 5) {
+      setAlertMessage({ type: 'error', text: 'Maximal 5 Impfpässe pro Tier erlaubt.' });
+      return;
+    }
+
+    // Pre-upload validation checks
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        setAlertMessage({ 
+          type: 'error', 
+          text: `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG).` 
+        });
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        setAlertMessage({ 
+          type: 'error', 
+          text: `Die Datei "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte unter 15 MB bleiben.` 
+        });
+        return;
+      }
+    }
+
+    try {
+      const compressedBase64s = await Promise.all(
+        files.map(file => compressImage(file))
+      );
+      setPassportPhotos(prev => [...prev, ...compressedBase64s]);
+    } catch (err) {
+      console.error(err);
+      setAlertMessage({ type: 'error', text: 'Fehler beim Komprimieren des Reisepasses.' });
+    }
+  };
+
+  // Helper to determine supported media recorder mime types
+  const getSupportedMimeType = (): string => {
+    if (typeof MediaRecorder === 'undefined') return '';
+    const types = [
+      'video/mp4;codecs=h264,aac',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/quicktime'
+    ];
+    for (const t of types) {
+      if (MediaRecorder.isTypeSupported(t)) {
+        return t;
+      }
+    }
+    return '';
+  };
+
+  // Background video compression function (Option 4 + Option 3)
+  const compressVideoFile = (file: File, onProgress: (pct: number) => void): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const isTestEnv = typeof window !== 'undefined' && 
+        (window.navigator.userAgent.includes('Node.js') || window.navigator.userAgent.includes('jsdom') || process.env.NODE_ENV === 'test');
+      
+      if (isTestEnv || typeof window === 'undefined') {
+        return resolve(file);
+      }
+
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.src = URL.createObjectURL(file);
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      let animId: number;
+      let progressInterval: NodeJS.Timeout;
+      let isCleanedUp = false;
+
+      const cleanupResources = () => {
+        if (isCleanedUp) return;
+        isCleanedUp = true;
+        clearInterval(progressInterval);
+        cancelAnimationFrame(animId);
+        window.URL.revokeObjectURL(video.src);
+      };
+
+      video.onloadedmetadata = async () => {
+        let width = video.videoWidth || 640;
+        let height = video.videoHeight || 480;
+        const maxDim = 1280;
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        
+        let audioTrack: MediaStreamTrack | null = null;
+        let audioContext: AudioContext | null = null;
+        let audioDest: MediaStreamAudioDestinationNode | null = null;
+        let audioSource: MediaElementAudioSourceNode | null = null;
+        
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioContextClass) {
+            audioContext = new AudioContextClass();
+            audioDest = audioContext.createMediaStreamDestination();
+            audioSource = audioContext.createMediaElementSource(video);
+            audioSource.connect(audioDest);
+            if (audioContext.state === 'suspended') {
+              await audioContext.resume();
+            }
+            if (audioDest.stream.getAudioTracks().length > 0) {
+              audioTrack = audioDest.stream.getAudioTracks()[0];
+            }
+          }
+        } catch (err) {
+          console.warn("AudioContext capture failed, proceeding video-only:", err);
+        }
+        
+        // Capture canvas stream at 24fps
+        let canvasStream: MediaStream;
+        try {
+          canvasStream = (canvas as any).captureStream ? (canvas as any).captureStream(24) : (canvas as any).mozCaptureStream(24);
+        } catch (e) {
+          cleanupResources();
+          return resolve(file); // fallback to original file if canvas.captureStream is not supported
+        }
+
+        const videoTrack = canvasStream.getVideoTracks()[0];
+        const tracks: MediaStreamTrack[] = [videoTrack];
+        if (audioTrack) {
+          tracks.push(audioTrack);
+        }
+        const combinedStream = new MediaStream(tracks);
+        
+        const mimeType = getSupportedMimeType() || 'video/webm';
+        
+        let recorder: MediaRecorder;
+        try {
+          recorder = new MediaRecorder(combinedStream, {
+            mimeType: mimeType,
+            videoBitsPerSecond: 1200000
+          });
+        } catch (e) {
+          cleanupResources();
+          return resolve(file); // fallback to original file if MediaRecorder fails
+        }
+        
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            chunks.push(e.data);
+          }
+        };
+        
+        recorder.onstop = () => {
+          cleanupResources();
+          combinedStream.getTracks().forEach(t => t.stop());
+          canvasStream.getTracks().forEach(t => t.stop());
+          if (audioDest) audioDest.stream.getTracks().forEach(t => t.stop());
+          if (audioContext) audioContext.close().catch(() => {});
+          
+          const blob = new Blob(chunks, { type: mimeType });
+          const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('quicktime') ? 'mov' : 'webm';
+          const compressedFile = new File([blob], `compressed_${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.${ext}`, {
+            type: mimeType
+          });
+          resolve(compressedFile);
+        };
+        
+        progressInterval = setInterval(() => {
+          if (video.duration) {
+            const progress = Math.min(99, Math.round((video.currentTime / video.duration) * 100));
+            onProgress(progress);
+          }
+        }, 250);
+        
+        const drawFrame = () => {
+          if (!video.paused && !video.ended) {
+            ctx?.drawImage(video, 0, 0, width, height);
+            animId = requestAnimationFrame(drawFrame);
+          }
+        };
+        
+        video.onplay = () => {
+          drawFrame();
+        };
+        
+        video.onended = () => {
+          onProgress(100);
+          recorder.stop();
+        };
+        
+        video.onerror = (err) => {
+          cleanupResources();
+          recorder.stop();
+          reject(new Error("Video playback error during compression"));
+        };
+        
+        recorder.start();
+        video.play().catch(err => {
+          cleanupResources();
+          resolve(file); // fallback to original file on play failure
+        });
+      };
+      
+      video.onerror = (err) => {
+        cleanupResources();
+        resolve(file); // fallback to original file
+      };
+    });
+  };
+
+  const processAndUploadVideo = async (file: File) => {
+    // If offline, show error and abort upload
+    if (!isOnline) {
+      setAlertMessage({ type: 'error', text: 'Video-Upload erfordert eine stabile Internetverbindung. Bitte im Online-Bereich hochladen.' });
+      return;
+    }
+
+    if (videos.length >= 5) {
+      setAlertMessage({ type: 'error', text: 'Maximal 5 Videos pro Tier erlaubt.' });
+      return;
+    }
+
+    if (!file.type.startsWith('video/')) {
+      setAlertMessage({ 
+        type: 'error', 
+        text: `Huch! Die Datei "${file.name}" ist kein Video. Bitte wähle nur Videodateien (z.B. MP4).` 
+      });
+      return;
+    }
+
+    // Check size limit: 200 MB
+    if (file.size > 200 * 1024 * 1024) {
+      setAlertMessage({ 
+        type: 'error', 
+        text: `Das Video "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Video unter 200 MB.` 
+      });
+      return;
+    }
+
+    const duration = await checkVideoDuration(file);
+    if (duration > 300) {
+      setAlertMessage({ 
+        type: 'error', 
+        text: `Das Video "${file.name}" überschreitet die maximale Länge von 5 Minuten (${Math.round(duration)} Sek).` 
+      });
+      return;
+    }
+
+    // Check if background compression is needed (if file size > 15MB)
+    let finalFile = file;
+    if (file.size > 15 * 1024 * 1024) {
+      try {
+        setCompressingVideoName(file.name);
+        setCompressionProgress(0);
+        finalFile = await compressVideoFile(file, (progress) => {
+          setCompressionProgress(progress);
+        });
+      } catch (err) {
+        console.warn("Background video compression failed, uploading original:", err);
+      } finally {
+        setCompressingVideoName(null);
+      }
+    }
+
+    // Add temporary uploading item
+    const finalName = finalFile.name;
+    setVideos(prev => [...prev, { name: finalName, isUploading: isOnline, isSynced: false }]);
+
+    let uploadedUrl: string | null = null;
+    let uploadSuccess = false;
+
+    if (isOnline) {
+      try {
+        uploadedUrl = await uploadMediaBlob('videos', finalName, finalFile);
+        if (uploadedUrl) {
+          uploadSuccess = true;
+          // Update state with synced URL
+          setVideos(prev => prev.map(v => 
+            v.name === finalName && !v.isSynced ? { name: finalName, url: uploadedUrl!, isSynced: true, isUploading: false } : v
+          ));
+        }
+      } catch (err) {
+        console.error('Immediate video upload failed, falling back to local OPFS storage:', err);
+      }
+    }
+
+    // Fallback local storage
+    if (!uploadSuccess) {
+      const opfsOk = isOpfsSupported();
+      if (opfsOk) {
+        try {
+          const opfsKey = `video_${Date.now()}_${finalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          await saveToOpfs(opfsKey, finalFile);
+          setVideos(prev => prev.map(v => 
+            v.name === finalName && v.isUploading ? { name: finalName, opfsKey, isSynced: false, isUploading: false } : v
+          ));
+        } catch (opfsErr) {
+          console.error('Failed to save to OPFS, falling back to IndexedDB blob:', opfsErr);
+          setVideos(prev => prev.map(v => 
+            v.name === finalName && v.isUploading ? { name: finalName, blob: finalFile, isSynced: false, isUploading: false } : v
+          ));
+        }
+      } else {
+        setVideos(prev => prev.map(v => 
+          v.name === finalName && v.isUploading ? { name: finalName, blob: finalFile, isSynced: false, isUploading: false } : v
+        ));
+      }
+    }
+  };
+
+  // Upload Videos (max 5, attempts immediate upload if online, fallback to OPFS/IDB)
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setAlertMessage(null);
+    const files = Array.from(e.target.files);
+
+    if (videos.length + files.length > 5) {
+      setAlertMessage({ type: 'error', text: 'Maximal 5 Videos pro Tier erlaubt.' });
+      return;
+    }
+
+    // Process files sequentially to avoid high concurrent resource usage
+    for (const file of files) {
+      await processAndUploadVideo(file);
+    }
+  };
+
+  const deletePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const deletePassportPhoto = (index: number) => {
+    setPassportPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const deleteVideo = async (index: number) => {
+    const videoToDelete = videos[index];
+    if (videoToDelete && videoToDelete.opfsKey) {
+      try {
+        await removeFromOpfs(videoToDelete.opfsKey);
+      } catch (err) {
+        console.error('Failed to delete OPFS video entry:', err);
+      }
+    }
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Audio Recording helpers
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingSeconds(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          setAudioDraftUrl(base64data);
+        };
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      alert('Zugriff auf das Mikrofon verweigert oder nicht unterstützt.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const deleteAudio = () => {
+    setAudioDraftUrl('');
+  };
+
+  const handleDeleteAnimal = async () => {
+    if (!window.confirm('Möchten Sie dieses Tierprofil wirklich endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.')) {
+      return;
+    }
+
+    try {
+      // 1. Delete locally from Dexie
+      if (catId) {
+        await db.animals.delete(catId);
+        
+        // Also delete local OPFS files if any
+        if (existingAnimal?.local_videos) {
+          for (const lv of existingAnimal.local_videos) {
+            if (lv.opfsKey) {
+              await removeFromOpfs(lv.opfsKey).catch((e) => console.warn(e));
+            }
+          }
+        }
+
+        await logger.info('AnimalEdit', `Tierprofil gelöscht: ${name} (ID: ${catId})`);
+      }
+
+      // 2. Delete from Supabase if online and configured
+      if (isOnline && supabase && catId) {
+        const { error } = await supabase
+          .from('animals')
+          .delete()
+          .eq('id', catId);
+        if (error) {
+          console.error('Failed to delete animal from Supabase:', error);
+          await logger.error('AnimalEdit', `Supabase Löschfehler für Tier ID ${catId}:`, error);
+        } else {
+          await logger.info('AnimalEdit', `Tierprofil aus Supabase gelöscht: ID ${catId}`);
+        }
+      }
+
+      router.push('/dashboard');
+    } catch (err) {
+      console.error(err);
+      await logger.error('AnimalEdit', `Fehler beim Löschen des Tiers: ${name}`, err);
+      setAlertMessage({ type: 'error', text: 'Fehler beim Löschen des Tierprofils.' });
+    }
+  };
+
+  // Submit updates
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAlertMessage(null);
+
+    if (!name.trim()) {
+      setAlertMessage({ type: 'error', text: 'Bitte gib einen Namen für das Tier ein.' });
+      setActiveSection('basic');
+      return;
+    }
+
+    if (!staffName.trim()) {
+      setAlertMessage({ type: 'error', text: 'Bitte gib deinen Namen oder dein Kürzel an, damit wir wissen, wer die Änderung vorgenommen hat.' });
+      return;
+    }
+
+    if (!existingAnimal) {
+      setAlertMessage({ type: 'error', text: 'Fehler: Zu bearbeitendes Tier wurde nicht gefunden.' });
+      return;
+    }
+
+    try {
+      const syncedVideos = videos.filter(v => v.isSynced && v.url).map(v => v.url as string);
+      const localVideos = videos.filter(v => !v.isSynced).map(v => ({ name: v.name, blob: v.blob, opfsKey: v.opfsKey }));
+
+      const animalData = {
+        ...existingAnimal,
+        name,
+        gender,
+        age_years: ageMode === 'exact' ? ageExact : ageYears,
+        age_mode: ageMode,
+        age_min: ageMode === 'range' ? ageMin : undefined,
+        age_max: ageMode === 'range' ? ageMax : undefined,
+        birth_year: ageMode === 'birthyear' ? birthYear : undefined,
+        birth_month: ageMode === 'birthyear' ? birthMonth : undefined,
+        birth_day: ageMode === 'birthyear' ? birthDay : undefined,
+        shelter_admission_date: `${shelterYear}-${shelterMonth}`,
+        reason_for_shelter: reasonForShelter,
+        restrictions,
+        notes_miscellaneous: notesMiscellaneous,
+        is_published: isPublished,
+        is_emergency: isEmergency,
+        
+        is_castrated: isCastrated,
+        is_chipped: isChipped,
+        has_rabies_vaccine: hasRabiesVaccine,
+        has_cat_flu_vaccine: hasCatFluVaccine,
+        is_dewormed: isDewormed,
+        has_eu_passport: hasEuPassport,
+        
+        compat_cats: compatCats,
+        compat_dogs: compatDogs,
+        compat_children: compatChildren,
+        trait_curious: traitCurious,
+        trait_playful: traitPlayful,
+        trait_aggressive: traitAggressive,
+        trait_fearful: traitFearful,
+        trait_cuddly: traitCuddly,
+
+        media_urls: photos.filter(p => p.startsWith('http')), // synced online links
+        passport_urls: passportPhotos.filter(p => p.startsWith('http')),
+        video_urls: syncedVideos,
+        room_name: roomName.trim() || undefined,
+        cage_name: cageName.trim() || undefined,
+        audio_draft_url: audioDraftUrl.startsWith('http') ? audioDraftUrl : undefined,
+
+        // Update local unsynced binary files
+        local_photos: [
+          ...(existingAnimal.local_photos || []).filter(p => photos.includes(p.name)),
+          ...photos.filter(p => p.startsWith('data:') || p.startsWith('blob:')).map((base64, index) => ({
+            name: `photo_new_${Date.now()}_${index}.jpg`,
+            blob: base64ToBlob(base64)
+          }))
+        ],
+        local_passports: [
+          ...(existingAnimal.local_passports || []).filter(p => passportPhotos.includes(p.name)),
+          ...passportPhotos.filter(p => p.startsWith('data:') || p.startsWith('blob:')).map((base64, index) => ({
+            name: `passport_new_${Date.now()}_${index}.jpg`,
+            blob: base64ToBlob(base64)
+          }))
+        ],
+        local_videos: localVideos,
+        local_audio: audioDraftUrl && (audioDraftUrl.startsWith('data:') || audioDraftUrl.startsWith('blob:')) ? {
+          name: 'audio_note.webm',
+          blob: base64ToBlob(audioDraftUrl)
+        } : undefined,
+
+        sync_pending: 1,
+        media_pending: (photos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || passportPhotos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || localVideos.length > 0 || (!!audioDraftUrl && (audioDraftUrl.startsWith('data:') || audioDraftUrl.startsWith('blob:')))) ? 1 : 0,
+        updated_at: new Date().toISOString()
+      };
+
+      if (existingAnimal && catId) {
+        try {
+          const snapshotData = {
+            animal_id: catId,
+            version_data: JSON.stringify(existingAnimal),
+            edited_by: staffName.trim() || 'Mitarbeiter',
+            created_at: new Date().toISOString(),
+            sync_pending: 1,
+            updated_at: new Date().toISOString()
+          };
+          await db.animalRevisions.add(snapshotData);
+          await pruneRevisions(catId);
+        } catch (e) {
+          console.error('Failed to save animal revision snapshot:', e);
+        }
+      }
+
+      await db.animals.put(animalData);
+      await logger.info('AnimalEdit', `Profil aktualisiert für: ${animalData.name} (${animalData.type})`);
+      
+      // Trigger cloud synchronization
+      syncWithCloud().catch((err) => {
+        console.error('Background sync failed after animal edit:', err);
+      });
+      
+      setSaveSuccess(true);
+
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+
+    } catch (err) {
+      console.error(err);
+      await logger.error('AnimalEdit', `Fehler beim Editieren des Tiers: ${name}`, err);
+      setAlertMessage({ type: 'error', text: 'Fehler beim Speichern in der lokalen Datenbank.' });
+    }
+  };
+
+  const HelpButton = ({ section }: { section: string }) => (
+    <button
+      type="button"
+      onClick={() => setHelpKey(section)}
+      className="p-0.5 rounded-full hover:bg-stone-200 text-stone-400 hover:text-stone-600 transition-colors inline-flex items-center justify-center cursor-pointer shrink-0 align-middle ml-1"
+      title="Hilfe anzeigen"
+    >
+      <HelpCircle className="w-3.5 h-3.5" />
+    </button>
+  );
+
+  // Helper toggle UI
+  const ToggleSelect = ({ 
+    label, 
+    value, 
+    onChange 
+  }: { 
+    label: string; 
+    value: boolean; 
+    onChange: (v: boolean) => void 
+  }) => (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className={`px-4 py-3 rounded-xl font-bold text-xs border transition-all text-center flex items-center justify-center h-12 select-none ${
+        value 
+          ? 'bg-brandpink-600 border-brandpink-600 text-white shadow-sm' 
+          : 'bg-white border-stone-200 text-stone-400 hover:text-stone-600 hover:bg-stone-50'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  // Triple status chip (JA / NEIN / unbekannt)
+  const TripleSelect = ({ 
+    label, 
+    value, 
+    onChange 
+  }: { 
+    label: string; 
+    value: 'JA' | 'NEIN' | 'unbekannt'; 
+    onChange: (v: 'JA' | 'NEIN' | 'unbekannt') => void 
+  }) => (
+    <div className="flex flex-col space-y-1 bg-white border border-stone-200 p-3 rounded-xl shadow-sm">
+      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">{label}</span>
+      <div className="grid grid-cols-3 gap-1">
+        {(['JA', 'NEIN', 'unbekannt'] as const).map((opt) => {
+          const style = opt === value 
+            ? 'bg-brandpink-600 border-brandpink-600 text-white shadow-sm'
+            : 'bg-stone-50 border-stone-200 text-stone-500 hover:bg-stone-100 hover:text-stone-800';
+          
+          const text = opt === 'unbekannt' ? 'Unbekannt' : opt;
+          
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              className={`py-2 rounded-lg font-bold text-[10px] border transition-all select-none ${style}`}
+            >
+              {text}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-stone-50 items-center justify-center">
+        <span className="w-8 h-8 border-4 border-brandpink-500 border-t-transparent rounded-full animate-spin"></span>
+      </div>
+    );
+  }
+
+  if (!existingAnimal) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex flex-col justify-center items-center p-6 text-center space-y-4">
+        <AlertTriangle className="w-12 h-12 text-amber-500 animate-bounce" />
+        <h2 className="text-lg font-bold text-stone-850">Katze nicht gefunden</h2>
+        <p className="text-xs text-stone-500 max-w-xs">
+          Das Tier mit ID <strong>{catId}</strong> existiert leider nicht in der lokalen Datenbank.
+        </p>
+        <Link href="/dashboard" className="px-5 py-2.5 bg-brandpink-600 text-white text-xs font-bold rounded-xl shadow-md">
+          Zurück zum Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
+      {/* Header */}
+      <header className="px-4 py-4 bg-white border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center space-x-2">
+          <Link 
+            href="/dashboard"
+            className="p-1 rounded bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="font-bold text-sm tracking-wide text-stone-850">Profil bearbeiten</h1>
+            <p className="text-[9px] text-stone-500 font-medium">{name || 'Katze'}</p>
+          </div>
+        </div>
+
+        <div>
+          {isOnline ? (
+            <div className="flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full text-emerald-700 text-[10px] font-bold">
+              <Wifi className="w-3.5 h-3.5" />
+              <span>Online</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1.5 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full text-amber-700 text-[10px] font-bold animate-pulse">
+              <WifiOff className="w-3.5 h-3.5" />
+              <span>Offline-Modus</span>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Form content */}
+      <main className="flex-1 max-w-lg mx-auto w-full p-4 pb-24">
+        
+        {saveSuccess && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-250 p-4 rounded-xl shadow-sm text-center space-y-2 animate-fade-in">
+            <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto" />
+            <h3 className="text-xs font-bold text-emerald-800">Änderungen gespeichert!</h3>
+            <p className="text-[10px] text-emerald-600 font-medium">Das Profil wurde erfolgreich aktualisiert und wird synchronisiert.</p>
+          </div>
+        )}
+
+        {alertMessage && (
+          <div className={`mb-4 border p-3 rounded-xl text-xs font-semibold flex items-start space-x-2 ${
+            alertMessage.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'
+          }`}>
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{alertMessage.text}</span>
+          </div>
+        )}
+
+        {/* Section Tabs */}
+        <div className="grid grid-cols-5 gap-1 bg-stone-200/60 p-1 rounded-xl border border-stone-300/80 mb-5">
+          <button
+            type="button"
+            onClick={() => setActiveSection('basic')}
+            className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'basic' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
+          >
+            Eckdaten
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('medical')}
+            className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'medical' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
+          >
+            Medizin
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('behavior')}
+            className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'behavior' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
+          >
+            Temperament
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('media')}
+            className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'media' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
+          >
+            Medien
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('revisions')}
+            className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'revisions' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
+          >
+            Verlauf
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* 1. BASIC INFORMATION */}
+          {activeSection === 'basic' && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Name *<HelpButton section="name" /></label>
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="z.B. Luna"
+                  className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Raum<HelpButton section="roomCage" /></label>
+                  <input 
+                    type="text" 
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    placeholder="z.B. Container 1"
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Käfig / Box<HelpButton section="roomCage" /></label>
+                  <input 
+                    type="text" 
+                    value={cageName}
+                    onChange={(e) => setCageName(e.target.value)}
+                    placeholder="z.B. Box 3"
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Geschlecht<HelpButton section="gender" /></label>
+                  <select 
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as 'Weiblich' | 'Männlich')}
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 text-xs font-semibold shadow-xs h-11"
+                  >
+                    <option value="Weiblich">Weiblich</option>
+                    <option value="Männlich">Männlich</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Alter Angeben<HelpButton section="age" /></span>
+                  <div className="grid grid-cols-3 gap-1 bg-stone-200/50 p-0.5 rounded-lg border border-stone-300">
+                    {(['range', 'exact', 'birthyear'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setAgeMode(mode)}
+                        className={`py-1.5 rounded text-[8px] font-bold uppercase transition-all select-none ${
+                          ageMode === mode 
+                            ? 'bg-white text-stone-850 shadow-xs' 
+                            : 'text-stone-500 hover:text-stone-850'
+                        }`}
+                      >
+                        {mode === 'range' ? 'Von-Bis' : mode === 'exact' ? 'Exakt' : 'Jahr'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Age Mode Selectors */}
+              <div className="bg-stone-50 border border-stone-200 p-3.5 rounded-xl shadow-xs">
+                {ageMode === 'range' && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold text-stone-500 uppercase">
+                      <span>Alter schätzen (Jahre)</span>
+                      <span className="text-brandpink-600">{ageMin} - {ageMax} Jahre</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 flex flex-col space-y-1">
+                        <span className="text-[9px] font-semibold text-stone-400">Minimum</span>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="20" 
+                          value={ageMin} 
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            setAgeMin(val);
+                            if (val > ageMax) setAgeMax(val);
+                          }} 
+                          className="w-full accent-brandpink-600 cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col space-y-1">
+                        <span className="text-[9px] font-semibold text-stone-400">Maximum</span>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="20" 
+                          value={ageMax} 
+                          onChange={(e) => setAgeMax(Math.max(parseInt(e.target.value), ageMin))} 
+                          className="w-full accent-brandpink-600 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {ageMode === 'exact' && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold text-stone-500 uppercase">
+                      <span>Exaktes Alter</span>
+                      <span className="text-brandpink-600">{ageExact} Jahre</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="20" 
+                      value={ageExact} 
+                      onChange={(e) => setAgeExact(parseInt(e.target.value))} 
+                      className="w-full accent-brandpink-600 cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                {ageMode === 'birthyear' && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">Jahr</label>
+                      <input 
+                        type="number" 
+                        min="2000" 
+                        max="2026" 
+                        value={birthYear}
+                        onChange={(e) => setBirthYear(parseInt(e.target.value) || 2026)}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-stone-900 text-xs font-semibold focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">Monat</label>
+                      <select
+                        value={birthMonth || ''}
+                        onChange={(e) => setBirthMonth(e.target.value ? parseInt(e.target.value) : undefined)}
+                        className="w-full px-2 py-2 bg-white border border-stone-300 rounded-lg text-stone-900 text-xs font-semibold focus:outline-none h-[34px]"
+                      >
+                        <option value="">unbekannt</option>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">Tag</label>
+                      <select
+                        value={birthDay || ''}
+                        onChange={(e) => setBirthDay(e.target.value ? parseInt(e.target.value) : undefined)}
+                        className="w-full px-2 py-2 bg-white border border-stone-300 rounded-lg text-stone-900 text-xs font-semibold focus:outline-none h-[34px]"
+                      >
+                        <option value="">unbekannt</option>
+                        {Array.from({ length: 31 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Admission Date */}
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Seit wann im Tierheim?<HelpButton section="arrivalDate" /></label>
+                <div className="grid grid-cols-2 gap-3">
+                  <select 
+                    value={shelterMonth}
+                    onChange={(e) => setShelterMonth(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 text-xs font-semibold shadow-xs h-11"
+                  >
+                    {['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <select 
+                    value={shelterYear}
+                    onChange={(e) => setShelterYear(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 text-xs font-semibold shadow-xs h-11"
+                  >
+                    {Array.from({ length: 15 }, (_, i) => (2026 - i).toString()).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Warum im Tierheim?<HelpButton section="reason" /></label>
+                <textarea 
+                  value={reasonForShelter}
+                  onChange={(e) => setReasonForShelter(e.target.value)}
+                  placeholder="Hintergründe der Abgabe..."
+                  rows={2}
+                  className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs resize-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Einschränkungen (z.B. Krankheiten)<HelpButton section="restrictions" /></label>
+                <input 
+                  type="text" 
+                  value={restrictions}
+                  onChange={(e) => setRestrictions(e.target.value)}
+                  placeholder="z.B. Nierendiät, mag keine Katzen..."
+                  className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Sonstiges<HelpButton section="misc" /></label>
+                <input 
+                  type="text" 
+                  value={notesMiscellaneous}
+                  onChange={(e) => setNotesMiscellaneous(e.target.value)}
+                  placeholder="Besonderheiten der Katze..."
+                  className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <label className="flex items-center space-x-3 bg-white border border-stone-200 p-3 rounded-xl shadow-xs select-none cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isPublished}
+                    onChange={(e) => setIsPublished(e.target.checked)}
+                    className="w-4.5 h-4.5 accent-brandpink-600 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">Galerie veröffentlichen<HelpButton section="publish" /></span>
+                    <span className="text-[8px] text-stone-450 font-medium">Öffentlich anzeigen</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-3 bg-white border border-stone-200 p-3 rounded-xl shadow-xs select-none cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isEmergency}
+                    onChange={(e) => setIsEmergency(e.target.checked)}
+                    className="w-4.5 h-4.5 accent-brandpink-600 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">Sorgenfell / Notfall<HelpButton section="emergency" /></span>
+                    <span className="text-[8px] text-stone-450 font-medium">SOS rote Markierung</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* 2. MEDICAL TOGGLES */}
+          {activeSection === 'medical' && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
+                Medizinischer Status
+                <HelpButton section="medical" />
+              </h3>
+              <div className="grid grid-cols-2 gap-3 bg-white border border-stone-200 p-4 rounded-xl shadow-sm">
+                <ToggleSelect label="Kastriert" value={isCastrated} onChange={setIsCastrated} />
+                <ToggleSelect label="Gechipt" value={isChipped} onChange={setIsChipped} />
+                <ToggleSelect label="Tollwutimpfung" value={hasRabiesVaccine} onChange={setHasRabiesVaccine} />
+                <ToggleSelect label="Katzenschnupfen" value={hasCatFluVaccine} onChange={setHasCatFluVaccine} />
+                <ToggleSelect label="Entwurmt" value={isDewormed} onChange={setIsDewormed} />
+                <ToggleSelect label="EU-Heimtierausweis" value={hasEuPassport} onChange={setHasEuPassport} />
+              </div>
+            </div>
+          )}
+
+          {/* 3. TEMPERAMENT & COMPATIBILITY */}
+          {activeSection === 'behavior' && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
+                Temperament &amp; Verträglichkeit
+                <HelpButton section="behavior" />
+              </h3>
+              <TripleSelect label="Verträglich mit anderen Katzen" value={compatCats} onChange={setCompatCats} />
+              <TripleSelect label="Verträglich mit Hunden" value={compatDogs} onChange={setCompatDogs} />
+              <TripleSelect label="Verträglich mit Kindern" value={compatChildren} onChange={setCompatChildren} />
+              <TripleSelect label="Neugierig" value={traitCurious} onChange={setTraitCurious} />
+              <TripleSelect label="Verspielt" value={traitPlayful} onChange={setTraitPlayful} />
+              <TripleSelect label="Aggressiv" value={traitAggressive} onChange={setTraitAggressive} />
+              <TripleSelect label="Ängstlich" value={traitFearful} onChange={setTraitFearful} />
+              <TripleSelect label="Verschmust" value={traitCuddly} onChange={setTraitCuddly} />
+            </div>
+          )}
+
+          {/* 4. MEDIA MANAGEMENT */}
+          {activeSection === 'media' && (
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
+                Fotos &amp; Videos hochladen
+                <HelpButton section="media" />
+              </h3>
+              
+              {/* Permission check Card */}
+              <div className="bg-stone-100/60 border border-stone-250 p-4 rounded-2xl shadow-sm space-y-3.5">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="w-5 h-5 text-brandpink-500 animate-pulse" />
+                    <div>
+                      <h4 className="text-xs font-bold text-stone-850 uppercase tracking-wide">Geräte- &amp; Speicher-Check</h4>
+                      <p className="text-[10px] text-stone-500 font-medium">Berechtigungen für Kamera &amp; Mikrofon</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => runDeviceCheck(true)}
+                    disabled={deviceCheckLoading}
+                    className="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-[10px] font-bold rounded-lg border border-stone-300 transition-all select-none disabled:opacity-50"
+                  >
+                    {deviceCheckLoading ? 'Prüft...' : 'Erneut prüfen'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Camera Status */}
+                  <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
+                    cameraStatus === 'granted'
+                      ? 'bg-emerald-50/50 border-emerald-150 text-emerald-800'
+                      : cameraStatus === 'denied'
+                      ? 'bg-amber-50/50 border-amber-150 text-amber-800'
+                      : 'bg-stone-50 border-stone-200 text-stone-600'
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Kamera</span>
+                      {cameraStatus === 'granted' ? (
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                      ) : cameraStatus === 'denied' ? (
+                        <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 bg-stone-400 rounded-full" />
+                      )}
+                    </div>
+                    <span className="text-xs font-bold mt-1">
+                      {cameraStatus === 'granted' ? 'Bereit 📸' : cameraStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                    </span>
+                  </div>
+
+                  {/* Mic Status */}
+                  <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
+                    micStatus === 'granted'
+                      ? 'bg-emerald-50/50 border-emerald-150 text-emerald-800'
+                      : micStatus === 'denied'
+                      ? 'bg-amber-50/50 border-amber-150 text-amber-800'
+                      : 'bg-stone-50 border-stone-200 text-stone-600'
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Mikrofon</span>
+                      {micStatus === 'granted' ? (
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                      ) : micStatus === 'denied' ? (
+                        <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 bg-stone-400 rounded-full" />
+                      )}
+                    </div>
+                    <span className="text-xs font-bold mt-1">
+                      {micStatus === 'granted' ? 'Bereit 🎤' : micStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Speicher- und Verbindungs-Diagnose */}
+                <div className="grid grid-cols-2 gap-3 mt-3 border-t border-stone-200/80 pt-3">
+                  {/* Speicher-Typ Status */}
+                  <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
+                    opfsSupported
+                      ? 'bg-emerald-50/50 border-emerald-150 text-emerald-800'
+                      : 'bg-amber-50/50 border-amber-150 text-amber-800'
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Typ</span>
+                      {opfsSupported ? (
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    <span className="text-xs font-bold mt-1">
+                      {opfsSupported ? 'OPFS (Optimiert) ⚡' : 'IndexedDB (Standard) 📦'}
+                    </span>
+                  </div>
+
+                  {/* Speicher-Schutz Status */}
+                  <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
+                    storagePersistent
+                      ? 'bg-emerald-50/50 border-emerald-150 text-emerald-800'
+                      : 'bg-amber-50/50 border-amber-150 text-amber-800'
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Schutz</span>
+                      {storagePersistent ? (
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 bg-amber-500 rounded-full" />
+                      )}
+                    </div>
+                    <span className="text-xs font-bold mt-1">
+                      {storagePersistent ? 'Geschützt 🛡️' : 'Temporär ⏳'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Storage Explanations/Troubleshooting */}
+                {(!opfsSupported || !storagePersistent) && (
+                  <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl text-[10px] text-stone-600 leading-relaxed font-normal space-y-1.5 mt-2">
+                    {!opfsSupported && (
+                      <p>
+                        ⚠️ <strong>Hinweis zum Speicher-Typ:</strong> Dein Gerät unterstützt das moderne OPFS-Dateisystem nicht. Videos werden im Standard-Datenbankspeicher abgelegt. Bitte lade Videos vorzugsweise hoch, wenn du online bist, um Speicher-Engpässe zu vermeiden.
+                      </p>
+                    )}
+                    {!storagePersistent && (
+                      <p>
+                        ⚠️ <strong>Hinweis zum Speicher-Schutz:</strong> Der Speicher ist als temporär eingestuft. Falls der Speicher deines Handys sehr voll wird, könnte der Browser ungesynchronisierte Entwürfe löschen. Synchronisiere deine Einträge bitte zeitnah!
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* troubleshooting help */}
+                {(cameraStatus === 'denied' || micStatus === 'denied') && (
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 leading-relaxed font-medium space-y-1.5 shadow-sm">
+                    <span className="font-bold flex items-center space-x-1">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Wie du den Zugriff erlauben kannst:</span>
+                    </span>
+                    <ol className="list-decimal list-inside space-y-1 pl-1 text-[10px]">
+                      {cameraStatus === 'denied' && (
+                        <li>
+                          <strong>Kamera freigeben:</strong> Klicke oben links neben der Webadresse (in der Adressleiste deines Browsers) auf das kleine Schloss-Symbol 🔒 und stelle <strong>Kamera</strong> auf &quot;Zulassen&quot; / &quot;Erlauben&quot;.
+                        </li>
+                      )}
+                      {micStatus === 'denied' && (
+                        <li>
+                          <strong>Mikrofon freigeben:</strong> Klicke ebenfalls auf das Schloss-Symbol 🔒 und erlaube den Zugriff auf das <strong>Mikrofon</strong>, damit du Sprachnotizen aufnehmen kannst.
+                        </li>
+                      )}
+                      <li>
+                        <strong>Am Handy:</strong> Gehe in die Handy-Einstellungen unter <em>Apps &rarr; Browser (z.B. Chrome/Safari) &rarr; Berechtigungen</em> und erlaube dort Kamera/Mikrofon. Lade danach diese Seite neu.
+                      </li>
+                    </ol>
+                  </div>
+                )}
+              </div>
+
+              {/* Main Animal photos */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Galeriefotos (max. 20)</h3>
+                    <p className="text-[10px] text-stone-400">Bilder für die Vermittlungsgalerie</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => photoCameraInputRef.current?.click()}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-brandpink-50 text-brandpink-700 hover:bg-brandpink-100 rounded-lg text-[10px] font-bold border border-brandpink-250 transition-all shadow-sm"
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1" />
+                      <span>Kamera</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => photoGalleryInputRef.current?.click()}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
+                    >
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                      <span>Galerie</span>
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    multiple
+                    ref={photoCameraInputRef}
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    ref={photoGalleryInputRef}
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
+                  {photos.length === 0 ? (
+                    <div className="col-span-4 py-4 text-center text-xs text-stone-400">
+                      Keine Fotos aufgenommen.
+                    </div>
+                  ) : (
+                    photos.map((urlOrBase64, index) => (
+                      <div key={index} className="relative aspect-square bg-stone-100 border border-stone-200 rounded-lg overflow-hidden group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={urlOrBase64} alt={`Photo ${index}`} className="w-full h-full object-cover" />
+                        
+                        {urlOrBase64.startsWith('data:') || urlOrBase64.startsWith('blob:') ? (
+                          <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
+                            <CloudOff className="w-2.5 h-2.5 text-amber-500" />
+                            <span>Lokal</span>
+                          </div>
+                        ) : (
+                          <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-emerald-50/90 border border-emerald-250 text-emerald-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
+                            <Cloud className="w-2.5 h-2.5 text-emerald-500" />
+                            <span>Online</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => deletePhoto(index)}
+                          className="absolute top-1 right-1 p-1 bg-red-655 hover:bg-red-700 text-white rounded-md shadow-xs opacity-80 hover:opacity-100 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Passport scans */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Dokumente / Impfpässe (max. 5)</h3>
+                    <p className="text-[10px] text-stone-400">Nur intern für Mitarbeiter sichtbar</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => passportCameraInputRef.current?.click()}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-brandpink-50 text-brandpink-700 hover:bg-brandpink-100 rounded-lg text-[10px] font-bold border border-brandpink-250 transition-all shadow-sm"
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1" />
+                      <span>Kamera</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => passportGalleryInputRef.current?.click()}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
+                    >
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                      <span>Galerie</span>
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    multiple
+                    ref={passportCameraInputRef}
+                    onChange={handlePassportPhotoUpload}
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    ref={passportGalleryInputRef}
+                    onChange={handlePassportPhotoUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
+                  {passportPhotos.length === 0 ? (
+                    <div className="col-span-4 py-4 text-center text-xs text-stone-400">
+                      Keine Pässe aufgenommen.
+                    </div>
+                  ) : (
+                    passportPhotos.map((urlOrBase64, index) => (
+                      <div key={index} className="relative aspect-square bg-stone-100 border border-stone-200 rounded-lg overflow-hidden group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={urlOrBase64} alt={`Passport ${index}`} className="w-full h-full object-cover" />
+                        
+                        {urlOrBase64.startsWith('data:') || urlOrBase64.startsWith('blob:') ? (
+                          <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
+                            <CloudOff className="w-2.5 h-2.5 text-amber-500" />
+                            <span>Lokal</span>
+                          </div>
+                        ) : (
+                          <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-emerald-50/90 border border-emerald-250 text-emerald-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
+                            <Cloud className="w-2.5 h-2.5 text-emerald-500" />
+                            <span>Online</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => deletePassportPhoto(index)}
+                          className="absolute top-1 right-1 p-1 bg-red-655 hover:bg-red-700 text-white rounded-md shadow-xs opacity-80 hover:opacity-100 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Videos */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Videos (max. 5, max. 5 Min., unter 200 MB)</h3>
+                    <p className="text-[10px] text-stone-400">Direkter Cloud-Upload &amp; Offline-Speicherung (OPFS) unterstützt</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowVideoRecorder(true)}
+                      disabled={!!compressingVideoName}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-bold border border-emerald-200 transition-all shadow-sm disabled:opacity-50"
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1" />
+                      <span>Aufnehmen</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => videoGalleryInputRef.current?.click()}
+                      disabled={!!compressingVideoName}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm disabled:opacity-50"
+                    >
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                      <span>Galerie</span>
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    capture="environment"
+                    ref={videoCameraInputRef}
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    ref={videoGalleryInputRef}
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* 💡 Video size warning tip */}
+                <div className="text-[10px] text-stone-500 bg-stone-100 border border-stone-200/60 rounded-lg p-2.5 flex items-start space-x-1.5">
+                  <span className="shrink-0 text-amber-600 font-bold">💡 Tipp:</span>
+                  <span>
+                    Direkt in der App aufgenommene Videos werden automatisch optimal komprimiert. Größere Videos aus der Galerie werden im Hintergrund verkleinert, oder du teilst sie vorab kurz per WhatsApp/Telegram, um sie sofort zu schrumpfen.
+                  </span>
+                </div>
+
+                <div className="border border-stone-200 rounded-xl p-3 bg-stone-50 space-y-2 min-h-[70px] flex flex-col justify-center">
+                  {compressingVideoName && (
+                    <div className="flex flex-col space-y-1.5 p-3 bg-brandpink-50/50 border border-brandpink-100 rounded-lg text-xs">
+                      <div className="flex justify-between font-semibold text-brandpink-800">
+                        <span className="truncate max-w-[250px]">Optimierung: {compressingVideoName}</span>
+                        <span>{compressionProgress}%</span>
+                      </div>
+                      <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-brandpink-500 h-1.5 rounded-full transition-all duration-300" 
+                          style={{ width: `${compressionProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-stone-400">Video wird für den schnellen Upload verkleinert, bitte warten...</p>
+                    </div>
+                  )}
+
+                  {videos.length === 0 ? (
+                    <div className="py-2 text-center text-xs text-stone-400">
+                      Keine Videos geladen.
+                    </div>
+                  ) : (
+                    videos.map((vid, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-white border border-stone-200 rounded-lg text-xs shadow-sm">
+                        <div className="flex items-center space-x-2 truncate">
+                          {vid.isSynced ? (
+                            <span title="Online hochgeladen" className="shrink-0 flex items-center">
+                              <Cloud className="w-3.5 h-3.5 text-emerald-500" />
+                            </span>
+                          ) : (
+                            <span title={vid.opfsKey ? "Lokal gesichert (OPFS) ⚡" : "Lokal gesichert (IndexedDB) 📦"} className="shrink-0 flex items-center">
+                              <CloudOff className="w-3.5 h-3.5 text-amber-500" />
+                            </span>
+                          )}
+                          <span className="truncate max-w-[200px] text-stone-750 font-mono">{vid.name}</span>
+                        </div>
+                        {vid.isUploading ? (
+                          <span className="w-3.5 h-3.5 border-2 border-brandpink-500 border-t-transparent rounded-full animate-spin shrink-0"></span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => deleteVideo(index)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Audio records */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotiz aufnehmen</h3>
+                    <p className="text-[10px] text-stone-400">Sprachnotiz für interne Notizen oder Beschreibung</p>
+                  </div>
+                  {!audioDraftUrl && (
+                    <button
+                      type="button"
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        isRecording
+                          ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
+                          : 'bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100'
+                      }`}
+                    >
+                      {isRecording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                      <span>{isRecording ? 'Stoppen' : 'Aufnehmen'}</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[60px] flex items-center justify-center">
+                  {audioDraftUrl ? (
+                    <div className="w-full space-y-2">
+                      <div className="flex items-center justify-between bg-white border border-stone-200 p-2 rounded-lg shadow-sm">
+                        <div className="flex items-center space-x-2 truncate">
+                          {audioDraftUrl.startsWith('http') ? (
+                            <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          ) : (
+                            <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          )}
+                          <audio src={audioDraftUrl} controls className="h-8 max-w-[200px]" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={deleteAudio}
+                          className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Sprachnotiz löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : isRecording ? (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                        <span className="text-xs font-semibold text-red-500">Aufnahme läuft...</span>
+                      </div>
+                      <span className="text-xl font-mono text-stone-700">
+                        {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="py-4 text-center text-xs text-stone-400">
+                      Keine Sprachnotiz aufgenommen. Klicke auf &quot;Aufnehmen&quot;, um eine Sprachnotiz zu starten.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* Edited By staff name field */}
+          {activeSection !== 'revisions' && (
+            <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3 mt-4">
+              <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                Wer nimmt diese Änderung vor? *
+              </label>
+              <input
+                type="text"
+                value={staffName}
+                onChange={(e) => {
+                  setStaffName(e.target.value);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('bmd_staff_name', e.target.value);
+                  }
+                }}
+                placeholder="Dein Name oder Kürzel (z.B. Carlos)"
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-300 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
+              />
+
+              <p className="text-[10px] text-stone-400">
+                Dies hilft dem Team nachzuvollziehen, wer welche Version bearbeitet hat.
+              </p>
+            </div>
+          )}
+
+          {/* 5. REVISIONS HISTORY */}
+          {activeSection === 'revisions' && (
+            <div className="space-y-4 pb-20">
+              <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <h3 className="text-xs font-bold text-stone-850 uppercase tracking-wider">Versionsverlauf (Die letzten 10 Änderungen)</h3>
+                <p className="text-[10px] text-stone-400">
+                  Hier siehst du, wer dieses Profil wann bearbeitet hat. Du kannst eine frühere Version direkt in das Formular laden, um sie zu überprüfen und wieder aktiv zu speichern.
+                </p>
+                
+                {loadingRevisions ? (
+                  <div className="py-6 text-center text-xs text-stone-500 font-semibold">
+                    Versionsverlauf wird geladen...
+                  </div>
+                ) : revisions.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-stone-400 font-medium bg-stone-50 rounded-xl border border-dashed border-stone-250">
+                    Bisher wurden keine früheren Versionen für dieses Tier gespeichert.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-stone-100">
+                    {revisions.map((rev) => {
+                      let data: any = {};
+                      try {
+                        data = JSON.parse(rev.version_data);
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      const formattedDate = new Date(rev.created_at).toLocaleString('de-DE', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                      
+                      const isExpanded = expandedRevisionId === rev.id;
+                      const changes = getChangedFields(data);
+
+                      return (
+                        <div key={rev.id} className="py-4 border-b border-stone-100 last:border-0 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[11px] font-bold text-stone-850 block">
+                                {formattedDate} Uhr
+                              </span>
+                              <span className="text-[10px] text-stone-500 font-medium block mt-0.5">
+                                Geändert von: <strong className="text-stone-700">{rev.edited_by}</strong>
+                              </span>
+                              <div className="flex items-center space-x-2 mt-1.5">
+                                {changes.length === 0 ? (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
+                                    Aktuell identisch
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-250">
+                                    {changes.length} {changes.length === 1 ? 'Unterschied' : 'Unterschiede'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedRevisionId(isExpanded ? null : rev.id)}
+                                className="px-2 py-1.5 hover:bg-stone-105 text-stone-500 hover:text-stone-800 text-[10px] font-bold rounded-lg border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                              >
+                                <span>Vergleichen</span>
+                                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm(`Möchten Sie das Formular wirklich auf den Stand vom ${formattedDate} zurücksetzen? Ungespeicherte aktuelle Änderungen gehen dabei verloren.`)) {
+                                    setName(data.name || '');
+                                    setGender(data.gender || 'Weiblich');
+                                    setAgeYears(data.age_years || 0);
+                                    setAgeMode(data.age_mode || 'range');
+                                    setAgeMin(data.age_min ?? 2);
+                                    setAgeMax(data.age_max ?? 3);
+                                    setAgeExact(data.age_years ?? 2);
+                                    setBirthYear(data.birth_year ?? 2024);
+                                    setBirthMonth(data.birth_month);
+                                    setBirthDay(data.birth_day);
+                                    
+                                    if (data.shelter_admission_date) {
+                                      const parts = data.shelter_admission_date.split('-');
+                                      if (parts.length === 2) {
+                                        setShelterYear(parts[0]);
+                                        setShelterMonth(parts[1]);
+                                      }
+                                    }
+                                    setRoomName(data.room_name || '');
+                                    setCageName(data.cage_name || '');
+                                    setReasonForShelter(data.reason_for_shelter || '');
+                                    setRestrictions(data.restrictions || '');
+                                    setNotesMiscellaneous(data.notes_miscellaneous || '');
+                                    setIsPublished(data.is_published ?? true);
+                                    setIsEmergency(data.is_emergency ?? false);
+                                    
+                                    setIsCastrated(data.is_castrated ?? true);
+                                    setIsChipped(data.is_chipped ?? true);
+                                    setHasRabiesVaccine(data.has_rabies_vaccine ?? true);
+                                    setHasCatFluVaccine(data.has_cat_flu_vaccine ?? true);
+                                    setIsDewormed(data.is_dewormed ?? true);
+                                    setHasEuPassport(data.has_eu_passport ?? false);
+                                    
+                                    setCompatCats(data.compat_cats || 'unbekannt');
+                                    setCompatDogs(data.compat_dogs || 'unbekannt');
+                                    setCompatChildren(data.compat_children || 'unbekannt');
+                                    setTraitCurious(data.trait_curious || 'unbekannt');
+                                    setTraitPlayful(data.trait_playful || 'unbekannt');
+                                    setTraitAggressive(data.trait_aggressive || 'unbekannt');
+                                    setTraitFearful(data.trait_fearful || 'unbekannt');
+                                    setTraitCuddly(data.trait_cuddly || 'unbekannt');
+                                    
+                                    setPhotos(data.media_urls || []);
+                                    setPassportPhotos(data.passport_urls || []);
+                                    setVideos(data.video_urls?.map((url: string) => ({ name: url.substring(url.lastIndexOf('/') + 1), url, isSynced: true })) || []);
+                                    setAudioDraftUrl(data.audio_draft_url || '');
+                                    
+                                    setActiveSection('basic');
+                                    setAlertMessage({ type: 'warn', text: 'Die historische Version wurde geladen. Bitte überprüfe die Daten und klicke zum Übernehmen unten auf "Änderungen speichern".' });
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-brandpink-50 hover:bg-brandpink-100 text-brandpink-700 text-[10px] font-bold rounded-lg border border-brandpink-200 transition-colors cursor-pointer"
+                              >
+                                Laden
+                              </button>
+                            </div>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 space-y-3 text-[11px] animate-fade-in">
+                              {changes.length === 0 ? (
+                                <p className="text-stone-500 font-medium text-center py-1">
+                                  Diese Version entspricht exakt den aktuellen Werten im Bearbeitungsformular.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  <span className="font-bold text-stone-600 block text-[10px] uppercase tracking-wider">Unterschiede zur aktuellen Ansicht:</span>
+                                  <div className="overflow-hidden border border-stone-200 rounded-lg bg-white">
+                                    <table className="min-w-full divide-y divide-stone-200 text-left">
+                                      <thead className="bg-stone-50 font-bold text-stone-500 text-[9px] uppercase">
+                                        <tr>
+                                          <th className="px-3 py-2">Feld</th>
+                                          <th className="px-3 py-2 text-amber-700">Diese Version</th>
+                                          <th className="px-3 py-2 text-stone-500">Aktuell im Formular</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-stone-150 text-stone-700">
+                                        {changes.map((ch, i) => (
+                                          <tr key={i} className="hover:bg-stone-50">
+                                            <td className="px-3 py-2 font-bold text-stone-600">{ch.label}</td>
+                                            <td className="px-3 py-2 font-semibold text-amber-800 bg-amber-50/40">{ch.oldVal}</td>
+                                            <td className="px-3 py-2 text-stone-500">{ch.newVal}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="pt-2.5 border-t border-stone-200/80 grid grid-cols-2 gap-2 text-[10px] text-stone-500">
+                                <div>
+                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">Name in dieser Version:</span>
+                                  <span className="text-stone-700 font-medium">{data.name || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">Raum / Box:</span>
+                                  <span className="text-stone-700 font-medium">
+                                    {data.room_name || data.cage_name 
+                                      ? `${data.room_name || '-'} / ${data.cage_name || '-'}`
+                                      : '-'
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-stone-200 backdrop-blur-md p-4 flex space-x-3 max-w-lg mx-auto z-40">
+            <button
+              type="button"
+              onClick={handleDeleteAnimal}
+              className="px-4 py-3.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 transition-colors flex items-center justify-center cursor-pointer shadow-sm"
+              title="Profil löschen"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="flex-1 py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl border border-stone-250 transition-colors"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              disabled={!!compressingVideoName}
+              className="flex-1 flex items-center justify-center space-x-1.5 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brandpink-900/10 active:scale-98 transition-all disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{isOnline ? 'Änderungen speichern' : 'Lokal speichern'}</span>
+            </button>
+          </div>
+
+        </form>
+
+        <HelpBottomSheet 
+          isOpen={!!helpKey} 
+          onClose={() => setHelpKey(null)} 
+          title={helpKey ? helpContent[helpKey].title : ''} 
+          content={helpKey ? helpContent[helpKey].body : ''} 
+        />
+
+        <VideoRecorderModal
+          isOpen={showVideoRecorder}
+          onClose={() => setShowVideoRecorder(false)}
+          onRecordComplete={(file) => {
+            processAndUploadVideo(file);
+          }}
+        />
+      </main>
+    </div>
+  );
+}

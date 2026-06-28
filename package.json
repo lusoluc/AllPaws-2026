@@ -1,0 +1,48 @@
+{
+  "name": "allpaws-2026",
+  "version": "0.1.0",
+  "author": {
+    "name": "Carlos Lucas",
+    "url": "https://www.linkedin.com/in/director-it-development/"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lusoluc/katzen-app.git"
+  },
+  "description": "AllPaws 2026 – Open-source, offline-first PWA for animal rescue NGOs. Built with love by volunteers.",
+  "private": true,
+  "scripts": {
+    "dev": "npx.cmd kill-port 3000 && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "dexie": "4.0.10",
+    "dexie-react-hooks": "4.4.0",
+    "lucide-react": "0.468.0",
+    "next": "15.1.12",
+    "nodemailer": "^9.0.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "22.10.1",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.1",
+    "autoprefixer": "10.4.20",
+    "jest": "30.4.2",
+    "jest-environment-jsdom": "30.4.1",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.16",
+    "ts-jest": "29.4.11",
+    "typescript": "5.7.2"
+  }
+}
