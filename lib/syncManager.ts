@@ -869,6 +869,79 @@ async function pullCloudChanges(): Promise<void> {
       await pruneRevisions(cr.animal_id);
     }
   }
+
+  // 9. Prune deleted records (to mirror cloud hard deletions locally)
+  await pruneDeletedRecords();
+}
+
+async function pruneDeletedRecords(): Promise<void> {
+  if (!supabase) return;
+
+  try {
+    // A. Prune Animals
+    const { data: cloudAnimals } = await supabase.from('animals').select('id');
+    if (cloudAnimals) {
+      const cloudIds = new Set(cloudAnimals.map(c => c.id));
+      const localAnimals = await db.animals.toArray();
+      for (const la of localAnimals) {
+        if (la.sync_pending === 0 && la.id && !cloudIds.has(la.id)) {
+          await db.animals.delete(la.id);
+          await logger.info('SyncManager', `Pruned deleted animal ${la.id} locally.`);
+        }
+      }
+    }
+
+    // B. Prune Shelters
+    const { data: cloudShelters } = await supabase.from('shelters').select('id');
+    if (cloudShelters) {
+      const cloudIds = new Set(cloudShelters.map(c => c.id));
+      const localShelters = await db.shelters.toArray();
+      for (const ls of localShelters) {
+        if (ls.sync_pending === 0 && ls.id && !cloudIds.has(ls.id)) {
+          await db.shelters.delete(ls.id);
+          await logger.info('SyncManager', `Pruned deleted shelter ${ls.id} locally.`);
+        }
+      }
+    }
+
+    // C. Prune Internal Notes
+    const { data: cloudNotes } = await supabase.from('internal_notes').select('id');
+    if (cloudNotes) {
+      const cloudIds = new Set(cloudNotes.map(c => c.id));
+      const localNotes = await db.internalNotes.toArray();
+      for (const ln of localNotes) {
+        if (ln.sync_pending === 0 && ln.id && !cloudIds.has(ln.id)) {
+          await db.internalNotes.delete(ln.id);
+        }
+      }
+    }
+
+    // D. Prune Inquiries
+    const { data: cloudInquiries } = await supabase.from('inquiries').select('id');
+    if (cloudInquiries) {
+      const cloudIds = new Set(cloudInquiries.map(c => c.id));
+      const localInquiries = await db.inquiries.toArray();
+      for (const li of localInquiries) {
+        if (li.sync_pending === 0 && li.id && !cloudIds.has(li.id)) {
+          await db.inquiries.delete(li.id);
+        }
+      }
+    }
+
+    // E. Prune Custom Blocks
+    const { data: cloudBlocks } = await supabase.from('custom_blocks').select('id');
+    if (cloudBlocks) {
+      const cloudIds = new Set(cloudBlocks.map(c => c.id));
+      const localBlocks = await db.customBlocks.toArray();
+      for (const lb of localBlocks) {
+        if (lb.sync_pending === 0 && lb.id && !cloudIds.has(lb.id)) {
+          await db.customBlocks.delete(lb.id);
+        }
+      }
+    }
+  } catch (err) {
+    await logger.error('SyncManager', 'Error pruning deleted records', err);
+  }
 }
 
 export async function pruneRevisions(animalId: number): Promise<void> {
