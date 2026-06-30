@@ -5,6 +5,14 @@ import { logger } from './logger';
 
 let isSyncing = false;
 
+function dispatchSyncStatus(state: 'idle' | 'syncing' | 'success' | 'error', updated = false) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bmd-sync-status', { 
+      detail: { state, updated } 
+    }));
+  }
+}
+
 export async function syncWithCloud(): Promise<void> {
   if (!supabase) {
     console.log('Sync skipped: Supabase client is not configured.');
@@ -17,15 +25,34 @@ export async function syncWithCloud(): Promise<void> {
   }
 
   isSyncing = true;
+  dispatchSyncStatus('syncing');
+
   try {
     await logger.info('SyncManager', 'Starting synchronization cycle...');
     await pushLocalChanges();
+
+    // Check latest animal timestamp before pulling
+    const latestLocalAnimalBefore = await db.animals.orderBy('updated_at').last();
+    const lastAnimalTimeBefore = latestLocalAnimalBefore?.updated_at || '1970-01-01T00:00:00Z';
+
     await pullCloudChanges();
+
+    // Check latest animal timestamp after pulling
+    const latestLocalAnimalAfter = await db.animals.orderBy('updated_at').last();
+    const lastAnimalTimeAfter = latestLocalAnimalAfter?.updated_at || '1970-01-01T00:00:00Z';
+
+    const hasNewData = lastAnimalTimeAfter !== lastAnimalTimeBefore;
+
     await logger.info('SyncManager', 'Synchronization cycle completed successfully.');
+    dispatchSyncStatus('success', hasNewData);
   } catch (error) {
     await logger.error('SyncManager', 'Error during synchronization', error);
+    dispatchSyncStatus('error');
   } finally {
     isSyncing = false;
+    setTimeout(() => {
+      dispatchSyncStatus('idle');
+    }, 4000);
   }
 }
 

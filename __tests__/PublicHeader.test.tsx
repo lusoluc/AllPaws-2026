@@ -118,4 +118,29 @@ describe('PublicHeader Component', () => {
     expect(link2).not.toHaveClass('text-brandpink-600');
     expect(link3).not.toHaveClass('text-brandpink-600');
   });
+
+  test('Happy Path: Displays sync status badge when custom event is fired', () => {
+    render(<PublicHeader lang="DE" setLang={mockSetLang} />);
+
+    // Renders nothing initially
+    expect(screen.queryByText('Aktualisiere...')).not.toBeInTheDocument();
+
+    // 1. Dispatch "syncing" event
+    fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'syncing', updated: false } }));
+    expect(screen.getByText('Aktualisiere...')).toBeInTheDocument();
+
+    // 2. Dispatch "success" event without updates
+    fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'success', updated: false } }));
+    expect(screen.getByText('Daten aktuell')).toBeInTheDocument();
+    expect(screen.queryByText('Aktuelle Katzen-Infos wurden geladen!')).not.toBeInTheDocument();
+
+    // 3. Dispatch "success" event with updates
+    fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'success', updated: true } }));
+    expect(screen.getByText('Daten aktuell')).toBeInTheDocument();
+    expect(screen.getByText('Aktuelle Katzen-Infos wurden geladen!')).toBeInTheDocument();
+
+    // 4. Dispatch "error" event
+    fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'error', updated: false } }));
+    expect(screen.getByText('Offline-Modus')).toBeInTheDocument();
+  });
 });

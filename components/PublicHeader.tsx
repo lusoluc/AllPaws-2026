@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User } from 'lucide-react';
+import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 
 interface PublicHeaderProps {
@@ -14,6 +14,27 @@ interface PublicHeaderProps {
 export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    const handleSyncStatus = (e: Event) => {
+      const customEvent = e as CustomEvent<{ state: 'idle' | 'syncing' | 'success' | 'error'; updated: boolean }>;
+      if (customEvent.detail) {
+        setSyncStatus(customEvent.detail.state);
+        if (customEvent.detail.state === 'success' && customEvent.detail.updated) {
+          setShowToast(true);
+          const t = setTimeout(() => setShowToast(false), 5000);
+          return () => clearTimeout(t);
+        }
+      }
+    };
+
+    window.addEventListener('bmd-sync-status', handleSyncStatus);
+    return () => {
+      window.removeEventListener('bmd-sync-status', handleSyncStatus);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -82,36 +103,64 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
           ))}
         </nav>
 
-        {/* Action Controls (Right Desktop) */}
-        <div className="hidden md:flex items-center space-x-4">
-          {/* Language selection */}
-          <button 
+        {/* Right Actions & Menu Trigger Container */}
+        <div className="flex items-center space-x-3.5">
+          
+          {/* Sync Status Badge */}
+          {syncStatus !== 'idle' && (
+            <div className="animate-in fade-in zoom-in-95 duration-200">
+              {syncStatus === 'syncing' && (
+                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-stone-50 text-[10px] text-stone-500 font-semibold border border-stone-250/65 shadow-sm">
+                  <RefreshCw className="w-3.5 h-3.5 text-stone-400 animate-spin shrink-0" />
+                  <span className="hidden sm:inline-block ml-0.5">{lang === 'DE' ? 'Aktualisiere...' : 'Atnaujinama...'}</span>
+                </span>
+              )}
+              {syncStatus === 'success' && (
+                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-[10px] text-emerald-700 font-semibold border border-emerald-250/65 shadow-sm">
+                  <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="hidden sm:inline-block ml-0.5">{lang === 'DE' ? 'Daten aktuell' : 'Duomenys atnaujinti'}</span>
+                </span>
+              )}
+              {syncStatus === 'error' && (
+                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 text-[10px] text-rose-700 font-semibold border border-rose-250/65 shadow-sm">
+                  <CloudOff className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span className="hidden sm:inline-block ml-0.5">{lang === 'DE' ? 'Offline-Modus' : 'Neprisijungęs'}</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Action Controls (Right Desktop) */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Language selection */}
+            <button 
+              type="button"
+              onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-950 transition-all border border-stone-200 shadow-sm cursor-pointer"
+            >
+              <Globe className="w-3.5 h-3.5 text-brandpink-600 animate-pulse" />
+              <span>{lang}</span>
+            </button>
+
+            {/* Member Login Button */}
+            <Link 
+              href="/login" 
+              className="text-xs font-bold text-stone-700 hover:text-stone-950 hover:bg-stone-100/90 transition-all py-1.5 px-3.5 bg-stone-50/50 rounded-xl border border-stone-200 shadow-sm"
+            >
+              {lang === 'DE' ? 'Helfer-Portal' : 'Savanorių portalas'}
+            </Link>
+          </div>
+
+          {/* Mobile Burger Trigger */}
+          <button
             type="button"
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-950 transition-all border border-stone-200 shadow-sm cursor-pointer"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-1.5 rounded-xl text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
+            aria-label="Toggle navigation menu"
           >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600 animate-pulse" />
-            <span>{lang}</span>
+            {isMobileMenuOpen ? <X className="w-5.5 h-5.5" /> : <Menu className="w-5.5 h-5.5" />}
           </button>
-
-          {/* Member Login Button */}
-          <Link 
-            href="/login" 
-            className="text-xs font-bold text-stone-700 hover:text-stone-950 hover:bg-stone-100/90 transition-all py-1.5 px-3.5 bg-stone-50/50 rounded-xl border border-stone-200 shadow-sm"
-          >
-            {lang === 'DE' ? 'Helfer-Portal' : 'Savanorių portalas'}
-          </Link>
         </div>
-
-        {/* Mobile Burger Trigger */}
-        <button
-          type="button"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-1.5 rounded-xl text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
-          aria-label="Toggle navigation menu"
-        >
-          {isMobileMenuOpen ? <X className="w-5.5 h-5.5" /> : <Menu className="w-5.5 h-5.5" />}
-        </button>
 
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
@@ -193,6 +242,18 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
         )}
 
       </div>
+
+      {/* Toast Notification for new data sync */}
+      {showToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 backdrop-blur-md text-white text-xs font-semibold px-4.5 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 animate-in fade-in slide-in-from-bottom-4 duration-300 border border-stone-800">
+          <span className="text-base">🐾</span>
+          <span>
+            {lang === 'DE' 
+              ? 'Aktuelle Katzen-Infos wurden geladen!' 
+              : 'Įkelti naujausi kačių duomenys!'}
+          </span>
+        </div>
+      )}
     </header>
   );
 }
