@@ -43,7 +43,7 @@ export const APP_CONFIG = {
   app: {
     title: process.env.NEXT_PUBLIC_APP_TITLE || 'AllPaws Tierheim App',
     description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Mobile-First Tiererfassungs-App für Tierheime',
-    githubUrl: process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/lusoluc/katzen-app',
+    githubUrl: process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/lusoluc/AllPaws-2026',
     vercelUrl: process.env.NEXT_PUBLIC_VERCEL_URL || 'https://allpaws-app.vercel.app',
     
     // Developer credits: Hardcoded as requested by Carlos Lucas
