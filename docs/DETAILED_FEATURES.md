@@ -42,7 +42,7 @@ This document explains exactly how each feature in AllPaws-2026 works and how it
 *   **Real-Life Example**: *A supporter named Robert wants to help the shelter. He visits the About Us page and switches it to English. He sees that €25 pays for a vaccine and anti-flea protection, and €100 pays for indoor heating in winter. Feeling connected to the tangible cost, he copies the IBAN directly using a one-tap select action and transfers €50 to spay one cat. He knows exactly how his donation helps.*
 
 ### 8. Developer Test Suites (For Technical Volunteers)
-To keep the framework stable, AllPaws-2026 features **11 built-in Jest test suites** verifying **77 test points**. When you modify colors, names, or features, you can run tests to verify no bugs were introduced.
+To keep the framework stable, AllPaws-2026 features **12 built-in Jest test suites** verifying **84 test points**. When you modify colors, names, or features, you can run tests to verify no bugs were introduced.
 *   **How to run tests**:
     ```bash
     pnpm test
@@ -92,7 +92,7 @@ To keep the framework stable, AllPaws-2026 features **11 built-in Jest test suit
 *   **Praxisbeispiel**: *Spender Robert möchte helfen. Er öffnet die Spendenrubrik und sieht genau: 10 € ernähren eine Katze für eine Woche. 50 € ermöglichen die Kastration und den Chip für ein neues Patentier. Er kopiert die IBAN bequem per Klick und überweist 50 € mit dem Verwendungszweck „Kastrationshilfe“. Er fühlt sich sicher und weiß genau, was seine Spende bewirkt.*
 
 ### 8. Entwickler-Test-Suites (Für IT-Helfer)
-AllPaws-2026 enthält **11 Jest-Test-Suites mit 77 Testfällen**, die sicherstellen, dass die App stabil bleibt. Wenn Sie das Design oder Funktionen ändern, können Sie die Tests ausführen, um Fehler sofort aufzudecken.
+AllPaws-2026 enthält **12 Jest-Test-Suites mit 84 Testfällen**, die sicherstellen, dass die App stabil bleibt. Wenn Sie das Design oder Funktionen ändern, können Sie die Tests ausführen, um Fehler sofort aufzudecken.
 *   **Tests ausführen**:
     ```bash
     pnpm test
@@ -142,7 +142,7 @@ AllPaws-2026 enthält **11 Jest-Test-Suites mit 77 Testfällen**, die sicherstel
 *   **Tikras pavyzdys**: *Rėmėjas Robertas nori padėti prieglaudai. Jis atsidaro puslapį ir pamato lentelę: 10 € pamaitina vieną katę savaitei, o 100 € apmoka šildymą šaltą žiemą. Matydamas realią naudą, jis vienu paspaudimu nukopijuoja IBAN kodą ir perveda 50 € katės kastracijai. Robertas jaučiasi prisidėjęs prie konkretaus gyvybės gelbėjimo.*
 
 ### 8. Programuotojų testavimo sistema (IT savanoriams)
-Kad užtikrintų sistemos stabilumą, „AllPaws-2026“ turi **11 integruotų Jest testų rinkinių su 77 unikaliais testais**. Jei programuotojas keičia spalvas ar programėlės logiką, jis gali paleisti testus ir iškart pamatyti, ar kas nors nesugedo.
+Kad užtikrintų sistemos stabilumą, „AllPaws-2026“ turi **12 integruotų Jest testų rinkinių su 84 unikaliais testais**. Jei programuotojas keičia spalvas ar programėlės logiką, jis gali paleisti testus ir iškart pamatyti, ar kas nors nesugedo.
 *   **Kaip paleisti testus**:
     ```bash
     pnpm test

@@ -39,11 +39,12 @@ For complete, friendly guides on our vision, features, and examples, please expl
 
 To ensure reliability for every shelter that forks this repository, AllPaws-2026 comes with a comprehensive testing suite running on Jest. The test suites validate everything from IndexedDB offline storage to email newsletters and UI translation switches.
 
-Currently, the framework includes **11 test suites** validating **77 unique test scenarios**:
+Currently, the framework includes **12 test suites** validating **84 unique test scenarios**:
 *   `sync.test.tsx` - Tests background cloud sync queues and conflict resolution.
 *   `share.test.tsx` - Validates the dynamic canvas card generation and sharing strings.
 *   `login.test.tsx` - Validates the secure client-side password flow and developer mode.
 *   `public.test.tsx` - Tests the home page, bilingual translation switches, and CMS blocks.
+*   `PublicHeader.test.tsx` - Tests navigation tabs highlighting, language toggle callback, mobile drawer menu, and real-time database sync status badge.
 *   `gallery.test.tsx` - Tests search, filters, and animal cards rendering.
 *   `edit.test.tsx` & `create.test.tsx` - Tests draft saving, OPFS media storage, and validation.
 
