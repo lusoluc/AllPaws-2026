@@ -15,7 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
-import { APP_CONFIG } from '@/lib/appConfig';
+import PublicHeader from '@/components/PublicHeader';
 
 export default function UeberUnsPage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
@@ -32,7 +32,6 @@ export default function UeberUnsPage() {
   useEffect(() => {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
-
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
 
   const defaultUi = {
@@ -42,16 +41,16 @@ export default function UeberUnsPage() {
       homeLink: 'Startseite',
       galleryLink: 'Zur Katzen-Galerie',
       historyTitle: 'Unsere Geschichte: Ein Weg aus Liebe und Schweiß',
-      historyText1: 'Hinter unserem Tierheim steht kein reicher Großsponsor und kein staatliches Budget. Alles begann vor einigen Jahren, als Tierfreunde die Not der Straßentiere nicht mehr mitansehen konnten. Was als private Rettungsaktion im kleinen Kreis begann, ist zu einer permanenten Zuflucht angewachsen. Wir gehen täglich an unsere körperlichen und finanziellen Grenzen, um diesen wunderbaren Geschöpfen Schutz zu bieten.',
-      historyText2: 'Unser oberstes Ziel ist einfach, aber lebenswichtig: Jedes gerettete Tier soll spüren, dass es geliebt wird, während wir medizinische Notversorgung leisten und nach einem endgültigen Zuhause suchen. Wir arbeiten unermüdlich ehrenamtlich als Brücke ins neue Leben und vermitteln Adoptionen.',
+      historyText1: 'Hinter unserem Tierheim steht kein reicher Großsponsor und kein staatliches Budget. Alles begann im Jahr 2011, als Galina Kučinskienė die Not der Straßenkatzen in Klaipėda nicht mehr mitansehen konnte und die ersten verletzten Seelen bei sich aufnahm. Was als private Rettungsaktion im kleinen Kreis begann, ist über 13 Jahre hinweg zu einer permanenten Zuflucht für über 600 Hunde, Katzen und Wildtiere angewachsen. Wir gehen täglich an unsere körperlichen und finanziellen Grenzen, um diesen wunderbaren Geschöpfen Schutz zu bieten.',
+      historyText2: 'Unser oberstes Ziel ist einfach, aber lebenswichtig: Jedes gerettete Tier soll spüren, dass es geliebt wird, während wir medizinische Notversorgung leisten und nach einem endgültigen Zuhause suchen. Um den Katzen in Deutschland eine Stimme zu geben, arbeitet Žana Baskytė unermüdlich ehrenamtlich als Brücke ins neue Leben, vermittelt Adoptionen und organisiert lebensrettende Fahrten.',
       containerTitle: 'Das Container-Projekt 🐈',
       containerSubtitle: 'Gebaut mit unseren eigenen Händen',
-      containerText: 'Als der Platz im Tierheim nicht mehr reichte und wir Tiere hätten abweisen müssen, haben wir beschlossen zu kämpfen. Die Idee: Jedes Tier verdient ein sicheres Plätzchen. Mit privatem Schweiß, Spenden und der Hilfe von freiwilligen Helfern haben wir Räumlichkeiten isoliert, klimatisiert und gemütlich ausgestattet.',
+      containerText: 'Als der Platz im Tierheim nicht mehr reichte und wir Tiere hätten abweisen müssen, haben wir beschlossen zu kämpfen. Die Idee: Ausgediente Überseecontainer zu Katzenparadiesen umzubauen. Mit privatem Schweiß, Spenden und der Hilfe von freiwilligen Handwerkern haben wir Container isoliert, klimatisiert und mit Kletterwänden, Kuschelecken und Spielzonen ausgestattet. Heute finden hier über 360 Katzen Schutz vor Frost und Hunger in gemütlichen Gruppen.',
       teamTitle: 'Das Team vor Ort & International',
-      galinaTitle: APP_CONFIG.shelter.representatives[0].name,
-      galinaDesc: APP_CONFIG.shelter.representatives[0].roleDe,
-      zanaTitle: APP_CONFIG.shelter.representatives[1].name,
-      zanaDesc: APP_CONFIG.shelter.representatives[1].roleDe,
+      galinaTitle: 'Galina Kučinskienė',
+      galinaDesc: 'Gründerin & Seele des Tierheims. Koordiniert die tägliche Rettungsarbeit, Tierarztbesuche und das Pfleger-Team in Litauen unermüdlich vor Ort.',
+      zanaTitle: 'Zana Baskyte',
+      zanaDesc: 'Internationale Vermittlung & Herzensbrücke. Ansprechpartnerin für alle Adoptionsanfragen aus Deutschland, Österreich und der Schweiz.',
       contactDe: 'Deutscher Support E-Mail',
       contactLt: 'Litauen E-Mail',
       regCode: 'Registrierungscode',
@@ -69,16 +68,16 @@ export default function UeberUnsPage() {
       homeLink: 'Pradžia',
       galleryLink: 'Kačių galerija',
       historyTitle: 'Mūsų istorija: kelias, grįstas meile ir rūpesčiu',
-      historyText1: 'Už mūsų prieglaudos stovi ne turtingi rėmėjai ar valstybės biudžetas. Viskas prasidėjo, kai gyvūnų mylėtojai priglaudė pirmuosiuos sužeistus gyvūnus. Tai, kas prasidėjo kaip nedidelė gelbėjimo akcija, išaugo į nuolatinį prieglobstį. Kiekvieną dieną mes atiduodame paskutines savo jėgas ir asmenines lėšas, kad apsaugotume šias nuostabias sielas.',
-      historyText2: 'Mūsų pagrindinis tikslas paprastas, bet gyvybiškai svarbus: kiekviena išgelbėta siela turi pajusti, kad yra mylima, kol mes suteikiame skubią pagalbą ir ieškome jai tikrųjų namų. Mes nenuilstamai savanoriaujame padėdami rasti namus ir organizuodami keliones.',
+      historyText1: 'Už mūsų prieglaudos stovi ne turtingi rėmėjai ar valstybės biudžetas. Viskas prasidėjo 2011 metais, kai Galina Kučinskienė nebegalėjo žiūrėti į Klaipėdos gatvės kačių kančias ir priglaudė pirmuosiuos sužeistus gyvūnus savo namuose. Tai, kas prasidėjo kaip nedidelė gelbėjimo akcija, per 13 metų išaugo į nuolatinį prieglobstį daugiau nei 600 šunų, kačių ir laukinių gyvūnų. Kiekvieną dieną mes atiduodame paskutines savo jėgas ir asmenines lėšas, kad apsaugotume šias nuostabias sielas.',
+      historyText2: 'Mūsų pagrindinis tikslas paprastas, bet gyvybiškai svarbus: kiekviena išgelbėta siela turi pajusti, kad yra mylima, kol mes suteikiame skubią pagalbą ir ieškome jai tikrųjų namų. Kad suteiktų katėms balsą užsienyje, Žana Baskytė nenuilstamai savanoriauja kaip tiltas į naują gyvenimą, padėdama rasti namus Vokietijoje ir organizuodama keliones.',
       containerTitle: 'Konteinerių projektas 🐈',
       containerSubtitle: 'Pastatyta mūsų pačių rankomis',
-      containerText: 'Kai prieglaudoje pritrūko vietos, nusprendėme kovoti. Kilusi idėja: kiekvienas gyvūnas nusipelno saugios vietos. Savo rankomis, savanorių pagalba ir asmeninėmis lėšomis apšiltinome patalpas, įrengėme oro kondicionavimą ir jaukius guolius.',
+      containerText: 'Kai prieglaudoje pritrūko vietos ir būtume turėję atsisakyti priimti gyvūnus, nusprendėme kovoti. Kilusi idėja: paversti senus jūrinius konteinerius kačių rojumi. Savo rankomis, savanorių pagalba ir asmeninėmis lėšomis apšiltinome konteinerius, įrengėme oro kondicionavimą, laipiojimo sieneles ir jaukius guolius. Šiandien čia saugų prieglobstį randa per 360 kačių.',
       teamTitle: 'Vietinė ir tarptautinė komanda',
-      galinaTitle: APP_CONFIG.shelter.representatives[0].name,
-      galinaDesc: APP_CONFIG.shelter.representatives[0].roleLt,
-      zanaTitle: APP_CONFIG.shelter.representatives[1].name,
-      zanaDesc: APP_CONFIG.shelter.representatives[1].roleLt,
+      galinaTitle: 'Galina Kučinskienė',
+      galinaDesc: 'Prieglaudos įkūrėja ir vadovė. Koordinuoja kasdienį gelbėjimo darbą, vizitus pas veterinarijos gydytojus bei prieglaudos darbuotojus Lietuvoje.',
+      zanaTitle: 'Zana Baskyte',
+      zanaDesc: 'Tarptautinis bendradarbiavimas ir parama Vokietijoje. Atsakinga už gyvūnų globos užklausas iš Vokietijos, Austrijos ir Šveicarijos.',
       contactDe: 'Vokietijos paramos el. paštas',
       contactLt: 'Lietuvos el. paštas',
       regCode: 'Įmonės kodas',
@@ -114,47 +113,7 @@ export default function UeberUnsPage() {
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       
       {/* Header */}
-      <header className="px-4 py-4 bg-white/80 border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center space-x-2">
-          {APP_CONFIG.theme.logoType === 'image' ? (
-            <img src={APP_CONFIG.theme.logoImage} alt="Logo" className="w-8 h-8 object-contain" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-brandpink-500 flex items-center justify-center shadow-md shadow-brandpink-500/10">
-              <CatHeartLogo className="w-5 h-5 text-white" />
-            </div>
-          )}
-          <div>
-            <NextLink href="/" className="font-bold text-sm tracking-wide bg-gradient-to-r from-brandpink-600 to-emerald-600 bg-clip-text text-transparent">
-              {APP_CONFIG.theme.logoText}
-            </NextLink>
-            <span className="text-[9px] text-stone-500 block">{APP_CONFIG.shelter.locationShort}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-          >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-            <span>{lang}</span>
-          </button>
-
-          <NextLink
-            href="/katzen-ratgeber"
-            className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            {lang === 'DE' ? 'Ratgeber' : 'Gidas'}
-          </NextLink>
-          
-          <NextLink
-            href="/katzen"
-            className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-semibold border border-stone-200 transition-colors"
-          >
-            {ui.galleryLink}
-          </NextLink>
-        </div>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       {/* Main Content */}
       <main className="flex-1 max-w-2xl mx-auto w-full p-4 space-y-8 pb-16">
@@ -181,7 +140,7 @@ export default function UeberUnsPage() {
           {/* Documentary Photo of Crowded Shelter Cages */}
           <div className="space-y-2 pt-2">
             <span className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold block">
-              {lang === 'DE' ? 'Die Realität vor Ort: Viele Tiere warten auf Hilfe' : 'Realybė prieglaudoje: daug gyvūnų laukia pagalbos'}
+              {lang === 'DE' ? 'Die Realität vor Ort: Über 600 Tiere warten auf Hilfe' : 'Realybė prieglaudoje: virš 600 gyvūnų laukia pagalbos'}
             </span>
             <div className="aspect-[16/9] w-full rounded-xl overflow-hidden border border-stone-200 shadow-inner bg-stone-50">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -193,8 +152,8 @@ export default function UeberUnsPage() {
             </div>
             <p className="text-[10px] text-stone-500 italic leading-normal">
               {lang === 'DE' 
-                ? 'Aktuelle Situation: Aufgrund akuter räumlicher Notlagen müssen viele gerettete Katzen vorübergehend in Käfigen untergebracht werden, bis Platz frei wird oder sie ein Zuhause finden.' 
-                : 'Šiuo metu dėl didelio vietos trūkumo kai kurios išgelbėtos katės prieglaudoje laikinai laikomos narvuose, kol atsilaisvina erdvė.'
+                ? 'Aktuelle Situation: Aufgrund akuter räumlicher Notlagen müssen viele gerettete Katzen vorübergehend in Käfigen untergebracht werden, bis Platz in den Containern frei wird oder sie ein Zuhause finden.' 
+                : 'Šiuo metu dėl didelio vietos trūkumo kai kurios išgelbėtos katės prieglaudoje laikinai laikomos narvuose, kol atsilaisvina erdvė konteineriuose.'
               }
             </p>
           </div>
@@ -228,7 +187,7 @@ export default function UeberUnsPage() {
               <div>
                 <h3 className="text-sm font-bold text-stone-900">{ui.galinaTitle}</h3>
                 <span className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider block mt-0.5">
-                  {lang === 'DE' ? 'Leitung' : 'Vadovas'}
+                  {lang === 'DE' ? 'Gründerin' : 'Įkūrėja'}
                 </span>
                 <p className="text-xs text-stone-600 mt-2.5 leading-relaxed font-light">
                   {ui.galinaDesc}
@@ -236,7 +195,7 @@ export default function UeberUnsPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-stone-200 text-[10px] text-stone-500">
                 <span className="block font-bold">{ui.contactLt}</span>
-                <span className="text-stone-600">{shelter?.emailLt || APP_CONFIG.shelter.emailLt}</span>
+                <span className="text-stone-600">{shelter?.emailLt || 'bukmanodraugas@inbox.lt'}</span>
               </div>
             </div>
 
@@ -245,7 +204,7 @@ export default function UeberUnsPage() {
               <div>
                 <h3 className="text-sm font-bold text-stone-900">{ui.zanaTitle}</h3>
                 <span className="text-[10px] text-brandpink-600 font-semibold uppercase tracking-wider block mt-0.5">
-                  {lang === 'DE' ? 'Auslands-Vermittlung' : 'Tarptautinis bendradarbiavimas'}
+                  {lang === 'DE' ? 'Auslands-Vermittlung' : 'Tarptautinė parama'}
                 </span>
                 <p className="text-xs text-stone-600 mt-2.5 leading-relaxed font-light">
                   {ui.zanaDesc}
@@ -253,7 +212,7 @@ export default function UeberUnsPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-stone-200 text-[10px] text-stone-500">
                 <span className="block font-bold">{ui.contactDe}</span>
-                <span className="text-stone-600">{shelter?.emailDe || APP_CONFIG.shelter.emailDe}</span>
+                <span className="text-stone-600">{shelter?.emailDe || 'Tierheimbmg@gmail.com'}</span>
               </div>
             </div>
           </div>
@@ -290,7 +249,7 @@ export default function UeberUnsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-800 font-bold">🔥 100 €</span>
-                <span className="text-stone-600 font-light">{lang === 'DE' ? '1 Monat Raumheizung im kalten Winter' : '1 mėnuo patalpų šildymo šaltą žiemą'}</span>
+                <span className="text-stone-600 font-light">{lang === 'DE' ? '1 Monat Container-Heizung im kalten Winter' : '1 mėnuo konteinerio šildymo šaltą žiemą'}</span>
               </div>
             </div>
           </div>
@@ -299,24 +258,24 @@ export default function UeberUnsPage() {
             {/* Swedbank info */}
             <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 space-y-2.5 text-xs font-mono">
               <span className="font-bold text-stone-500 block font-sans text-[10px] uppercase tracking-wider">
-                Bankverbindung
+                Bankverbindung (Swedbank)
               </span>
               <div className="grid grid-cols-2 gap-2 text-stone-600">
                 <div>
                   <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.bankName}</span>
-                  <span className="text-stone-700">{shelter?.bankName || APP_CONFIG.shelter.bankName}</span>
+                  <span className="text-stone-700">{shelter?.bankName || 'Swedbank'}</span>
                 </div>
                 <div>
                   <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.bic}</span>
-                  <span className="text-stone-700">{shelter?.bic || APP_CONFIG.shelter.bic}</span>
+                  <span className="text-stone-700">{shelter?.bic || 'HABALT22'}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.iban}</span>
-                  <span className="text-stone-900 select-all text-sm">{shelter?.iban || APP_CONFIG.shelter.iban}</span>
+                  <span className="text-stone-900 select-all text-sm">{shelter?.iban || 'LT97 7300 0101 2750 0736'}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.purpose}</span>
-                  <span className="text-stone-700 font-sans">{shelter?.donationPurposeDe || APP_CONFIG.shelter.donationPurposeDe}</span>
+                  <span className="text-stone-700 font-sans">{shelter?.donationPurposeDe || 'Donate Germany'}</span>
                 </div>
               </div>
             </div>
@@ -326,11 +285,11 @@ export default function UeberUnsPage() {
               <div className="bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs">
                 <span className="text-[9px] text-stone-500 font-bold block uppercase tracking-wider mb-0.5">PayPal</span>
                 <a 
-                  href={`https://www.paypal.com/donate/?business=${shelter?.paypalEmail || APP_CONFIG.shelter.paypalEmail}`}
+                  href={`https://www.paypal.com/donate/?business=${shelter?.paypalEmail || 'bukmanodraugas@inbox.lt'}`}
                   target="_blank" 
                   className="text-brandpink-600 font-mono hover:text-brandpink-700 truncate block mt-1"
                 >
-                  {shelter?.paypalEmail || APP_CONFIG.shelter.paypalEmail}
+                  {shelter?.paypalEmail || 'bukmanodraugas@inbox.lt'}
                 </a>
               </div>
               <div className="bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs">
@@ -338,7 +297,7 @@ export default function UeberUnsPage() {
                   {ui.regCode}
                 </span>
                 <span className="text-stone-700 font-mono block mt-1">
-                  {shelter?.code || APP_CONFIG.shelter.code}
+                  {shelter?.code || '302639996'}
                 </span>
               </div>
             </div>
@@ -386,16 +345,16 @@ export default function UeberUnsPage() {
 
       {/* Footer */}
       <footer className="py-6 border-t border-stone-200 text-center text-xs text-stone-500 bg-stone-100/60">
-        <p>© 2026 {APP_CONFIG.shelter.name}. {APP_CONFIG.shelter.locationShort}.</p>
+        <p>© 2026 VšĮ &quot;Būk mano draugas&quot;. Kaukėnų g. 9, Glaudėnai, Litauen.</p>
         <p className="mt-2">
           {lang === 'DE' ? 'App entwickelt mit ❤️ von' : 'Programėlę su ❤️ sukūrė'}{' '}
           <a
-            href={APP_CONFIG.app.developerUrl}
+            href="https://www.linkedin.com/in/director-it-development/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brandpink-600 hover:text-brandpink-700 font-semibold hover:underline"
           >
-            {APP_CONFIG.app.developerName}
+            Carlos Lucas
           </a>
         </p>
         <div className="mt-2 flex items-center justify-center space-x-3">

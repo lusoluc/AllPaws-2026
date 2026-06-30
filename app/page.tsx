@@ -4,11 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Eye, Globe, ShieldCheck, HeartHandshake, BookOpen, Mail, CheckCircle2 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import PublicHeader from '@/components/PublicHeader';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { syncWithCloud } from '@/lib/syncManager';
-import { APP_CONFIG } from '@/lib/appConfig';
-
 
 export default function HomePage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
@@ -35,7 +34,7 @@ export default function HomePage() {
     DE: {
       heroTag: '🐾 Ein privates Herzensprojekt von Tierfreunden',
       title: 'Weil jede Pfote ein weiches Körbchen verdient',
-      subtitle: 'Hinter dieser App steckt kein großes Unternehmen. Wir sind ein kleines Team aus ehrenamtlichen Helfern und Katzenliebhabern, die jede freie Minute und eigenes Geld spenden. Wir wollen der Tierrettung helfen, Zeit zu sparen – Zeit, die zu 100 % den Tieren zugutekommt. Finde heute deinen neuen treuen Begleiter oder unterstütze unsere Rettungsarbeit!',
+      subtitle: 'Hinter dieser App steckt kein großes Unternehmen. Wir sind ein kleines Team aus ehrenamtlichen Helfern und Katzenliebhabern, die jede freie Minute und eigenes Geld spenden. Wir wollen der Tierrettung in Litauen helfen, Zeit zu sparen – Zeit, die zu 100 % den Tieren zugutekommt. Finde heute deinen neuen treuen Begleiter oder unterstütze unsere Rettungsarbeit!',
       ctaGalleryTitle: 'Unsere Schützlinge',
       ctaGalleryDesc: 'Triff unsere liebenswerten Samtpfoten, die sehnsüchtig auf eine zweite Chance und ein liebevolles Zuhause warten.',
       ctaGalleryBtn: 'Werd Teil der Rettungscrew',
@@ -46,14 +45,14 @@ export default function HomePage() {
       ctaGuideDesc: 'Ehrliche, praktische Ratschläge für ein harmonisches Zusammenleben, von der Eingewöhnung bis zum Spielverhalten.',
       ctaGuideBtn: 'Ratgeber lesen',
       memberLogin: 'Helfer-Portal',
-      footerText: `© 2026 ${APP_CONFIG.shelter.name}. ${APP_CONFIG.shelter.address}.`,
+      footerText: '© 2026 VšĮ "Būk mano draugas". Kaukėnų g. 9, Glaudėnai, Litauen.',
       regCode: 'Registrierungscode',
       visionTitle: 'Unsere Vision: Ein liebevolles Zuhause',
       realityTitle: 'Die Realität vor Ort: Leben im Käfig',
-      realityNote: 'Aufgrund extremer räumlicher Notlagen müssen viele unserer geretteten Katzen vorübergehend in Käfigen leben. Unterstütze uns durch eine Adoption oder Spende, um ihnen den Weg in eine bessere Zukunft zu ermöglichen.',
+      realityNote: 'Aufgrund extremer räumlicher Notlagen müssen viele unserer 600 geretteten Katzen vorübergehend in Käfigen leben. Unterstütze uns durch eine Adoption oder Spende, um ihnen den Weg in eine bessere Zukunft zu ermöglichen.',
       guideLink: 'Katzen-Ratgeber',
       storyTitle: 'Aus dem Tagebuch unserer Helfer: Mimis große Reise 🐾',
-      storyText: 'Mimi wurde klitschnass und zitternd vor Kälte in einem Graben gefunden. Sie wog kaum ein Kilo und hatte die Hoffnung schon aufgegeben. In unserem beheizten Rettungs-Container fand sie Schutz, Futter und die nötige Liebe, um wieder zu vertrauen. Heute ist Mimi gesund, verspielt und sucht Menschen, die ihr ein echtes Zuhause schenken wollen. Es sind Geschichten wie diese, für die wir alles geben.',
+      storyText: 'Mimi wurde klitschnass und zitternd vor Kälte in einem Graben bei Klaipėda gefunden. Sie wog kaum ein Kilo und hatte die Hoffnung schon aufgegeben. In unserem beheizten Rettungs-Container fand sie Schutz, Futter und die nötige Liebe, um wieder zu vertrauen. Heute ist Mimi gesund, verspielt und sucht Menschen, die ihr ein echtes Zuhause schenken wollen. Es sind Geschichten wie diese, für die wir alles geben.',
       newsletterTitle: 'Bleib auf dem Laufenden 🐾',
       newsletterDesc: 'Du willst wissen, wenn neue Fellnasen ankommen, wann die nächste Hilfsaktion startet oder einfach mal ehrliche Tipps aus dem Katzen-Alltag bekommen? Dann trag dich ein – wir melden uns nur, wenn es wirklich was zu erzählen gibt.',
       newsletterEmail: 'Deine E-Mail-Adresse',
@@ -70,7 +69,7 @@ export default function HomePage() {
     LT: {
       heroTag: '🐾 Asmeninis gyvūnų mylėtojų širdies projektas',
       title: 'Nes kiekviena pėdutė nusipelno mylinčių namų',
-      subtitle: 'Šią programėlę sukūrė ne įmonė, o nedidelė savanorių ir kačių mylėtojų komanda, aukojanti savo laisvą laiką ir asmenines lėšas. Mūsų tikslas – palengvinti prieglaudos darbą, kad daugiau laiko liktų kačių priežiūrai ir gelbėjimui. Raskite savo naują šeimos narį arba prisidėkite prie mūsų veiklos!',
+      subtitle: 'Šią programėlę sukūrė ne įmonė, o nedidelė savanorių ir kačių mylėtojų komanda, aukojanti savo laisvą laiką ir asmenines lėšas. Mūsų tikslas – palengvinti prieglaudos darbą Lietuvoje, kad daugiau laiko liktų kačių priežiūrai ir gelbėjimui. Raskite savo naują šeimos narį arba prisidėkite prie mūsų veiklos!',
       ctaGalleryTitle: 'Mūsų globotiniai',
       ctaGalleryDesc: 'Susipažinkite su mūsų katėmis, kurios nekantriai ieško antrojo šanso ir šiltų bei mylinčių namų.',
       ctaGalleryBtn: 'Prisijunk prie gelbėtojų',
@@ -81,14 +80,14 @@ export default function HomePage() {
       ctaGuideDesc: 'Nuoširdūs, praktiški patarimai darniam gyvenimui kartu – nuo pripratinimo iki elgsenos sprendimų.',
       ctaGuideBtn: 'Skaityti gidą',
       memberLogin: 'Savanorių portalas',
-      footerText: `© 2026 ${APP_CONFIG.shelter.name}. ${APP_CONFIG.shelter.address}.`,
+      footerText: '© 2026 VšĮ „Būk mano draugas“. Kaukėnų g. 9, Glaudėnai, Lietuva.',
       regCode: 'Įmonės kodas',
       visionTitle: 'Mūsų vizija: Mylintys namai',
       realityTitle: 'Realybė prieglaudoje: Gyvenimas narvuose',
-      realityNote: 'Dėl didelio vietos trūkumo daugelis iš išgelbėtų kačių laikinai gyvena narvuose. Paremkite mus arba priglauskite katę, kad suteiktumėte joms geresnį rytojų.',
+      realityNote: 'Dėl didelio vietos trūkumo daugelis iš 600 išgelbėtų kačių laikinai gyvena narvuose. Paremkite mus arba priglauskite katę, kad suteiktumėte joms geresnį rytojų.',
       guideLink: 'Kačių gidas',
       storyTitle: 'Iš mūsų savanorių dienoraščio: Didžioji Mimi kelionė 🐾',
-      storyText: 'Mimi buvo rasta visiškai šlapia ir drebanti nuo šalčio griovyje. Ji svėrė vos kilogramą ir jau buvo praradusi viltį. Mūsų šildomame konteineryje ji rado prieglobstį, maistą ir meilę, kad vėl pradėtų pasitikėti. Šiandien Mimi yra sveika, žaisminga ir ieško žmonių, kurie suteiktų jai tikrus namus. Būtent dėl tokių istorijų mes aukojame kiekvieną savo laisvą minutę.',
+      storyText: 'Mimi buvo rasta visiškai šlapia ir drebanti nuo šalčio griovyje netoli Klaipėdos. Ji svėrė vos kilogramą ir jau buvo praradusi viltį. Mūsų šildomame konteineryje ji rado prieglobstį, maistą ir meilę, kad vėl pradėtų pasitikėti. Šiandien Mimi yra sveika, žaisminga ir ieško žmonių, kurie suteiktų jai tikrus namus. Būtent dėl tokių istorijų mes aukojame kiekvieną savo laisvą minutę.',
       newsletterTitle: 'Būk su mumis 🐾',
       newsletterDesc: 'Nori sužinoti, kai į prieglaudą atvyksta nauji gyventojai, kada vyks kita akcija ar tiesiog gauti patarimų apie kačių priežiūrą? Užsiregistruok – rašysime tik tada, kai tikrai bus ką papasakoti.',
       newsletterEmail: 'Tavo el. paštas',
@@ -126,41 +125,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       {/* Header */}
-      <header className="px-6 py-4 flex justify-between items-center border-b border-stone-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center space-x-2">
-          {APP_CONFIG.theme.logoType === 'image' ? (
-            <img src={APP_CONFIG.theme.logoImage} alt="Logo" className="w-8 h-8 object-contain" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-brandpink-500 flex items-center justify-center shadow-md shadow-brandpink-500/10">
-              <CatHeartLogo className="w-5 h-5 text-white" />
-            </div>
-          )}
-          <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-brandpink-600 to-emerald-600 bg-clip-text text-transparent">
-            {APP_CONFIG.theme.logoText}
-          </span>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Link 
-            href="/katzen-ratgeber"
-            className="text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors"
-          >
-            {ui.guideLink}
-          </Link>
-          <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-          >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-            <span>{lang}</span>
-          </button>
-          <Link 
-            href="/login" 
-            className="text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors py-1.5 px-2.5 bg-stone-100/40 rounded-lg border border-stone-200/80"
-          >
-            {ui.memberLogin}
-          </Link>
-        </div>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       {/* Hero & Mascot Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 max-w-4xl mx-auto space-y-10">
@@ -479,16 +444,16 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-6 border-t border-stone-200/80 text-center text-xs text-stone-500 bg-stone-100/40">
         <p>{ui.footerText}</p>
-        <p className="mt-1">{ui.regCode}: {APP_CONFIG.shelter.code}</p>
+        <p className="mt-1">{ui.regCode}: 302639996</p>
         <p className="mt-2">
           {ui.authorCredit}{' '}
           <a
-            href={APP_CONFIG.app.developerUrl}
+            href="https://www.linkedin.com/in/director-it-development/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brandpink-600 hover:text-brandpink-700 font-semibold hover:underline"
           >
-            {APP_CONFIG.app.developerName}
+            Carlos Lucas
           </a>
         </p>
         <p className="mt-2">

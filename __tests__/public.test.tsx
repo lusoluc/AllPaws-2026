@@ -1,18 +1,17 @@
+jest.mock('next/navigation', () => ({
+  __esModule: true,
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: () => null,
+  }),
+  usePathname: () => '/',
+}));
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import HomePage from '@/app/page';
 import UeberUnsPage from '@/app/ueber-uns/page';
 import CatGuidePage from '@/app/katzen-ratgeber/page';
-
-// Mock next/navigation
-jest.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: jest.fn(),
-      prefetch: () => null,
-    };
-  },
-}));
 
 // Mock shelter data
 const mockShelter = {
@@ -66,7 +65,7 @@ describe('HomePage Rendering & Translation', () => {
     // Default language is German (DE)
     expect(screen.getByText('Unsere Schützlinge')).toBeInTheDocument();
     expect(screen.getByText('Katzen-Ratgeber & FAQ')).toBeInTheDocument();
-    expect(screen.getByText('Über uns & Spenden')).toBeInTheDocument();
+    expect(screen.getAllByText('Über uns & Spenden')[0]).toBeInTheDocument();
     expect(screen.getByText(/Unsere Vision: Ein liebevolles Zuhause/)).toBeInTheDocument();
     expect(screen.getByText(/Die Realität vor Ort: Leben im Käfig/)).toBeInTheDocument();
     

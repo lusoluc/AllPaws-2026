@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import PublicHeader from '@/components/PublicHeader';
 
 type Category = 'all' | 'behavior' | 'bodyLanguage' | 'nutrition' | 'safety' | 'problems';
 
@@ -128,36 +129,7 @@ export default function KatzenRatgeberPage() {
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       
       {/* Header */}
-      <header className="px-4 py-4 bg-white/80 border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-brandpink-500 flex items-center justify-center shadow-md shadow-brandpink-500/10">
-            <CatHeartLogo className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <NextLink href="/" className="font-bold text-sm tracking-wide bg-gradient-to-r from-brandpink-600 to-emerald-600 bg-clip-text text-transparent">
-              Būk mano draugas
-            </NextLink>
-            <span className="text-[9px] text-stone-500 block">Klaipėdos raj., Litauen</span>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-          >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-            <span>{lang}</span>
-          </button>
-          
-          <NextLink
-            href="/katzen"
-            className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-semibold border border-stone-200 transition-colors"
-          >
-            {ui.galleryLink}
-          </NextLink>
-        </div>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       {/* Main Content */}
       <main className="flex-1 max-w-2xl mx-auto w-full p-4 space-y-6 pb-16">

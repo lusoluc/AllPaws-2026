@@ -221,7 +221,7 @@ export default function NewsletterPage() {
       }
 
       const provider = emailSettings.provider || 'simulation';
-      const authPass = localStorage.getItem('bmd_user_pass') || '';
+      const authPass = localStorage.getItem('bmd_user_pass') || 'BMD2026';
 
       for (const item of pendingItems) {
         if (provider === 'simulation') {

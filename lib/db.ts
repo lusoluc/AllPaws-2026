@@ -1,6 +1,4 @@
 import Dexie, { type Table } from 'dexie';
-import { APP_CONFIG } from './appConfig';
-
 
 export interface Shelter {
   id?: number;
@@ -299,20 +297,20 @@ export async function seedDatabase() {
   const shelterCount = await db.shelters.count();
   if (shelterCount === 0) {
     await db.shelters.add({
-      name: APP_CONFIG.shelter.name,
-      code: APP_CONFIG.shelter.code,
-      address: APP_CONFIG.shelter.address,
-      gpsLatitude: APP_CONFIG.shelter.gpsLatitude,
-      gpsLongitude: APP_CONFIG.shelter.gpsLongitude,
-      phone: APP_CONFIG.shelter.phone,
-      emailLt: APP_CONFIG.shelter.emailLt,
-      emailDe: APP_CONFIG.shelter.emailDe,
-      bankName: APP_CONFIG.shelter.bankName,
-      bic: APP_CONFIG.shelter.bic,
-      iban: APP_CONFIG.shelter.iban,
-      donationPurposeDe: APP_CONFIG.shelter.donationPurposeDe,
-      paypalEmail: APP_CONFIG.shelter.paypalEmail,
-      wishlistUrl: APP_CONFIG.shelter.wishlistUrl,
+      name: 'VšĮ "Būk mano draugas"',
+      code: '302639996',
+      address: 'Kaukėnų g. 9, LT-92336 Glaudėnai (Klaipėda raj., Sendvario sen.), Litauen',
+      gpsLatitude: 55.787364,
+      gpsLongitude: 21.152453,
+      phone: '+370 614 36617',
+      emailLt: 'bukmanodraugas@inbox.lt',
+      emailDe: 'Tierheimbmg@gmail.com',
+      bankName: 'Swedbank',
+      bic: 'HABALT22',
+      iban: 'LT97 7300 0101 2750 0736',
+      donationPurposeDe: 'Donate Germany',
+      paypalEmail: 'bukmanodraugas@inbox.lt',
+      wishlistUrl: 'https://bukmanodraugas.lt/en/wishlist',
       sync_pending: 0,
       updated_at: new Date().toISOString()
     });

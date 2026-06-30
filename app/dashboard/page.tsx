@@ -6,8 +6,6 @@ import Link from 'next/link';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, Animal, formatAge } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { APP_CONFIG } from '@/lib/appConfig';
-
 import { syncWithCloud } from '@/lib/syncManager';
 import SharePanel from '@/components/SharePanel';
 // ... existing lucide-react imports ...
@@ -167,7 +165,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <h1 className="font-bold text-sm tracking-wide text-stone-850">{ui.title}</h1>
-            <p className="text-[10px] text-stone-500">{shelter?.name || APP_CONFIG.shelter.name}</p>
+            <p className="text-[10px] text-stone-500">{shelter?.name || 'VšĮ "Būk mano draugas"'}</p>
           </div>
         </div>
 

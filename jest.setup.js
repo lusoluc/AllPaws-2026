@@ -20,3 +20,15 @@ jest.mock('@/lib/logger', () => ({
     error: jest.fn(),
   },
 }));
+
+// Mock next/navigation globally
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));

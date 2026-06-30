@@ -20,6 +20,7 @@ import {
   Video
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import PublicHeader from '@/components/PublicHeader';
 
 export default function PublicGalleryPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,50 +123,7 @@ export default function PublicGalleryPage() {
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       
       {/* Public Header */}
-      <header className="px-4 py-4 bg-white/80 border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-brandpink-500 flex items-center justify-center shadow-md shadow-brandpink-500/10">
-            <CatHeartLogo className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <NextLink href="/" className="font-bold text-sm tracking-wide bg-gradient-to-r from-brandpink-600 to-emerald-600 bg-clip-text text-transparent block">
-              Būk mano draugas
-            </NextLink>
-            <span className="text-[9px] text-stone-500 block">{shelter?.address.split(',')[0]} (Litauen)</span>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-          >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-            <span>{lang}</span>
-          </button>
-
-          <NextLink
-            href="/katzen-ratgeber"
-            className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            {lang === 'DE' ? 'Ratgeber' : 'Gidas'}
-          </NextLink>
-          
-          <NextLink
-            href="/ueber-uns"
-            className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Über Uns
-          </NextLink>
-          
-          <NextLink
-            href="/login"
-            className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Team-Login
-          </NextLink>
-        </div>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       {/* Stats Board */}
       <div className="mx-4 mt-4 bg-white border border-stone-200 shadow-sm rounded-xl p-3 flex flex-col sm:flex-row justify-around items-center space-y-1 sm:space-y-0 text-xs text-stone-600">

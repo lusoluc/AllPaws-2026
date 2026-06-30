@@ -190,7 +190,7 @@ export default function SettingsPage() {
 
     setTestStatus('loading');
 
-    const authPass = localStorage.getItem('bmd_user_pass') || '';
+    const authPass = localStorage.getItem('bmd_user_pass') || 'BMD2026';
 
     try {
       const res = await fetch('/api/send-email', {

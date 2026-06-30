@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Animal, formatAge } from '@/lib/db';
-import { APP_CONFIG } from '@/lib/appConfig';
 import { 
   Share2, 
   Copy, 
@@ -44,9 +43,9 @@ export default function SharePanel({ animal, onClose }: SharePanelProps) {
     if (lang === 'DE') {
       return `🐈 ICH SUCHE DICH! MEIN NAME IST ${animal.name} 🐾
 
-Hallo... hörst du mich? Ich sitze im Tierheim und hoffe so sehr, dass mich jemand sieht. Ich bin ${formatAge(animal, 'DE')} alt und bereit, mein ganzes Katzenherz zu verschenken.
+Hallo... hörst du mich? Ich sitze im Tierheim in Litauen und hoffe so sehr, dass mich jemand sieht. Ich bin ${formatAge(animal, 'DE')} alt und bereit, mein ganzes Katzenherz zu verschenken.
 
-📍 Mein aktueller Aufenthaltsort: ${APP_CONFIG.shelter.name} (${APP_CONFIG.shelter.locationShort})
+📍 Mein aktueller Aufenthaltsort: VšĮ "Būk mano draugas" (Klaipėda, Litauen)
 ${traitsLineDe ? `\n✨ ${traitsLineDe}` : ''}
 🩺 Mein Gesundheits-Check:
 ${medicalDe}
@@ -55,15 +54,15 @@ ${medicalDe}
 "${animal.reason_for_shelter || 'Ich wurde auf der Straße gefunden und warte nun voller Hoffnung im Tierheim.'}"
 
 Wer schenkt mir ein warmes Plätzchen und ganz viel Liebe? 🏡 Bitte teilt meinen Beitrag, damit mich mein Herzensmensch findet!
-📧 Anfragen an: ${APP_CONFIG.shelter.emailDe}
+📧 Anfragen an: Tierheimbmg@gmail.com
 
-#AdoptDontShop #Katzenhilfe #TierheimKatze`;
+#AdoptDontShop #Katzenhilfe #TierheimKatze #BukManoDraugas`;
     } else {
       return `🐈 AŠ LABAI TAVĘS LAUKIU! MANO VARDAS ${animal.name} 🐾
 
-Labas... Ar matai mane? Aš esu prieglaudoje ir labai tikiuosi rasti savo tikruosius namus. Man yra ${formatAge(animal, 'LT')} ir aš labai noriu tapti tavo geriausiu draugu.
+Labas... Ar matai mane? Aš esu prieglaudoje und labai tikiuosi rasti savo tikruosius namus. Man yra ${formatAge(animal, 'LT')} ir aš labai noriu tapti tavo geriausiu draugu.
 
-📍 Kur aš esu: ${APP_CONFIG.shelter.name} (${APP_CONFIG.shelter.locationShort})
+📍 Kur aš esu: VšĮ „Būk mano draugas“ (Klaipėdos raj.)
 ${traitsLineLt ? `\n✨ ${traitsLineLt}` : ''}
 🩺 Mano sveikatos būklė:
 ${medicalLt}
@@ -72,9 +71,9 @@ ${medicalLt}
 „${animal.reason_for_shelter || 'Buvau rastas gatvėje ir priglaustas prieglaudoje. Dabar laukiu tavęs.'}“
 
 Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidalinti šiuo įrašu – padėkite man rasti namus!
-📧 Užklausos el. paštu: ${APP_CONFIG.shelter.emailLt}
+📧 Užklausos el. paštu: bukmanodraugas@inbox.lt
 
-#BeglobiaiGyvunai #IeskoNamu`;
+#BeglobiaiGyvunai #BukManoDraugas #IeskoNamu`;
     }
   };
 
@@ -244,18 +243,18 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
     
     ctx.fillStyle = '#78716C'; 
     ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-    ctx.fillText(APP_CONFIG.shelter.name, 540, 930);
+    ctx.fillText('VšĮ "Būk mano draugas"', 540, 930);
     
     ctx.font = '500 18px system-ui, -apple-system, sans-serif';
     ctx.fillText(lang === 'DE' 
-      ? `Anfragen an: ${APP_CONFIG.shelter.emailDe}` 
-      : `Užklausos: ${APP_CONFIG.shelter.emailLt}`, 
+      ? 'Anfragen an: Tierheimbmg@gmail.com' 
+      : 'Užklausos: bukmanodraugas@inbox.lt', 
       540, 965
     );
     
     ctx.fillText(lang === 'DE' 
-      ? `Website: ${APP_CONFIG.shelter.websiteUrl.replace(/https?:\/\/(www\.)?/, '')}` 
-      : `Svetainė: ${APP_CONFIG.shelter.websiteUrl.replace(/https?:\/\/(www\.)?/, '')}`, 
+      ? 'Website: bukmanodraugas.lt/en' 
+      : 'Svetainė: bukmanodraugas.lt', 
       540, 995
     );
     

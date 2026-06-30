@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { APP_CONFIG } from '@/lib/appConfig';
-
 import { syncWithCloud, uploadMediaBlob } from '@/lib/syncManager';
 import { isOpfsSupported, saveToOpfs, removeFromOpfs } from '@/lib/opfsStorage';
 import HelpBottomSheet from '@/components/HelpBottomSheet';
@@ -1067,7 +1065,7 @@ export default function CreateCatPage() {
           </Link>
           <div>
             <h1 className="font-bold text-sm tracking-wide text-stone-850">Katze registrieren</h1>
-            <p className="text-[9px] text-stone-500 font-medium">{APP_CONFIG.shelter.name}</p>
+            <p className="text-[9px] text-stone-500 font-medium">Būk mano draugas</p>
           </div>
         </div>
 

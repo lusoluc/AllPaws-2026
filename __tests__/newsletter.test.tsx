@@ -3,12 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: jest.fn(),
-      prefetch: () => null,
-    };
-  },
+  __esModule: true,
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: () => null,
+  }),
+  usePathname: () => '/',
 }));
 
 // Mock syncWithCloud
@@ -156,7 +156,7 @@ describe('Newsletter Signup Form', () => {
   test('renders author credit with Carlos Lucas in footer', () => {
     render(<HomePage />);
 
-    expect(screen.getByText(/Carlos Lucas/)).toBeInTheDocument();
+    expect(screen.getByText('Carlos Lucas')).toBeInTheDocument();
   });
 
   test('topic preference checkboxes toggle correctly', () => {

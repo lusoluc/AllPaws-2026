@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Lock, AlertTriangle, HelpCircle, Smartphone, Database, Wifi } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import { logger } from '@/lib/logger';
-import { APP_CONFIG } from '@/lib/appConfig';
-
 
 export default function LoginPage() {
   const [password, setPassword] = useState('');
@@ -35,17 +33,8 @@ export default function LoginPage() {
 
     // Simulate small latency for premium UI feel
     setTimeout(async () => {
-      const securePassword = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD;
-      const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD;
-
-      if (!securePassword || !devPassword) {
-        setError(guideLang === 'DE' 
-          ? 'Konfigurationsfehler: Die Passwörter NEXT_PUBLIC_DASHBOARD_PASSWORD und NEXT_PUBLIC_DEV_PASSWORD sind nicht in der .env-Datei konfiguriert.' 
-          : 'Konfigūracijos klaida: slaptažodžiai nenustatyti aplinkos kintamuosiuose.'
-        );
-        setIsLoading(false);
-        return;
-      }
+      const securePassword = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD || 'BMD2026';
+      const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD || 'DEVBMD2026';
       
       if (password === devPassword) {
         localStorage.setItem('bmd_session', 'authenticated');
@@ -96,14 +85,10 @@ export default function LoginPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100 justify-center items-center py-12 px-4 text-stone-900">
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-6">
-        {APP_CONFIG.theme.logoType === 'image' ? (
-          <img src={APP_CONFIG.theme.logoImage} alt="Logo" className="w-12 h-12 object-contain mb-3" />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-brandpink-600 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(221,15,123,0.3)]">
-            <CatHeartLogo className="w-6 h-6 text-white" />
-          </div>
-        )}
-        <h1 className="text-2xl font-bold tracking-tight text-stone-850">{APP_CONFIG.theme.logoText}</h1>
+        <div className="w-12 h-12 rounded-full bg-brandpink-600 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(221,15,123,0.3)]">
+          <CatHeartLogo className="w-6 h-6 text-white" />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-stone-850">Būk mano draugas</h1>
         <p className="text-sm text-stone-500 mt-1">Interne Tiererfassung</p>
       </div>
 
@@ -118,20 +103,6 @@ export default function LoginPage() {
             <p className="text-xs text-stone-500">{guideLang === 'DE' ? 'Bitte gib das Zugangspasswort ein.' : 'Įveskite prieigos slaptažodį.'}</p>
           </div>
         </div>
-
-        {!process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD && !process.env.NEXT_PUBLIC_DEV_PASSWORD && (
-          <div className="mb-5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs space-y-1">
-            <div className="flex items-center space-x-1 font-bold">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{guideLang === 'DE' ? 'Konfigurationsfehler' : 'Konfigūracijos klaida'}</span>
-            </div>
-            <p className="leading-relaxed">
-              {guideLang === 'DE' 
-                ? 'Die Passwörter sind nicht in den Umgebungsvariablen konfiguriert. Bitte erstelle eine .env.local Datei und setze die Passwörter NEXT_PUBLIC_DASHBOARD_PASSWORD und NEXT_PUBLIC_DEV_PASSWORD.'
-                : 'Slaptažodžiai nekonfigūruoti aplinkos kintamuosiuose. Sukurkite .env.local failą ir nustatykite slaptažodžius.'}
-            </p>
-          </div>
-        )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>

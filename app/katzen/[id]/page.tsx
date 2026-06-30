@@ -6,6 +6,7 @@ import NextLink from 'next/link';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, formatAge } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import PublicHeader from '@/components/PublicHeader';
 import { 
   ArrowLeft, 
   Heart, 
@@ -372,31 +373,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       
       {/* Dynamic Header */}
-      <header className="px-4 py-4 bg-white/80 border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center space-x-2">
-          <NextLink href="/katzen" className="p-1.5 rounded-lg bg-stone-100 text-stone-600 hover:text-stone-900 transition-colors border border-stone-200">
-            <ArrowLeft className="w-4.5 h-4.5" />
-          </NextLink>
-          <span className="font-bold text-sm text-stone-900">{cat.name}</span>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <NextLink
-            href="/katzen-ratgeber"
-            className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            {lang === 'DE' ? 'Ratgeber' : 'Gidas'}
-          </NextLink>
-          
-          <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-          >
-            <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-            <span>{lang}</span>
-          </button>
-        </div>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       <main className="flex-1 max-w-lg mx-auto w-full pb-32">
         {/* Photo & Video Gallery with Slider */}
@@ -471,6 +448,16 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
         {/* Content details */}
         <div className="p-4 space-y-6">
           
+          {/* Cat Name and Age Header */}
+          <div className="border-b border-stone-200 pb-4">
+            <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight">
+              {cat.name}
+            </h1>
+            <p className="text-xs text-stone-500 mt-1.5">
+              {formatAge(cat, lang)} • {cat.gender === 'Weiblich' ? (lang === 'DE' ? 'Weiblich' : 'Patelė') : (lang === 'DE' ? 'Männlich' : 'Patinas')}
+            </p>
+          </div>
+
           {/* General specs */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-white p-3 rounded-xl border border-stone-200 shadow-sm">

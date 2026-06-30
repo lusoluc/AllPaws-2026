@@ -1,7 +1,7 @@
 {
-  "name": "AllPaws Tiererfassung",
-  "short_name": "AllPaws",
-  "description": "Mobile PWA zur Tiererfassung im Tierheim",
+  "name": "Būk mano draugas Tiererfassung",
+  "short_name": "BMD Erfassung",
+  "description": "Mobile PWA zur Tiererfassung im Tierheim Būk mano draugas",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#18181b",

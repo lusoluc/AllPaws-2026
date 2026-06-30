@@ -117,7 +117,7 @@ describe('SharePanel Social Exporter Component', () => {
     
     // Check that first-person template is visible in the preview container
     expect(screen.getByText(/ICH SUCHE DICH! MEIN NAME IST Mimi/)).toBeInTheDocument();
-    expect(screen.getByText(/Hallo\.\.\. hörst du mich\? Ich sitze im Tierheim/)).toBeInTheDocument();
+    expect(screen.getByText(/Hallo\.\.\. hörst du mich\? Ich sitze im Tierheim in Litauen/)).toBeInTheDocument();
   });
 
   test('Language toggle switch (DE <-> LT) updates description translation and state', () => {

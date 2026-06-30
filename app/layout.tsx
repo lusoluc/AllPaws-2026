@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ClientInitializer from '@/components/ClientInitializer';
-import { APP_CONFIG } from '@/lib/appConfig';
 
 export const metadata: Metadata = {
-  title: `${APP_CONFIG.theme.logoText} - Tiererfassung & Vermittlung`,
-  description: APP_CONFIG.app.description,
+  title: 'Būk mano draugas - Tiererfassung & Vermittlung',
+  description: 'Mobile-First Tiererfassungs-App für das Tierheim Būk mano draugas',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: `${APP_CONFIG.theme.logoText} Erfassung`,
+    title: 'BMD Erfassung',
   },
 };
 

@@ -1,18 +1,15 @@
-import React from 'react';
+jest.mock('next/navigation', () => ({
+  __esModule: true,
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: () => null,
+  }),
+  usePathname: () => '/katzen',
+}));
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PublicGalleryPage from '@/app/katzen/page';
 import CatDetailPage from '@/app/katzen/[id]/page';
-
-// Mock useRouter and use
-const mockPush = jest.fn();
-jest.mock('next/navigation', () => ({
-  useRouter() {
-    return {
-      push: mockPush,
-      prefetch: () => null,
-    };
-  },
-}));
 
 const createResolvedPromise = (value: any) => {
   const p = Promise.resolve(value);

@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import NextLink from 'next/link';
 import { Globe, ArrowLeft } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
-import { APP_CONFIG } from '@/lib/appConfig';
-
+import PublicHeader from '@/components/PublicHeader';
 
 export default function ImpressumPage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
@@ -24,23 +23,23 @@ export default function ImpressumPage() {
       title: 'Impressum',
       subtitle: 'Angaben gemäß § 5 TMG / Informationspflicht laut litauischem Recht',
       orgTitle: 'Verantwortliche Organisation',
-      orgName: APP_CONFIG.shelter.name,
-      orgType: 'Gemeinnützige Einrichtung (VšĮ – Viešoji įstaiga / e.V.)',
-      regCode: 'Registrierungscode / Steuer-Nr.',
+      orgName: 'VšĮ „Būk mano draugas"',
+      orgType: 'Gemeinnützige Einrichtung (VšĮ – Viešoji įstaiga)',
+      regCode: 'Registrierungscode',
       address: 'Anschrift',
-      addressValue: APP_CONFIG.shelter.address,
+      addressValue: 'Kaukėnų g. 9, LT-92336 Glaudėnai\nKlaipėda raj., Sendvario sen.\nLitauen / Lietuva',
       phone: 'Telefon',
       emailTitle: 'E-Mail',
       emailDe: 'Deutscher Support',
       emailLt: 'Litauischer Kontakt',
       representedBy: 'Vertretungsberechtigt',
-      galinaRole: APP_CONFIG.shelter.representatives[0].roleDe,
-      zanaRole: APP_CONFIG.shelter.representatives[1].roleDe,
+      galinaRole: 'Gründerin & Leiterin des Tierheims',
+      zanaRole: 'Internationale Vermittlung (Deutschland, Österreich, Schweiz)',
       contentResponsible: 'Inhaltlich verantwortlich (§ 55 Abs. 2 RStV)',
-      contentPerson: `${APP_CONFIG.shelter.representatives[0].name} (Anschrift wie oben)`,
+      contentPerson: 'Galina Kučinskienė (Anschrift wie oben)',
       appDev: 'App-Entwicklung & Technik',
-      appDevDesc: `${APP_CONFIG.app.title} wurde ehrenamtlich und privat entwickelt von`,
-      appDevNote: APP_CONFIG.app.developerNoteDe,
+      appDevDesc: 'AllPaws 2026 wurde ehrenamtlich und privat entwickelt von',
+      appDevNote: 'Die App ist ein privates Herzensprojekt und wird zu 100 % kostenlos für den Verein zur Verfügung gestellt. Es besteht kein kommerzielles Interesse.',
       disclaimerTitle: 'Haftungsausschluss',
       disclaimerContent: 'Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.',
       disclaimerContent2: 'Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen.',
@@ -59,23 +58,23 @@ export default function ImpressumPage() {
       title: 'Teisinė informacija',
       subtitle: 'Informacija pagal Lietuvos teisės aktus ir Vokietijos TMG § 5',
       orgTitle: 'Atsakinga organizacija',
-      orgName: APP_CONFIG.shelter.name,
+      orgName: 'VšĮ „Būk mano draugas"',
       orgType: 'Viešoji įstaiga (VšĮ)',
       regCode: 'Įmonės kodas',
       address: 'Adresas',
-      addressValue: APP_CONFIG.shelter.address,
+      addressValue: 'Kaukėnų g. 9, LT-92336 Glaudėnai\nKlaipėdos raj., Sendvario sen.\nLietuva',
       phone: 'Telefonas',
       emailTitle: 'El. paštas',
       emailDe: 'Vokietijos parama',
       emailLt: 'Lietuvos kontaktas',
       representedBy: 'Atstovaujama',
-      galinaRole: APP_CONFIG.shelter.representatives[0].roleLt,
-      zanaRole: APP_CONFIG.shelter.representatives[1].roleLt,
+      galinaRole: 'Prieglaudos įkūrėja ir vadovė',
+      zanaRole: 'Tarptautinis bendradarbiavimas (Vokietija, Austrija, Šveicarija)',
       contentResponsible: 'Už turinį atsakinga',
-      contentPerson: `${APP_CONFIG.shelter.representatives[0].name} (adresas kaip aukščiau)`,
+      contentPerson: 'Galina Kučinskienė (adresas kaip aukščiau)',
       appDev: 'Programėlės kūrimas ir technika',
-      appDevDesc: `${APP_CONFIG.app.title} buvo sukurta savanoriškai ir privačiai`,
-      appDevNote: APP_CONFIG.app.developerNoteLt,
+      appDevDesc: 'AllPaws 2026 buvo sukurta savanoriškai ir privačiai',
+      appDevNote: 'Programėlė yra asmeninis širdies projektas ir 100 % nemokamai teikiama organizacijai. Jokio komercinio intereso nėra.',
       disclaimerTitle: 'Atsakomybės apribojimas',
       disclaimerContent: 'Nepaisant kruopštaus turinio patikrinimo, mes neprisiimame atsakomybės už išorinių nuorodų turinį. Už susietų puslapių turinį atsako tik jų valdytojai.',
       disclaimerContent2: 'Mūsų puslapių turinys buvo sukurtas su didžiausiu rūpestingumu. Tačiau negalime garantuoti turinio tikslumo, išsamumo ir aktualumo.',
@@ -95,32 +94,7 @@ export default function ImpressumPage() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       {/* Header */}
-      <header className="px-4 py-4 bg-white/80 border-b border-stone-200 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center space-x-2">
-          <NextLink href="/" className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-stone-600" />
-          </NextLink>
-          <div className="flex items-center space-x-2">
-            {APP_CONFIG.theme.logoType === 'image' ? (
-              <img src={APP_CONFIG.theme.logoImage} alt="Logo" className="w-7 h-7 object-contain" />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-brandpink-500 flex items-center justify-center shadow-md shadow-brandpink-500/10">
-                <CatHeartLogo className="w-4 h-4 text-white" />
-              </div>
-            )}
-            <span className="font-bold text-sm tracking-wide bg-gradient-to-r from-brandpink-600 to-emerald-600 bg-clip-text text-transparent">
-              {APP_CONFIG.theme.logoText}
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
-          className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-stone-100 text-xs font-semibold text-stone-700 hover:text-stone-900 transition-colors border border-stone-200"
-        >
-          <Globe className="w-3.5 h-3.5 text-brandpink-600" />
-          <span>{lang}</span>
-        </button>
-      </header>
+      <PublicHeader lang={lang} setLang={setLang} />
 
       <main className="flex-1 max-w-2xl mx-auto w-full p-4 space-y-6 pb-16">
         {/* Title */}
@@ -140,11 +114,11 @@ export default function ImpressumPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <span className="text-[9px] text-stone-500 uppercase font-semibold tracking-wider block">{ui.regCode}</span>
-                <span className="font-mono text-stone-800">{APP_CONFIG.shelter.code}</span>
+                <span className="font-mono text-stone-800">302639996</span>
               </div>
               <div>
                 <span className="text-[9px] text-stone-500 uppercase font-semibold tracking-wider block">{ui.phone}</span>
-                <a href={`tel:${APP_CONFIG.shelter.phone.replace(/\s+/g, '')}`} className="text-brandpink-600 hover:underline">{APP_CONFIG.shelter.phone}</a>
+                <a href="tel:+37061436617" className="text-brandpink-600 hover:underline">+370 614 36617</a>
               </div>
             </div>
             <div>
@@ -154,11 +128,11 @@ export default function ImpressumPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <span className="text-[9px] text-stone-500 uppercase font-semibold tracking-wider block">{ui.emailDe}</span>
-                <a href={`mailto:${APP_CONFIG.shelter.emailDe}`} className="text-brandpink-600 hover:underline break-all">{APP_CONFIG.shelter.emailDe}</a>
+                <a href="mailto:Tierheimbmg@gmail.com" className="text-brandpink-600 hover:underline break-all">Tierheimbmg@gmail.com</a>
               </div>
               <div>
                 <span className="text-[9px] text-stone-500 uppercase font-semibold tracking-wider block">{ui.emailLt}</span>
-                <a href={`mailto:${APP_CONFIG.shelter.emailLt}`} className="text-brandpink-600 hover:underline break-all">{APP_CONFIG.shelter.emailLt}</a>
+                <a href="mailto:bukmanodraugas@inbox.lt" className="text-brandpink-600 hover:underline break-all">bukmanodraugas@inbox.lt</a>
               </div>
             </div>
           </div>
@@ -169,11 +143,11 @@ export default function ImpressumPage() {
           <h2 className="text-sm font-bold text-stone-900 border-b border-stone-100 pb-2">{ui.representedBy}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
-              <p className="text-sm font-bold text-stone-900">{APP_CONFIG.shelter.representatives[0].name}</p>
+              <p className="text-sm font-bold text-stone-900">Galina Kučinskienė</p>
               <p className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">{ui.galinaRole}</p>
             </div>
             <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
-              <p className="text-sm font-bold text-stone-900">{APP_CONFIG.shelter.representatives[1].name}</p>
+              <p className="text-sm font-bold text-stone-900">Žana Baskytė</p>
               <p className="text-[10px] text-brandpink-600 font-semibold uppercase tracking-wider mt-0.5">{ui.zanaRole}</p>
             </div>
           </div>
@@ -191,12 +165,12 @@ export default function ImpressumPage() {
           <p className="text-xs text-stone-700">
             {ui.appDevDesc}{' '}
             <a
-              href={APP_CONFIG.app.developerUrl}
+              href="https://www.linkedin.com/in/director-it-development/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-brandpink-600 hover:text-brandpink-700 font-semibold hover:underline"
             >
-              {APP_CONFIG.app.developerName}
+              Carlos Lucas
             </a>.
           </p>
           <p className="text-xs text-stone-500 italic bg-stone-50 p-3 rounded-lg border border-stone-200">
@@ -211,19 +185,19 @@ export default function ImpressumPage() {
             <div className="grid grid-cols-2 gap-2 text-stone-600">
               <div>
                 <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.bankName}</span>
-                <span className="text-stone-700">{APP_CONFIG.shelter.bankName}</span>
+                <span className="text-stone-700">Swedbank</span>
               </div>
               <div>
                 <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.bic}</span>
-                <span className="text-stone-700">{APP_CONFIG.shelter.bic}</span>
+                <span className="text-stone-700">HABALT22</span>
               </div>
               <div className="col-span-2">
                 <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.iban}</span>
-                <span className="text-stone-900 select-all text-sm">{APP_CONFIG.shelter.iban}</span>
+                <span className="text-stone-900 select-all text-sm">LT97 7300 0101 2750 0736</span>
               </div>
               <div className="col-span-2">
                 <span className="text-[9px] text-stone-500 block font-sans uppercase">{ui.purpose}</span>
-                <span className="text-stone-700 font-sans">{APP_CONFIG.shelter.donationPurposeDe}</span>
+                <span className="text-stone-700 font-sans">Donate Germany</span>
               </div>
             </div>
           </div>
@@ -251,7 +225,7 @@ export default function ImpressumPage() {
 
       {/* Footer */}
       <footer className="py-6 border-t border-stone-200 text-center text-xs text-stone-500 bg-stone-100/60">
-        <p>© 2026 {APP_CONFIG.shelter.name}. {APP_CONFIG.shelter.locationShort}.</p>
+        <p>© 2026 VšĮ &quot;Būk mano draugas&quot;. Kaukėnų g. 9, Glaudėnai, Litauen.</p>
         <NextLink href="/" className="mt-2 text-stone-500 hover:text-stone-700 inline-block text-xs">
           {ui.homeLink}
         </NextLink>
