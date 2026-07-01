@@ -28,7 +28,9 @@ import {
   Cloud,
   CloudOff,
   Video,
-  Mic
+  Mic,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 
@@ -53,6 +55,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
   
   // State for image carousel
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [autoSwipeTick, setAutoSwipeTick] = useState(0);
   
   // State for simulated donation increment
   const [extraDonation, setExtraDonation] = useState(0);
@@ -164,6 +167,54 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
   }, [cat]);
 
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
+
+  // Compile all photos and videos (synced and unsynced)
+  const mediaItems: { type: 'photo' | 'video'; url: string }[] = [];
+  if (cat) {
+    if (cat.media_urls) {
+      cat.media_urls.forEach((url) => {
+        mediaItems.push({ type: 'photo', url });
+      });
+    }
+    if (cat.video_urls) {
+      cat.video_urls.forEach((url) => {
+        mediaItems.push({ type: 'video', url });
+      });
+    }
+    if (cat.local_videos) {
+      cat.local_videos.forEach((lv) => {
+        if (lv.blob) {
+          try {
+            const url = URL.createObjectURL(lv.blob);
+            mediaItems.push({ type: 'video', url });
+          } catch (e) {
+            console.error(e);
+          }
+        } else if (lv.opfsKey && localVideoUrls[lv.opfsKey]) {
+          mediaItems.push({ type: 'video', url: localVideoUrls[lv.opfsKey] });
+        }
+      });
+    }
+  }
+
+  // Auto-swipe effect
+  useEffect(() => {
+    if (mediaItems.length <= 1) return;
+    
+    // Do not auto-swipe if active item is a video
+    const currentItem = mediaItems[activePhotoIndex];
+    if (currentItem && currentItem.type === 'video') return;
+
+    const interval = setInterval(() => {
+      setActivePhotoIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+    }, 5000); // Slow, gentle 5-second swipe
+
+    return () => clearInterval(interval);
+  }, [mediaItems.length, activePhotoIndex, autoSwipeTick]);
+
+  const resetAutoSwipe = () => {
+    setAutoSwipeTick((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (!loading && !cat) {
@@ -343,35 +394,6 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
     }
   };
 
-  // Compile all photos and videos (synced and unsynced)
-  const mediaItems: { type: 'photo' | 'video'; url: string }[] = [];
-  if (cat) {
-    if (cat.media_urls) {
-      cat.media_urls.forEach((url) => {
-        mediaItems.push({ type: 'photo', url });
-      });
-    }
-    if (cat.video_urls) {
-      cat.video_urls.forEach((url) => {
-        mediaItems.push({ type: 'video', url });
-      });
-    }
-    if (cat.local_videos) {
-      cat.local_videos.forEach((lv) => {
-        if (lv.blob) {
-          try {
-            const url = URL.createObjectURL(lv.blob);
-            mediaItems.push({ type: 'video', url });
-          } catch (e) {
-            console.error(e);
-          }
-        } else if (lv.opfsKey && localVideoUrls[lv.opfsKey]) {
-          mediaItems.push({ type: 'video', url: localVideoUrls[lv.opfsKey] });
-        }
-      });
-    }
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
       
@@ -431,14 +453,52 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
             )}
           </div>
 
+          {/* Navigation Arrows */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePhotoIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
+                  resetAutoSwipe();
+                }}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/75 hover:bg-white border border-stone-200/50 shadow-md transition-all text-stone-750 hover:text-stone-900 z-10 cursor-pointer flex items-center justify-center backdrop-blur-xs active:scale-95"
+                title="Vorheriges Bild"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePhotoIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+                  resetAutoSwipe();
+                }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/75 hover:bg-white border border-stone-200/50 shadow-md transition-all text-stone-750 hover:text-stone-900 z-10 cursor-pointer flex items-center justify-center backdrop-blur-xs active:scale-95"
+                title="Nächstes Bild"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          {/* Media Count Badge */}
+          {mediaItems.length > 1 && (
+            <div className="absolute bottom-16 right-3.5 px-2.5 py-1 rounded-full bg-stone-900/60 backdrop-blur-xs text-white text-[10px] font-extrabold tracking-wider z-10 select-none border border-white/10 shadow-sm">
+              {activePhotoIndex + 1} / {mediaItems.length}
+            </div>
+          )}
+
           {/* Dots Indicator / Thumbnail list */}
           {mediaItems.length > 1 && (
             <div className="flex space-x-1.5 justify-center p-3 overflow-x-auto bg-stone-900/10 backdrop-blur-sm border-t border-stone-200/60">
               {mediaItems.map((item, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActivePhotoIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${idx === activePhotoIndex ? 'bg-brandpink-500 scale-125' : 'bg-stone-300'} flex items-center justify-center`}
+                  onClick={() => {
+                    setActivePhotoIndex(idx);
+                    resetAutoSwipe();
+                  }}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${idx === activePhotoIndex ? 'bg-brandpink-500 scale-125' : 'bg-stone-300'} flex items-center justify-center cursor-pointer`}
                   title={item.type === 'video' ? 'Video abspielen' : 'Foto anzeigen'}
                 >
                   {item.type === 'video' && <Video className="w-1.5 h-1.5 text-white" />}

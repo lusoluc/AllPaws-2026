@@ -29,16 +29,52 @@ export default function SharePanel({ animal, onClose }: SharePanelProps) {
 
   // Generate Facebook/WhatsApp Post Template
   const generatePostText = () => {
-    const cuddlyText = animal.trait_cuddly === 'JA' ? (lang === 'DE' ? 'verschmust' : 'meilus') : '';
-    const playfulText = animal.trait_playful === 'JA' ? (lang === 'DE' ? 'verspielt' : 'žaismingas') : '';
-    const curiousText = animal.trait_curious === 'JA' ? (lang === 'DE' ? 'neugierig' : 'smalsus') : '';
-    
-    const traits = [cuddlyText, playfulText, curiousText].filter(Boolean).join(', ');
+    const activeTraits: string[] = [];
+    if (animal.trait_cuddly === 'JA' || (animal.trait_cuddly as any) === true) {
+      activeTraits.push(lang === 'DE' ? 'verschmust' : 'meilus (-i)');
+    }
+    if (animal.trait_playful === 'JA' || (animal.trait_playful as any) === true) {
+      activeTraits.push(lang === 'DE' ? 'verspielt' : 'žaismingas (-a)');
+    }
+    if (animal.trait_curious === 'JA' || (animal.trait_curious as any) === true) {
+      activeTraits.push(lang === 'DE' ? 'neugierig' : 'smalsus (-i)');
+    }
+    if (animal.trait_trusting) {
+      activeTraits.push(lang === 'DE' ? 'zutraulich' : 'patiklus (-i)');
+    }
+    if (animal.trait_people_oriented) {
+      activeTraits.push(lang === 'DE' ? 'sehr menschenbezogen' : 'labai orientuotas (-a) į žmones');
+    }
+    if (animal.trait_active) {
+      activeTraits.push(lang === 'DE' ? 'aktiv' : 'aktyvus (-i)');
+    }
+    if (animal.trait_fearful === 'JA' || (animal.trait_fearful as any) === true) {
+      activeTraits.push(lang === 'DE' ? 'ängstlich / unsicher' : 'baimingas (-a) / nesaugus (-i)');
+    }
+
+    const traits = activeTraits.join(', ');
     const traitsLineDe = traits ? `Über mich: Ich bin ${traits}! 💕` : '';
     const traitsLineLt = traits ? `Koks aš esu: aš esu ${traits}! 💕` : '';
 
-    const medicalDe = `Gechipt: ${animal.is_chipped ? 'Ja' : 'Nein'} | Kastriert: ${animal.is_castrated ? 'Ja' : 'Nein'} | Impfungen: ${animal.has_rabies_vaccine ? 'Ja' : 'Nein'}`;
-    const medicalLt = `Paženklintas: ${animal.is_chipped ? 'Taip' : 'Ne'} | Kastruotas: ${animal.is_castrated ? 'Taip' : 'Ne'} | Skiepytas: ${animal.has_rabies_vaccine ? 'Taip' : 'Ne'}`;
+    // Adoption/housing criteria
+    const activeReqs: string[] = [];
+    if (animal.slow_integration) activeReqs.push(lang === 'DE' ? 'langsame Zusammenführung' : 'lėtas supažindinimas');
+    if (animal.partner_needed) activeReqs.push(lang === 'DE' ? 'Vermittlung mit Partner' : 'reikalingas antram gyvūnui');
+    if (animal.no_single_animal) activeReqs.push(lang === 'DE' ? 'keine Einzelhaltung' : 'ne vienišas laikymas');
+    if (animal.needs_outdoor) activeReqs.push(lang === 'DE' ? 'braucht Freigang' : 'reikia lauko sąlygų');
+    if (animal.indoor_only) activeReqs.push(lang === 'DE' ? 'nur Wohnungshaltung' : 'tik bute');
+    if (animal.secured_balcony) activeReqs.push(lang === 'DE' ? 'gesicherter Balkon' : 'apsaugotas balkonas');
+    if (animal.for_beginners) activeReqs.push(lang === 'DE' ? 'für Anfänger geeignet' : 'tinka pradedantiesiems');
+    if (animal.for_experienced) activeReqs.push(lang === 'DE' ? 'für katzenerfahrene Menschen' : 'tinka turintiems patirties');
+    if (animal.no_small_children) activeReqs.push(lang === 'DE' ? 'keine kleinen Kinder' : 'be mažų vaikų');
+    if (animal.suitable_families) activeReqs.push(lang === 'DE' ? 'familiengeeignet' : 'tinka šeimai');
+
+    const requirementsText = activeReqs.length > 0 
+      ? (lang === 'DE' ? `🏡 Mein Traumzuhause: ${activeReqs.join(', ')}` : `🏡 Mano svajonių namai: ${activeReqs.join(', ')}`)
+      : '';
+
+    const medicalDe = `Gechipt: ${animal.is_chipped ? 'Ja' : 'Nein'} | Kastriert: ${animal.is_castrated ? 'Ja' : 'Nein'} | EU-Ausweis: ${animal.has_eu_passport ? 'Ja' : 'Nein'}`;
+    const medicalLt = `Paženklintas: ${animal.is_chipped ? 'Taip' : 'Ne'} | Kastruotas: ${animal.is_castrated ? 'Taip' : 'Ne'} | ES pasas: ${animal.has_eu_passport ? 'Taip' : 'Ne'}`;
 
     if (lang === 'DE') {
       return `🐈 ICH SUCHE DICH! MEIN NAME IST ${animal.name} 🐾
@@ -46,7 +82,7 @@ export default function SharePanel({ animal, onClose }: SharePanelProps) {
 Hallo... hörst du mich? Ich sitze im Tierheim in Litauen und hoffe so sehr, dass mich jemand sieht. Ich bin ${formatAge(animal, 'DE')} alt und bereit, mein ganzes Katzenherz zu verschenken.
 
 📍 Mein aktueller Aufenthaltsort: VšĮ "Būk mano draugas" (Klaipėda, Litauen)
-${traitsLineDe ? `\n✨ ${traitsLineDe}` : ''}
+${traitsLineDe ? `\n✨ ${traitsLineDe}` : ''}${requirementsText ? `\n${requirementsText}` : ''}
 🩺 Mein Gesundheits-Check:
 ${medicalDe}
 
@@ -60,10 +96,10 @@ Wer schenkt mir ein warmes Plätzchen und ganz viel Liebe? 🏡 Bitte teilt mein
     } else {
       return `🐈 AŠ LABAI TAVĘS LAUKIU! MANO VARDAS ${animal.name} 🐾
 
-Labas... Ar matai mane? Aš esu prieglaudoje und labai tikiuosi rasti savo tikruosius namus. Man yra ${formatAge(animal, 'LT')} ir aš labai noriu tapti tavo geriausiu draugu.
+Labas... Ar matai mane? Aš esu prieglaudoje ir labai tikiuosi rasti savo tikruosius namus. Man yra ${formatAge(animal, 'LT')} ir aš labai noriu tapti tavo geriausiu draugu.
 
 📍 Kur aš esu: VšĮ „Būk mano draugas“ (Klaipėdos raj.)
-${traitsLineLt ? `\n✨ ${traitsLineLt}` : ''}
+${traitsLineLt ? `\n✨ ${traitsLineLt}` : ''}${requirementsText ? `\n${requirementsText}` : ''}
 🩺 Mano sveikatos būklė:
 ${medicalLt}
 
@@ -195,7 +231,7 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
     const traits = [
       { label: lang === 'DE' ? 'Kastriert' : 'Kastruotas', val: animal.is_castrated },
       { label: lang === 'DE' ? 'Gechipt' : 'Paženklintas', val: animal.is_chipped },
-      { label: lang === 'DE' ? 'Geimpft' : 'Skiepytas', val: animal.has_rabies_vaccine }
+      { label: lang === 'DE' ? 'EU-Pass' : 'ES pasas', val: animal.has_eu_passport }
     ];
     
     traits.forEach((t) => {
