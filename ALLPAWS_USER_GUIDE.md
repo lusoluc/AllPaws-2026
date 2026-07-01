@@ -52,6 +52,8 @@ Hier ist alles, was AllPaws 2026 aktuell kann:
 - 🔄 **Offline-First** — Die App funktioniert komplett ohne Internet. Alle Daten werden lokal gespeichert und automatisch synchronisiert, sobald wieder Netz da ist.
 - 🌍 **Zweisprachig** — Die gesamte Oberfläche gibt es auf Deutsch und Litauisch, umschaltbar per Knopfdruck.
 - 📋 **Öffentliche Galerie** — Eine Tiergalerie, die potenzielle Adoptanten direkt durchstöbern können.
+- 🎙️ **Diktierband (Multi-Audio)** — Nimm bis zu 10 separate Sprachnotizen pro Tier auf und setze bestehende Aufnahmen nahtlos fort (Browser-basiertes Audio-Stitching).
+- 🎨 **Social-Media Grafikkarten** — Generiere fertige Beitragsgrafiken inklusive Steckbrief und QR-Code direkt aus dem Profil heraus (sowohl im Helfer-Portal als auch auf der öffentlichen Profilseite).
 - 🏥 **Medizinischer Status** — Impfungen, Kastration, Chip, EU-Pass — alles auf einen Blick.
 - 🐱 **Verträglichkeit & Temperament** — Verträgt sich die Katze mit Kindern? Hunden? Anderen Katzen? Alles erfassbar.
 - 📰 **Newsletter-Tool** — Abonnenten verwalten, Kampagnen erstellen, Tierprofile in Mails einbetten.
@@ -68,6 +70,8 @@ Hier ist alles, was AllPaws 2026 aktuell kann:
 - 🔄 **Veikia be interneto** — Programėlė veikia visiškai be ryšio. Duomenys saugomi lokaliai ir automatiškai sinchronizuojami atsiradus internetui.
 - 🌍 **Dvikalbė sąsaja** — Visa sąsaja prieinama vokiečių ir lietuvių kalbomis, perjungiama vienu mygtuku.
 - 📋 **Vieša galerija** — Gyvūnų galerija, kurią potencialūs globėjai gali naršyti tiesiogiai.
+- 🎙️ **Keli balso įrašai (diktofonas)** — Įrašykite iki 10 skirtingų balso pastabų vienam gyvūnui ir tęskite esamus įrašus juos apjungdami tiesiai naršyklėje.
+- 🎨 **Socialinių tinklų kortelės** — Generuokite gražius paveikslėlius su gyvūno aprašymu ir QR kodu tiesiai iš profilio (tiek viešame puslapyje, tiek savanorių valdyme).
 - 🏥 **Medicininė būklė** — Skiepai, kastracija, mikroschemelė, ES pasas — viskas vienoje vietoje.
 - 🐱 **Suderinamumas ir charakteris** — Ar katė sutaria su vaikais? Šunimis? Kitomis katėmis? Viską galima registruoti.
 - 📰 **Naujienlaiškių įrankis** — Prenumeratorių valdymas, kampanijų kūrimas, gyvūnų profilių įterpimas į laiškus.
@@ -84,6 +88,8 @@ Here's everything AllPaws 2026 can do right now:
 - 🔄 **Offline-First** — The app works completely without internet. All data is stored locally and syncs automatically when you're back online.
 - 🌍 **Bilingual Interface** — The entire UI is available in German and Lithuanian, switchable with one tap.
 - 📋 **Public Gallery** — An animal gallery that potential adopters can browse directly.
+- 🎙️ **Dictation Tape (Multi-Audio)** — Record up to 10 separate voice descriptions per animal and seamlessly continue existing recordings (client-side audio stitching).
+- 🎨 **Social Media Graphic Cards** — Auto-generate post cards containing traits and a profile QR code directly from the profile view (accessible to both public visitors and logged-in staff).
 - 🏥 **Medical Status Tracking** — Vaccinations, castration, microchip, EU passport — all at a glance.
 - 🐱 **Compatibility & Temperament** — Does the cat get along with children? Dogs? Other cats? All trackable.
 - 📰 **Newsletter Tool** — Manage subscribers, create campaigns, embed animal profiles in emails.
@@ -278,9 +284,11 @@ Um ein neues Tier zu registrieren, klicke im Dashboard auf das **„+"**-Symbol.
 **Videos (bis zu 5):**
 - Videoaufnahme oder Upload — benötigt eine Online-Verbindung für den Upload in die Cloud
 
-**Sprachnotizen:**
-- Tippe auf das Mikrofon-Symbol, um eine Audiobeschreibung aufzunehmen
-- Perfekt, wenn du im Tierheim schnell Notizen festhalten willst, ohne zu tippen
+**Sprachnotizen (bis zu 10):**
+- Tippe auf das Mikrofon-Symbol, um eine Audiobeschreibung aufzunehmen.
+- Du kannst bis zu 10 separate Sprachnotizen pro Tier anlegen.
+- Tippe bei einer bestehenden Note auf den "Fortsetzen"-Knopf, um die Aufnahme zu erweitern (die Audio-Teile werden automatisch aneinandergeheftet).
+- Perfekt, wenn du im Tierheim schnell Notizen festhalten willst, ohne zu tippen.
 
 **Medizinischer Status:**
 - Kastriert ✓/✗ · Gechipt ✓/✗ · Tollwut-Impfung ✓/✗
@@ -312,9 +320,11 @@ Norėdami registruoti naują gyvūną, valdymo skyde bakstelėkite **„+"** sim
 **Vaizdo įrašai (iki 5):**
 - Vaizdo įrašymas arba įkėlimas — reikia interneto ryšio įkėlimui į debesį
 
-**Balso pastabos:**
-- Bakstelėkite mikrofono simbolį, kad įrašytumėte garso aprašymą
-- Puikiai tinka, kai prieglaudoje norite greitai užsirašyti pastabas nerašydami teksto
+**Balso pastabos (iki 10):**
+- Bakstelėkite mikrofono simbolį, kad įrašytumėte garso aprašymą.
+- Galite sukurti iki 10 skirtingų balso pastabų vienam gyvūnui.
+- Bakstelėkite „Tęsti“ prie esamo įrašo, kad jį pratęstumėte (garso dalys bus apjungiamos fone).
+- Puikiai tinka, kai prieglaudoje norite greitai užsirašyti pastabas nerašydami teksto.
 
 **Medicininė būklė:**
 - Kastruotas ✓/✗ · Mikroschemelė ✓/✗ · Pasiutligės skiepas ✓/✗
@@ -346,9 +356,11 @@ To register a new animal, tap the **"+"** icon in the dashboard.
 **Videos (up to 5):**
 - Record or upload video — requires an online connection for cloud upload
 
-**Voice notes:**
-- Tap the microphone icon to record an audio description
-- Perfect when you want to capture quick notes at the shelter without typing
+**Voice notes (up to 10):**
+- Tap the microphone icon to record an audio description.
+- You can keep up to 10 separate voice descriptions per profile.
+- Tap "Continue" on an existing recording to append new audio (the segments will stitch automatically).
+- Perfect when you want to capture quick notes at the shelter without typing.
 
 **Medical status:**
 - Castrated ✓/✗ · Microchipped ✓/✗ · Rabies vaccine ✓/✗
@@ -376,7 +388,7 @@ Tippe im Dashboard auf ein Tierprofil, um es zu bearbeiten. Dort kannst du:
   - 🟢 **Zu vermitteln** — Das Tier sucht ein Zuhause
   - 🟡 **Reserviert** — Es gibt einen Interessenten
   - 🟣 **Vermittelt** — Happy End! Das Tier hat sein Zuhause gefunden
-- **Social-Media-Beiträge generieren** — Über den Teilen-Button kannst du fertige Facebook-Posts und WhatsApp-Nachrichten in Deutsch oder Litauisch erstellen lassen
+- **Social-Media-Beiträge & Grafiken generieren** — Über den Teilen-Knopf (im Dashboard und auf der öffentlichen Tierseite für Besucher) kannst du den Social-Media-Karten-Generator öffnen. Erstelle fertige Grafikkarten mit QR-Code zum Herunterladen sowie Post-Texte für WhatsApp, Facebook oder Instagram.
 
 ### 🇱🇹 Lietuvių
 
@@ -388,7 +400,7 @@ Valdymo skyde bakstelėkite gyvūno profilį, kad jį redaguotumėte. Ten galite
   - 🟢 **Ieško namų** — gyvūnas ieško šeimininko
   - 🟡 **Rezervuotas** — yra susidomėjęs asmuo
   - 🟣 **Globojamas** — Laiminga pabaiga! Gyvūnas rado namus
-- **Socialinių tinklų įrašų generavimas** — Per bendrinimo mygtuką galite sukurti paruoštus Facebook ir WhatsApp pranešimus vokiečių arba lietuvių kalbomis
+- **Generuoti įrašus ir paveikslėlius socialiniams tinklams** — Per bendrinimo mygtuką (valdymo skyde arba viešame gyvūno puslapyje) galite atidaryti bendrinimo kortelę. Generuokite paruoštus tekstus bei atsisiunčiamus paveikslėlius su QR kodu „Facebook“, „WhatsApp“ ar „Instagram“.
 
 ### 🇬🇧 English
 
@@ -400,7 +412,7 @@ Tap on an animal profile in the dashboard to edit it. There you can:
   - 🟢 **Available** — the animal is looking for a home
   - 🟡 **Reserved** — there's a potential adopter
   - 🟣 **Adopted** — Happy ending! The animal found its home
-- **Generate social media posts** — Via the share button, you can auto-generate ready-made Facebook posts and WhatsApp messages in German or Lithuanian
+- **Generate social media posts & graphics** — Via the share button (in the staff dashboard or directly on the public details page for visitors), you can open the SharePanel. Auto-generate ready-to-share text templates and download custom graphics with profile QR codes.
 
 ---
 

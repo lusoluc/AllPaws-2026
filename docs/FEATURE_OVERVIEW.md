@@ -13,11 +13,10 @@ AllPaws-2026 is equipped with features built specifically to make shelter work s
 2.  **Offline Database (Dexie/IndexedDB)**
     Works completely offline. New animal profiles, pictures, and notes are saved directly onto your device's local memory.
 3.  **Background Cloud Sync (Supabase Integration)**
-    When you reconnect to Wi-Fi, the app automatically uploads your offline profiles to your central database, resolving conflicts gracefully.
-4.  **Local Photo & Audio Storage (OPFS & Blobs)**
-    Saves high-quality smartphone pictures and voice memos directly in browser storage so no files are lost during offline sessions.
-5.  **Digital Adoption Card Generator**
-    Generates a beautiful image of the cat's profile containing a QR code, name, and medical details, ready to share on Facebook, Instagram, or print out for shelter cages.
+    When you reconnect to Wi-Fi, the app automatically uploads your offline profiles to your central database, resolving conflicts gra4.  **Local Photo & Multi-Audio Storage (OPFS, Blobs & Stitching)**
+    Saves high-quality smartphone pictures and up to 10 voice memos directly in browser storage. Features an append/continue recording functionality ("dictation tape") that automatically stitches audio clips together sequentially on the client.
+5.  **Digital Adoption Card Generator & Share Overlay**
+    Generates a beautiful adoption graphic cards on a virtual canvas (with photo, traits, and a profile QR code). Fully integrated directly on the public profile details page for supporters and the staff edit page for social media export.
 6.  **Staff & Developer Portal**
     A password-protected portal where helpers manage data, view system debug logs, write newsletters, and manage configurations.
 7.  **Server-Side Newsletter Engine**
@@ -43,10 +42,10 @@ AllPaws-2026 wurde speziell dafür entwickelt, die tägliche Arbeit im Tierheim 
     Funktioniert komplett ohne Internet. Neue Tierprofile, Fotos und Notizen werden sicher auf dem lokalen Speicher Ihres Geräts gesichert.
 3.  **Hintergrund-Synchronisation (Supabase-Anbindung)**
     Sobald wieder eine WLAN-Verbindung besteht, lädt die App alle lokal gespeicherten Profile automatisch in die zentrale Cloud-Datenbank und löst Konflikte eigenständig.
-4.  **Lokaler Foto- & Audio-Speicher (OPFS & Blobs)**
-    Speichert Smartphone-Fotos und Sprachnotizen direkt im Browser-Speicher ab, damit während der Offline-Arbeit nichts verloren geht.
-5.  **Karten-Generator für soziale Medien**
-    Erstellt auf Knopfdruck ein schönes Bild des Katzenprofils mit einem QR-Code, Namen und Gesundheitsdaten – ideal zum Teilen auf Facebook/Instagram oder zum Ausdrucken für den Katzenkäfig.
+4.  **Lokaler Foto- & Multi-Audio-Speicher (OPFS, Blobs & Zusammenfügen)**
+    Speichert Smartphone-Fotos und bis zu 10 Sprachnotizen direkt im Browser-Speicher ab. Bietet eine Fortsetzungsfunktion ("Diktierband"), mit der neue Aufnahmen fädelnd an eine bestehende Notiz angehängt (zusammengefügt) werden.
+5.  **Karten-Generator für soziale Medien & Teilen-Overlay**
+    Erstellt auf Knopfdruck ein schönes Bild des Katzenprofils mit einem QR-Code, Namen und Gesundheitsdaten. Vollständig integriert auf der öffentlichen Profilseite für Besucher sowie im Bearbeitungsbereich für Helfer.
 6.  **Helfer- & Entwickler-Portal**
     Ein passwortgeschützter Bereich, in dem Helfer Daten verwalten, Systemprotokolle einsehen, Newsletter schreiben und Einstellungen bearbeiten können.
 7.  **Newsletter-System auf dem Server**
@@ -72,10 +71,10 @@ AllPaws-2026 wurde speziell dafür entwickelt, die tägliche Arbeit im Tierheim 
     Veikia visiškai neprisijungus prie tinklo. Nauji profiliai, nuotraukos ir pastabos saugiai įrašomos į įrenginio vidinę atmintį.
 3.  **Foninis debesies sinchronizavimas („Supabase“ integracija)**
     Kai telefonas vėl prisijungia prie interneto, programėlė automatiškai fone įkelia visus duomenis į jūsų centrinį debesį ir išsprendžia konfliktus.
-4.  **Nuotraukų ir garso įrašų saugykla (OPFS ir Blobs)**
-    Išsaugo telefono kameros nuotraukas bei balso įrašus naršyklės atmintyje, kad niekas nepasimestų dirbant be interneto.
-5.  **Dalijimosi kortelių generatorius**
-    Vienu mygtuko paspaudimu sugeneruoja gražų katės profilio paveikslėlį su QR kodu, vardu ir sveikatos būkle – idealu dalintis „Facebook“, „Instagram“ ar atspausdinti ant narvo.
+4.  **Nuotraukų ir kelių garso įrašų saugykla (OPFS, Blobs ir apjungimas)**
+    Išsaugo telefono kameros nuotraukas bei iki 10 balso įrašų naršyklės atmintyje. Turi įrašymo tęsimo funkciją ("diktofonas"), leidžiančią naujus įrašus prijungti (sujungti) prie esamos pastabos.
+5.  **Dalijimosi kortelių generatorius ir bendrinimo langas**
+    Vienu mygtuko paspaudimu sugeneruoja gražų katės profilio paveikslėlį su QR kodu, vardu ir sveikatos būkle. Pilnai integruota tiek viešame gyvūno profilyje, tiek savanorių valdymo skydo redagavimo puslapyje.
 6.  **Savanorių ir programuotojų portalas**
     Slaptažodžiu apsaugota aplinka, skirta savanoriams tvarkyti duomenis, skaityti sistemos žurnalus, kurti naujienlaiškius ir keisti nustatymus.
 7.  **Naujienlaiškių siuntimo sistema**
@@ -88,3 +87,4 @@ AllPaws-2026 wurde speziell dafür entwickelt, die tägliche Arbeit im Tierheim 
     Leidžia savanoriams be programavimo žinių kurti bendruosius puslapius, redaguoti prieglaudos istoriją, keisti banko sąskaitas bei pildyti dažniausiai užduodamų klausimų (DUK) skiltį.
 11. **Integruotos paramos galimybės ir skaidrumas**
     Pateikia aiškius paramos būdus (keičiamus banko sąskaitos rekvizitus, BIC kodą, PayPal nuorodas) kartu su emociniu išlaidų paaiškinimu, kad rėmėjai tiksliai matytų, kaip jų pinigai padeda gyvūnams.
+

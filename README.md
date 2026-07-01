@@ -24,6 +24,8 @@ AllPaws-2026 is not a cold, corporate SaaS dashboard. It is a **living-room styl
 Additionally, it functions as a **complete web presence for the shelter**, providing:
 *   🌐 **Native Multi-Language Support (DE/LT)**: Switch the entire user interface and user-generated database contents between German and Lithuanian instantly.
 *   🐈 **Automated Public Animal Gallery**: A live catalog of adoptable animals generated dynamically from database records.
+*   🎙️ **Dictation-Tape Multi-Audio**: Record up to 10 separate voice descriptions per animal with an append/continue recording functionality (audio stitching) directly on mobile browsers.
+*   🎨 **Custom Social Media Graphic Generator**: Generate beautiful post card graphics directly from both the public animal details page (for supporters) and the staff edit portal.
 *   ✍️ **Voluntary CMS & FAQ Engine**: Easily create general web pages (like shelter history, bank account details) and maintain a public FAQ section without writing any code.
 *   💳 **Integrated Donations & Cost Transparency**: Display customizable bank transfer details and PayPal donation buttons alongside an emotional cost breakdown table to show supporters exactly how their contributions help.
 
@@ -39,14 +41,16 @@ For complete, friendly guides on our vision, features, and examples, please expl
 
 To ensure reliability for every shelter that forks this repository, AllPaws-2026 comes with a comprehensive testing suite running on Jest. The test suites validate everything from IndexedDB offline storage to email newsletters and UI translation switches.
 
-Currently, the framework includes **12 test suites** validating **84 unique test scenarios**:
+Currently, the framework includes **14 test suites** validating **90 unique test scenarios**:
 *   `sync.test.tsx` - Tests background cloud sync queues and conflict resolution.
 *   `share.test.tsx` - Validates the dynamic canvas card generation and sharing strings.
 *   `login.test.tsx` - Validates the secure client-side password flow and developer mode.
 *   `public.test.tsx` - Tests the home page, bilingual translation switches, and CMS blocks.
 *   `PublicHeader.test.tsx` - Tests navigation tabs highlighting, language toggle callback, mobile drawer menu, and real-time database sync status badge.
 *   `gallery.test.tsx` - Tests search, filters, and animal cards rendering.
-*   `edit.test.tsx` & `create.test.tsx` - Tests draft saving, OPFS media storage, and validation.
+*   `edit.test.tsx` & `create.test.tsx` - Tests draft saving, OPFS media storage, validation, and multi-audio UI recording actions.
+*   `audioStitcher.test.tsx` - Tests raw Web Audio decoders, WAV binary headers, and sequential chunk stitching.
+*   `profileShare.test.tsx` - Tests Katzen profile details page mounting, Dexie mocks, and SharePanel opening/closing interactions.
 
 ### Running the Tests
 To run all tests locally, use `pnpm` (which handles our package workspaces):

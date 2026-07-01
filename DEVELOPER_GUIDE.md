@@ -110,24 +110,38 @@ The app uses the **Next.js 15 App Router** pattern — each folder under `app/` 
 
 ---
 
-## Tech Stack
+## Tech Stack & Dependencies
 
-No bloated dependencies here — just the tools we actually need:
+No bloated dependencies here — all core dependencies and exact version configurations from `package.json` are listed below:
 
-| Technology | Purpose |
-|---|---|
-| **Next.js 15** | React framework with App Router |
-| **TypeScript** | Type safety across the entire codebase |
-| **Tailwind CSS 3** | Utility-first styling — warm, organic aesthetics |
-| **Dexie.js 4** | IndexedDB wrapper — our offline-first database |
-| **Supabase** | Cloud database & storage sync |
-| **OPFS** | Origin Private File System for large media (videos) |
-| **Lucide React** | Clean, friendly icon library |
-| **Jest + Testing Library** | Unit testing |
+### Core Framework & Runtimes
+*   **Next.js 15.1.12**: React framework with App Router routing configurations.
+*   **React 19.0.0 & React-DOM 19.0.0**: Leveraging modern rendering paradigms and client hooks.
+*   **TypeScript 5.7.2**: Strict type configurations across database tables, forms, and utils.
+
+### Offline & Local Storage Layer
+*   **Dexie.js 4.0.10 & Dexie-React-Hooks 4.4.0**: IndexedDB wrapper serving as the primary local offline database.
+*   **Origin Private File System (OPFS)**: High-speed native browser storage for heavy media (videos) via `opfsStorage.ts` to bypass IndexedDB size limits.
+*   **Web Audio API (Audio Stitcher)**: Leveraging native browser `AudioContext` and decoders in `lib/audioStitcher.ts` to decode, append, and encode raw 16-bit PCM Mono WAV files.
+
+### Cloud Integration & Service Layer
+*   **@supabase/supabase-js 2.108.2**: Cloud sync layer pushing offline changes and handling Supabase Storage media uploads.
+*   **Nodemailer 9.0.1 (Types: 8.0.1)**: Staggered server-side newsletter queues.
+
+### Styling & Design System
+*   **Tailwind CSS 3.4.16 & Autoprefixer 10.4.20**: Colocated utility styles configured with warm organic tokens.
+*   **PostCSS 8.4.49**: CSS compiler pipeline.
+*   **Lucide React 0.468.0**: SVG icon component assets.
+
+### Quality Assurance & Testing Framework
+*   **Jest 30.4.2 & Jest-Environment-JSdom 30.4.1**: Test runner and browser environment mock engine.
+*   **TS-Jest 29.4.11**: TypeScript compiler integration for test runs.
+*   **React Testing Library (@testing-library/react 16.3.2)**: DOM-based integration verification tools.
+*   **@testing-library/jest-dom 6.9.1 & @testing-library/user-event 14.6.1**: Semantic DOM assertions and user interaction simulation utilities.
 
 ---
 
-## Offline-First Architecture
+## Offline-First Architecture & Multi-Audio Sync
 
 This is the heart of the app's design philosophy. Shelters don't always have reliable internet — sometimes you're registering a new rescue in a field with one bar of signal. The app needs to *just work*, online or off.
 
@@ -147,34 +161,19 @@ Here's what happens under the hood:
 ```
 
 1. **User creates or edits an animal profile** → saved immediately to Dexie with `sync_pending: 1`
-2. **When the app detects connectivity** → `syncWithCloud()` pushes all pending records to Supabase
-3. **Cloud changes are pulled** and merged back into the local Dexie database
-4. **Media files** (photos, videos) are uploaded to Supabase Storage; cloud URLs replace local blobs
-
-Large media files — especially videos — use **OPFS (Origin Private File System)** instead of IndexedDB, because IndexedDB has practical size limits in most browsers. OPFS gives us a proper file-system-like API for handling bigger files without choking the browser.
-
-> [!IMPORTANT]
-> The app is fully functional without Supabase configured. Offline mode is the default — cloud sync is an enhancement, not a requirement.
+2. **Multi-Audio Local List**: Up to 10 offline audio blobs are stored locally in the Dexie `animals` table under `local_audios` (with names and OPFS keys).
+3. **Audio Appending ("Diktierband")**: When continuing an existing recording, the `audioStitcher.ts` decodes both blobs, joins their raw floats, and encodes a single 16-bit 44.1kHz / 48kHz WAV file.
+4. **When the app detects connectivity** → `syncWithCloud()` launches in the background:
+   - Media files (photos, passport attachments, and `local_audios` recordings) are uploaded to Supabase Storage.
+   - Pushes the local changes. The array of uploaded media URLs is serialized as a JSON string inside the fixed remote database column `audio_draft_url`.
+   - Merges central updates back. Incoming JSON arrays in `audio_draft_url` are parsed back into the local `audio_urls` array on pulling (retaining compatibility with single legacy string formats).
+5. **Conflict Resolution**: If the same animal profile was edited on two devices simultaneously, the newest change wins (based on the `updated_at` timestamp).
 
 ---
 
 ## Database Schema
 
 All data lives in Dexie.js tables. Here's what we're working with:
-
-| Table | What it stores |
-|-------|---------------|
-| `shelters` | Organization details (name, address, contact info) |
-| `animals` | Animal profiles — medical status, compatibility traits, photos, videos |
-| `internalNotes` | Staff-only notes attached to individual animals |
-| `inquiries` | Adoption inquiries from the public |
-| `systemLogs` | Application event logs (visible in dev mode) |
-| `uiTexts` | CMS-editable UI strings (bilingual German/Lithuanian) |
-| `guideItems` | Cat care FAQ items for the Ratgeber section |
-| `customBlocks` | CMS content blocks for flexible page content |
-| `subscribers` | Newsletter subscribers |
-| `newsletterCampaigns` | Newsletter campaign records |
-| `newsletterQueue` | Staggered email sending queue |
 
 The schema is defined in `lib/db.ts`. The `seedDatabase()` function in the same file populates initial data on first run.
 

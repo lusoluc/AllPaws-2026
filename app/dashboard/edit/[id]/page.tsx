@@ -2123,9 +2123,13 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-stone-200 p-2.5 rounded-xl shadow-sm gap-2">
                           <div className="flex items-center space-x-2 flex-1">
                             {item.isSynced ? (
-                              <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Online synchronisiert" />
+                              <span title="Online synchronisiert" className="flex items-center">
+                                <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              </span>
                             ) : (
-                              <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" title="Lokal gespeichert" />
+                              <span title="Lokal gespeichert" className="flex items-center">
+                                <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              </span>
                             )}
                             <span className="text-[10px] font-bold text-stone-500 min-w-[45px] shrink-0">Note #{index + 1}</span>
                             <audio src={item.url} controls className="w-full max-h-8 outline-none accent-brandpink-500" />
