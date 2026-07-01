@@ -1,5 +1,40 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+// Polyfill TextEncoder and crypto.subtle for JSDOM test environment
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+if (typeof global.crypto === 'undefined' || !global.crypto.subtle) {
+  const webcrypto = require('crypto').webcrypto;
+  if (webcrypto && webcrypto.subtle) {
+    global.crypto = webcrypto;
+  } else {
+    global.crypto = {
+      subtle: {
+        digest: async (algo: string, data: Uint8Array) => {
+          const shasum = require('crypto').createHash(algo.toLowerCase().replace('-', ''));
+          shasum.update(data);
+          return shasum.digest();
+        }
+      }
+    } as any;
+  }
+}
+
+// Bind to window.crypto for JSDOM context compatibility
+if (typeof window !== 'undefined' && window.crypto) {
+  if (!window.crypto.subtle) {
+    Object.defineProperty(window.crypto, 'subtle', {
+      value: global.crypto.subtle,
+      writable: true,
+      configurable: true
+    });
+  }
+}
+
 import LoginPage from '@/app/login/page';
 
 // Mock useRouter

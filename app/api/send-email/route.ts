@@ -6,9 +6,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { authPassword, settings, email } = body;
 
-    // Check Auth
-    const devPass = process.env.NEXT_PUBLIC_DEV_PASSWORD || 'DEVBMD2026';
-    const staffPass = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD || 'BMD2026';
+    // Check Auth - Server-only environment variables are preferred for server validation
+    const devPass = process.env.DEV_PASSWORD || process.env.NEXT_PUBLIC_DEV_PASSWORD || 'DEVBMD2026';
+    const staffPass = process.env.DASHBOARD_PASSWORD || process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD || 'BMD2026';
 
     if (!authPassword || (authPassword !== devPass && authPassword !== staffPass)) {
       return NextResponse.json(
