@@ -27,7 +27,8 @@ import {
   AlertTriangle,
   Cloud,
   CloudOff,
-  Video
+  Video,
+  Mic
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 
@@ -509,75 +510,334 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
             </div>
           )}
 
+          {/* Audio voice descriptions */}
+          {((cat.audio_urls && cat.audio_urls.length > 0) || (cat.local_audios && cat.local_audios.length > 0)) && (
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center space-x-1.5 border-b border-stone-100 pb-2">
+                <Mic className="w-4 h-4 text-brandpink-500" />
+                <span>{lang === 'DE' ? 'Sprachbeschreibungen' : 'Balso aprašymai'}</span>
+              </h3>
+              
+              <div className="space-y-2">
+                {/* Synced remote audios */}
+                {cat.audio_urls?.map((url, index) => (
+                  <div key={`remote-${index}`} className="flex items-center space-x-2 bg-stone-50 border border-stone-150 p-2 rounded-xl">
+                    <span className="text-[10px] font-bold text-stone-500 min-w-[45px] shrink-0">
+                      {lang === 'DE' ? `Beschreibung #${index + 1}` : `Aprašymas #${index + 1}`}
+                    </span>
+                    <audio src={url} controls className="w-full max-h-8 outline-none" />
+                  </div>
+                ))}
+
+                {/* Local unsynced audios */}
+                {cat.local_audios?.map((la, index) => {
+                  if (!la.blob) return null;
+                  const url = URL.createObjectURL(la.blob);
+                  const offset = cat.audio_urls ? cat.audio_urls.length : 0;
+                  return (
+                    <div key={`local-${index}`} className="flex items-center space-x-2 bg-stone-50 border border-stone-150 p-2 rounded-xl">
+                      <span className="text-[10px] font-bold text-stone-500 min-w-[45px] shrink-0">
+                        {lang === 'DE' ? `Beschreibung #${offset + index + 1}` : `Aprašymas #${offset + index + 1}`}
+                      </span>
+                      <audio src={url} controls className="w-full max-h-8 outline-none" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Vermittlung / Haltungsbedingungen */}
+          {(cat.slow_integration || cat.partner_needed || cat.no_single_animal || cat.needs_outdoor || 
+            cat.indoor_only || cat.secured_balcony || cat.for_beginners || cat.for_experienced || 
+            cat.quiet_home || cat.patient_people || cat.needs_attention || cat.no_small_children || 
+            cat.suitable_seniors || cat.suitable_families) && (
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 border-b border-stone-100 pb-2">
+                {lang === 'DE' ? 'Vermittlung & Haltungsbedingungen' : 'Dovanojimo ir laikymo sąlygos'}
+              </h3>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {cat.slow_integration && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🤝 <span className="ml-1">{lang === 'DE' ? 'langsame Zusammenführung' : 'lėtas supažindinimas'}</span>
+                  </span>
+                )}
+                {cat.partner_needed && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🐱 <span className="ml-1">{lang === 'DE' ? 'Vermittlung nur mit Partnertier' : 'dovanojama tik su kitu gyvūnu'}</span>
+                  </span>
+                )}
+                {cat.no_single_animal && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🐱 <span className="ml-1">{lang === 'DE' ? 'Keine Einzelhaltung' : 'negalima laikyti vieno'}</span>
+                  </span>
+                )}
+                {cat.needs_outdoor && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🌳 <span className="ml-1">{lang === 'DE' ? 'braucht Freigang' : 'reikia galimybės išeiti į lauką'}</span>
+                  </span>
+                )}
+                {cat.indoor_only && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🏠 <span className="ml-1">{lang === 'DE' ? 'nur Wohnungshaltung' : 'tik laikymui bute/namuose'}</span>
+                  </span>
+                )}
+                {cat.secured_balcony && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🏢 <span className="ml-1">{lang === 'DE' ? 'gesicherter Balkon/Terrasse' : 'apsaugotas balkonas/terasa'}</span>
+                  </span>
+                )}
+                {cat.for_beginners && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🔰 <span className="ml-1">{lang === 'DE' ? 'für Anfänger geeignet' : 'tinka pradedantiesiems'}</span>
+                  </span>
+                )}
+                {cat.for_experienced && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🧠 <span className="ml-1">{lang === 'DE' ? 'für katzenerfahrene Menschen' : 'tik patyrusiems kačių augintojams'}</span>
+                  </span>
+                )}
+                {cat.quiet_home && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🤫 <span className="ml-1">{lang === 'DE' ? 'ruhiges Zuhause' : 'ramūs namai'}</span>
+                  </span>
+                )}
+                {cat.patient_people && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    🧘 <span className="ml-1">{lang === 'DE' ? 'geduldige Menschen' : 'kantrūs šeimininkai'}</span>
+                  </span>
+                )}
+                {cat.needs_attention && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    💖 <span className="ml-1">{lang === 'DE' ? 'viel Aufmerksamkeit' : 'reikia daug dėmesio'}</span>
+                  </span>
+                )}
+                {cat.no_small_children && (
+                  <span className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/50 font-medium flex items-center">
+                    🚫👶 <span className="ml-1">{lang === 'DE' ? 'keine kleinen Kinder' : 'be mažų vaikų'}</span>
+                  </span>
+                )}
+                {cat.suitable_seniors && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    👵 <span className="ml-1">{lang === 'DE' ? 'Seniorenhaushalt geeignet' : 'tinka senjorams'}</span>
+                  </span>
+                )}
+                {cat.suitable_families && (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium flex items-center">
+                    👨‍👩‍👧‍👦 <span className="ml-1">{lang === 'DE' ? 'Familien geeignet' : 'tinka šeimoms'}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Medical Checks List */}
           <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 border-b border-stone-100 pb-2">
-              {ui.medicalStatus}
+              {lang === 'DE' ? 'Gesundheit' : 'Sveikata'}
             </h3>
             
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.castrated}</span>
-                {renderBadge(cat.is_castrated)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.chipped}</span>
-                {renderBadge(cat.is_chipped)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.rabies}</span>
-                {renderBadge(cat.has_rabies_vaccine)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.catFlu}</span>
-                {renderBadge(cat.has_cat_flu_vaccine)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.dewormed}</span>
-                {renderBadge(cat.is_dewormed)}
-              </div>
-              <div className="flex justify-between items-center pb-0.5">
-                <span className="text-stone-600">{ui.passport}</span>
-                {renderBadge(cat.has_eu_passport)}
-              </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {cat.has_eu_passport && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  🇪🇺 {lang === 'DE' ? 'EU-Heimtierausweis' : 'ES augintinio pasas'}
+                </span>
+              )}
+              {cat.is_chipped && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  📍 {lang === 'DE' ? 'gechipt' : 'paženklintas čipu'}
+                </span>
+              )}
+              {cat.is_castrated && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  ✂️ {lang === 'DE' ? 'kastriert' : 'kastruotas/sterilizuota'}
+                </span>
+              )}
+              {cat.not_castrated && (
+                <span className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/50 font-medium">
+                  ✂️ {lang === 'DE' ? 'nicht kastriert' : 'nekastruotas/nesterilizuota'}
+                </span>
+              )}
+              {cat.has_rabies_vaccine && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  💉 {lang === 'DE' ? 'Tollwutimpfung' : 'skiepas nuo pasiutligės'}
+                </span>
+              )}
+              {cat.has_cat_plague_vaccine && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  💉 {lang === 'DE' ? 'Katzenseuche-Impfung' : 'skiepas nuo kačių maro'}
+                </span>
+              )}
+              {cat.has_cat_flu_vaccine && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  💉 {lang === 'DE' ? 'Katzenschnupfen-Impfung' : 'skiepas nuo kačių slogos'}
+                </span>
+              )}
+              {cat.vaccination_status_unknown && (
+                <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200 font-medium">
+                  ❓ {lang === 'DE' ? 'Impfstatus unbekannt' : 'skiepų statusas nežinomas'}
+                </span>
+              )}
+              {cat.fiv_negative && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  🦠 {lang === 'DE' ? 'FIV negativ' : 'FIV neigiamas'}
+                </span>
+              )}
+              {cat.felv_negative && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  🦠 {lang === 'DE' ? 'FeLV negativ' : 'FeLV neigiamas'}
+                </span>
+              )}
+              {cat.fiv_positive && (
+                <span className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-800 border border-rose-250/50 font-semibold">
+                  ⚠️ {lang === 'DE' ? 'FIV positiv' : 'FIV teigiamas'}
+                </span>
+              )}
+              {cat.felv_positive && (
+                <span className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-800 border border-rose-250/50 font-semibold">
+                  ⚠️ {lang === 'DE' ? 'FeLV positiv' : 'FeLV teigiamas'}
+                </span>
+              )}
+              {cat.fip_positive && (
+                <span className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-800 border border-rose-250/50 font-semibold">
+                  ⚠️ {lang === 'DE' ? 'FIP positiv' : 'FIP teigiamas'}
+                </span>
+              )}
+              {cat.is_dewormed && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  ✨ {lang === 'DE' ? 'entwurmt' : 'nukirmintas'}
+                </span>
+              )}
+              {cat.flea_mite_treatment && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/50 font-medium">
+                  ✨ {lang === 'DE' ? 'Floh-/Milbenbehandlung' : 'gydymas nuo parazitų'}
+                </span>
+              )}
             </div>
+            {cat.handicaps && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200/60 rounded-xl text-xs text-amber-900 leading-relaxed font-normal">
+                <strong>{lang === 'DE' ? 'Handicap / Einschränkung:' : 'Fizinis trūkumas / negalia:'}</strong> {cat.handicaps}
+              </div>
+            )}
           </div>
 
           {/* Behavior / Compatibility List */}
           <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 border-b border-stone-100 pb-2">
-              {ui.temperament}
+              {lang === 'DE' ? 'Charakter / Verhalten' : 'Charakteris / Elgsena'}
             </h3>
             
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.compatCats}</span>
-                {renderBadge(cat.compat_cats)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.compatDogs}</span>
-                {renderBadge(cat.compat_dogs)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.compatChildren}</span>
-                {renderBadge(cat.compat_children)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.traitCurious}</span>
-                {renderBadge(cat.trait_curious)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.traitPlayful}</span>
-                {renderBadge(cat.trait_playful)}
-              </div>
-              <div className="flex justify-between items-center border-b border-stone-50 pb-2">
-                <span className="text-stone-600">{ui.traitCuddly}</span>
-                {renderBadge(cat.trait_cuddly)}
-              </div>
-              <div className="flex justify-between items-center pb-0.5">
-                <span className="text-stone-600">{ui.traitFearful}</span>
-                {renderBadge(cat.trait_fearful)}
-              </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {((cat.trait_cuddly as any) === 'JA' || (cat.trait_cuddly as any) === true) && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  ❤️ {lang === 'DE' ? 'verschmust' : 'meilus (-i)'}
+                </span>
+              )}
+              {cat.trait_trusting && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🤝 {lang === 'DE' ? 'zutraulich' : 'patiklus (-i)'}
+                </span>
+              )}
+              {cat.trait_people_oriented && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🧑‍🤝‍🧑 {lang === 'DE' ? 'sehr menschenbezogen' : 'labai orientuotas (-a) į žmones'}
+                </span>
+              )}
+              {((cat.trait_playful as any) === 'JA' || (cat.trait_playful as any) === true) && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🧶 {lang === 'DE' ? 'verspielt' : 'žaismingas (-a)'}
+                </span>
+              )}
+              {cat.trait_quiet && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  💤 {lang === 'DE' ? 'ruhig' : 'ramus (-i)'}
+                </span>
+              )}
+              {cat.trait_active && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  ⚡ {lang === 'DE' ? 'aktiv' : 'aktyvus (-i)'}
+                </span>
+              )}
+              {((cat.trait_curious as any) === 'JA' || (cat.trait_curious as any) === true) && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  👀 {lang === 'DE' ? 'neugierig' : 'smalsus (-i)'}
+                </span>
+              )}
+              {((cat.trait_fearful as any) === 'JA' || (cat.trait_fearful as any) === true) && (
+                <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-250 font-medium">
+                  😰 {lang === 'DE' ? 'ängstlich / unsicher' : 'baimingas (-a) / nesaugus (-i)'}
+                </span>
+              )}
+              {cat.trait_needs_time && (
+                <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-250 font-medium">
+                  ⏳ {lang === 'DE' ? 'braucht Zeit zum Vertrauen' : 'reikia laiko pasitikėjimui įgyti'}
+                </span>
+              )}
+              {cat.trait_allows_touch && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🖐️ {lang === 'DE' ? 'lässt sich anfassen' : 'leidžiasi glostomas (-a)'}
+                </span>
+              )}
+              {cat.trait_allows_lift && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🤲 {lang === 'DE' ? 'lässt sich hochheben' : 'leidžiasi pakeliamas (-a)'}
+                </span>
+              )}
+              {cat.trait_allows_brush && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🧹 {lang === 'DE' ? 'lässt sich bürsten' : 'leidžiasi šukuojamas (-a)'}
+                </span>
+              )}
+              {cat.trait_shows_limits && (
+                <span className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/50 font-medium">
+                  ⚠️ {lang === 'DE' ? 'zeigt Grenzen deutlich' : 'aiškiai rodo savo ribas'}
+                </span>
+              )}
+              {cat.trait_seeks_cats && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🐱 {lang === 'DE' ? 'sucht Kontakt zu anderen Katzen' : 'ieško kontakto su kitomis katėmis'}
+                </span>
+              )}
+              {cat.trait_insecure_cats && (
+                <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-250 font-medium">
+                  🐱 {lang === 'DE' ? 'unsicher mit anderen Katzen' : 'nesaugus (-i) su kitomis katėmis'}
+                </span>
+              )}
+              {cat.trait_compat_cats && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🐈 {lang === 'DE' ? 'verträglich mit anderen Katzen' : 'sutaria su kitomis katėmis'}
+                </span>
+              )}
+              {cat.trait_compat_dogs && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🐕 {lang === 'DE' ? 'verträglich mit Hunden' : 'sutaria su šunimis'}
+                </span>
+              )}
+              {cat.trait_compat_children && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  👶 {lang === 'DE' ? 'verträglich mit Kindern' : 'sutaria su vaikais'}
+                </span>
+              )}
+              {cat.trait_dominant && (
+                <span className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/50 font-medium">
+                  👑 {lang === 'DE' ? 'dominant' : 'dominantinis (-ė)'}
+                </span>
+              )}
+              {cat.trait_submissive && (
+                <span className="px-3 py-1.5 rounded-full bg-brandpink-50 text-brandpink-850 border border-brandpink-200/50 font-medium">
+                  🙇 {lang === 'DE' ? 'unterwürfig' : 'paklusnus (-i)'}
+                </span>
+              )}
+              {cat.trait_sensitive_noise && (
+                <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-250 font-medium">
+                  🔊 {lang === 'DE' ? 'reagiert empfindlich auf laute Geräusche' : 'jautriai reaguoja į garsius triukšmus'}
+                </span>
+              )}
+              {cat.trait_litter_box && (
+                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-250/50 font-medium">
+                  🚽 {lang === 'DE' ? 'benutzt Katzenklo zuverlässig' : 'patikimai naudojasi kraiko dėžute'}
+                </span>
+              )}
             </div>
           </div>
 

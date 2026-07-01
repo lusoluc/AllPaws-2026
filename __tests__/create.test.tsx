@@ -271,7 +271,7 @@ describe('CreateCatPage Validation, Multilingual, Offline & Edge Cases', () => {
     render(<CreateCatPage />);
     
     // Switch to medical tab
-    const medicalTabBtn = screen.getByRole('button', { name: 'Medizin' });
+    const medicalTabBtn = screen.getByRole('button', { name: 'Gesundheit' });
     fireEvent.click(medicalTabBtn);
     
     // Find help button next to "Medizinischer Status"
@@ -279,7 +279,7 @@ describe('CreateCatPage Validation, Multilingual, Offline & Edge Cases', () => {
     fireEvent.click(helpButtons[0]);
     
     expect(screen.getByText('💡 Ausfüll-Hilfe:')).toBeInTheDocument();
-    expect(screen.getAllByText('Medizinischer Status').length).toBe(2);
+    expect(screen.getAllByText('Medizinischer Status').length).toBe(1);
     expect(screen.getByText(/Aktiviere die Knöpfe/)).toBeInTheDocument();
   });
 
@@ -348,6 +348,52 @@ describe('CreateCatPage Validation, Multilingual, Offline & Edge Cases', () => {
       expect(screen.getByText(/Note #1/i)).toBeInTheDocument();
       expect(screen.getByTitle(/Diese Sprachnotiz fortsetzen/i)).toBeInTheDocument();
       expect(screen.getByTitle(/Löschen/i)).toBeInTheDocument();
+    });
+  });
+
+  test('submits newly added Haltung, Gesundheit, and Charakter/Verhalten boolean flags to Dexie', async () => {
+    render(<CreateCatPage />);
+    
+    // Fill required Name
+    const nameInput = screen.getByPlaceholderText('z.B. Luna');
+    fireEvent.change(nameInput, { target: { value: 'Balu' } });
+
+    // Click basic section checkboxes
+    const slowIntLabel = screen.getByText('langsame Zusammenführung');
+    fireEvent.click(slowIntLabel);
+
+    // Switch to medical tab
+    const medicalTabBtn = screen.getByRole('button', { name: 'Gesundheit' });
+    fireEvent.click(medicalTabBtn);
+
+    // Click medical checkboxes
+    const catPlagueLabel = screen.getByText('Katzenseuche-Impfung');
+    fireEvent.click(catPlagueLabel);
+
+    const fivPositiveLabel = screen.getByText('FIV positiv');
+    fireEvent.click(fivPositiveLabel);
+
+    // Switch to behavior tab
+    const behaviorTabBtn = screen.getByRole('button', { name: 'Charakter / Verhalten' });
+    fireEvent.click(behaviorTabBtn);
+
+    // Click behavior checkbox
+    const trustingLabel = screen.getByText('zutraulich');
+    fireEvent.click(trustingLabel);
+
+    const saveButton = screen.getByRole('button', { name: 'Speichern' });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockDbAdd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Balu',
+          slow_integration: true,
+          has_cat_plague_vaccine: true,
+          fiv_positive: true,
+          trait_trusting: true,
+        })
+      );
     });
   });
 });

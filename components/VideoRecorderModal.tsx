@@ -40,13 +40,6 @@ export default function VideoRecorderModal({ isOpen, onClose, onRecordComplete }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(mediaStream);
-
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = mediaStream;
-        videoPreviewRef.current.play().catch(err => {
-          console.error("Preview play failed:", err);
-        });
-      }
     } catch (err: any) {
       console.error("Failed to access camera/microphone:", err);
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -56,6 +49,16 @@ export default function VideoRecorderModal({ isOpen, onClose, onRecordComplete }
       }
     }
   };
+
+  // Bind stream when it is set and the video preview element mounts
+  useEffect(() => {
+    if (stream && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = stream;
+      videoPreviewRef.current.play().catch(err => {
+        console.error("Preview play failed:", err);
+      });
+    }
+  }, [stream]);
 
   useEffect(() => {
     if (isOpen) {

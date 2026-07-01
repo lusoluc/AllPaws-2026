@@ -40,6 +40,16 @@ export default function CreateCatPage() {
   const [activeSection, setActiveSection] = useState<'basic' | 'medical' | 'behavior' | 'media'>('basic');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [helpKey, setHelpKey] = useState<string | null>(null);
+  const [lang, setLang] = useState<'DE' | 'LT'>('DE');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('bmd_language') as 'DE' | 'LT';
+      if (savedLang) {
+        setLang(savedLang);
+      }
+    }
+  }, []);
 
   // Form State
   const [name, setName] = useState('');
@@ -101,6 +111,55 @@ export default function CreateCatPage() {
   const [notesMiscellaneous, setNotesMiscellaneous] = useState('');
   const [isPublished, setIsPublished] = useState(true);
   const [isEmergency, setIsEmergency] = useState(false);
+
+  // Vermittlung / Haltung State
+  const [slowIntegration, setSlowIntegration] = useState(false);
+  const [partnerNeeded, setPartnerNeeded] = useState(false);
+  const [noSingleAnimal, setNoSingleAnimal] = useState(false);
+  const [needsOutdoor, setNeedsOutdoor] = useState(false);
+  const [indoorOnly, setIndoorOnly] = useState(false);
+  const [securedBalcony, setSecuredBalcony] = useState(false);
+  const [forBeginners, setForBeginners] = useState(false);
+  const [forExperienced, setForExperienced] = useState(false);
+  const [quietHome, setQuietHome] = useState(false);
+  const [patientPeople, setPatientPeople] = useState(false);
+  const [needsAttention, setNeedsAttention] = useState(false);
+  const [noSmallChildren, setNoSmallChildren] = useState(false);
+  const [suitableSeniors, setSuitableSeniors] = useState(false);
+  const [suitableFamilies, setSuitableFamilies] = useState(false);
+
+
+  // Gesundheit State
+  const [notCastrated, setNotCastrated] = useState(false);
+  const [hasCatPlagueVaccine, setHasCatPlagueVaccine] = useState(false);
+  const [vaccinationStatusUnknown, setVaccinationStatusUnknown] = useState(false);
+  const [fivNegative, setFivNegative] = useState(false);
+  const [felvNegative, setFelvNegative] = useState(false);
+  const [fivPositive, setFivPositive] = useState(false);
+  const [felvPositive, setFelvPositive] = useState(false);
+  const [fipPositive, setFipPositive] = useState(false);
+  const [fleaMiteTreatment, setFleaMiteTreatment] = useState(false);
+  const [handicaps, setHandicaps] = useState('');
+
+  // Charakter / Verhalten State
+  const [traitTrusting, setTraitTrusting] = useState(false);
+  const [traitPeopleOriented, setTraitPeopleOriented] = useState(false);
+  const [traitQuiet, setTraitQuiet] = useState(false);
+  const [traitActive, setTraitActive] = useState(false);
+  const [traitNeedsTime, setTraitNeedsTime] = useState(false);
+  const [traitAllowsTouch, setTraitAllowsTouch] = useState(false);
+  const [traitAllowsLift, setTraitAllowsLift] = useState(false);
+  const [traitAllowsBrush, setTraitAllowsBrush] = useState(false);
+  const [traitShowsLimits, setTraitShowsLimits] = useState(false);
+  const [traitSeeksCats, setTraitSeeksCats] = useState(false);
+  const [traitInsecureCats, setTraitInsecureCats] = useState(false);
+  const [traitDominant, setTraitDominant] = useState(false);
+  const [traitSubmissive, setTraitSubmissive] = useState(false);
+  const [traitSensitiveNoise, setTraitSensitiveNoise] = useState(false);
+  const [traitLitterBox, setTraitLitterBox] = useState(false);
+  const [traitCompatCats, setTraitCompatCats] = useState(false);
+  const [traitCompatDogs, setTraitCompatDogs] = useState(false);
+  const [traitCompatChildren, setTraitCompatChildren] = useState(false);
 
   // Medical Toggles (Default Ja/True)
   const [isCastrated, setIsCastrated] = useState(true);
@@ -222,6 +281,51 @@ export default function CreateCatPage() {
         setNotesMiscellaneous(d.notesMiscellaneous || '');
         setIsPublished(d.isPublished ?? true);
         setIsEmergency(d.isEmergency ?? false);
+
+        setSlowIntegration(d.slowIntegration ?? false);
+        setPartnerNeeded(d.partnerNeeded ?? false);
+        setNoSingleAnimal(d.noSingleAnimal ?? false);
+        setNeedsOutdoor(d.needsOutdoor ?? false);
+        setIndoorOnly(d.indoorOnly ?? false);
+        setSecuredBalcony(d.securedBalcony ?? false);
+        setForBeginners(d.forBeginners ?? false);
+        setForExperienced(d.forExperienced ?? false);
+        setQuietHome(d.quietHome ?? false);
+        setPatientPeople(d.patientPeople ?? false);
+        setNeedsAttention(d.needsAttention ?? false);
+        setNoSmallChildren(d.noSmallChildren ?? false);
+        setSuitableSeniors(d.suitableSeniors ?? false);
+        setSuitableFamilies(d.suitableFamilies ?? false);
+
+        setNotCastrated(d.notCastrated ?? false);
+        setHasCatPlagueVaccine(d.hasCatPlagueVaccine ?? false);
+        setVaccinationStatusUnknown(d.vaccinationStatusUnknown ?? false);
+        setFivNegative(d.fivNegative ?? false);
+        setFelvNegative(d.felvNegative ?? false);
+        setFivPositive(d.fivPositive ?? false);
+        setFelvPositive(d.felvPositive ?? false);
+        setFipPositive(d.fipPositive ?? false);
+        setFleaMiteTreatment(d.fleaMiteTreatment ?? false);
+        setHandicaps(d.handicaps || '');
+
+        setTraitTrusting(d.traitTrusting ?? false);
+        setTraitPeopleOriented(d.traitPeopleOriented ?? false);
+        setTraitQuiet(d.traitQuiet ?? false);
+        setTraitActive(d.traitActive ?? false);
+        setTraitNeedsTime(d.traitNeedsTime ?? false);
+        setTraitAllowsTouch(d.traitAllowsTouch ?? false);
+        setTraitAllowsLift(d.traitAllowsLift ?? false);
+        setTraitAllowsBrush(d.traitAllowsBrush ?? false);
+        setTraitShowsLimits(d.traitShowsLimits ?? false);
+        setTraitSeeksCats(d.traitSeeksCats ?? false);
+        setTraitInsecureCats(d.traitInsecureCats ?? false);
+        setTraitDominant(d.traitDominant ?? false);
+        setTraitSubmissive(d.traitSubmissive ?? false);
+        setTraitSensitiveNoise(d.traitSensitiveNoise ?? false);
+        setTraitLitterBox(d.traitLitterBox ?? false);
+        setTraitCompatCats(d.traitCompatCats ?? false);
+        setTraitCompatDogs(d.traitCompatDogs ?? false);
+        setTraitCompatChildren(d.traitCompatChildren ?? false);
         
         setIsCastrated(d.isCastrated ?? true);
         setIsChipped(d.isChipped ?? true);
@@ -255,6 +359,15 @@ export default function CreateCatPage() {
       ageMode, ageMin, ageMax, ageExact, birthYear, birthMonth, birthDay,
       roomName, cageName, audioItems,
       reasonForShelter, restrictions, notesMiscellaneous, isPublished, isEmergency,
+      slowIntegration, partnerNeeded, noSingleAnimal, needsOutdoor, indoorOnly, securedBalcony,
+      forBeginners, forExperienced, quietHome, patientPeople, needsAttention, noSmallChildren,
+      suitableSeniors, suitableFamilies,
+      notCastrated, hasCatPlagueVaccine, vaccinationStatusUnknown, fivNegative, felvNegative,
+      fivPositive, felvPositive, fipPositive, fleaMiteTreatment, handicaps,
+      traitTrusting, traitPeopleOriented, traitQuiet, traitActive, traitNeedsTime,
+      traitAllowsTouch, traitAllowsLift, traitAllowsBrush, traitShowsLimits, traitSeeksCats,
+      traitInsecureCats, traitDominant, traitSubmissive, traitSensitiveNoise, traitLitterBox,
+      traitCompatCats, traitCompatDogs, traitCompatChildren,
       isCastrated, isChipped, hasRabiesVaccine, hasCatFluVaccine, isDewormed, hasEuPassport,
       compatCats, compatDogs, compatChildren,
       traitCurious, traitPlayful, traitAggressive, traitFearful, traitCuddly,
@@ -284,6 +397,15 @@ export default function CreateCatPage() {
     ageMode, ageMin, ageMax, ageExact, birthYear, birthMonth, birthDay,
     roomName, cageName, audioItems,
     reasonForShelter, restrictions, notesMiscellaneous, isPublished, isEmergency,
+    slowIntegration, partnerNeeded, noSingleAnimal, needsOutdoor, indoorOnly, securedBalcony,
+    forBeginners, forExperienced, quietHome, patientPeople, needsAttention, noSmallChildren,
+    suitableSeniors, suitableFamilies,
+    notCastrated, hasCatPlagueVaccine, vaccinationStatusUnknown, fivNegative, felvNegative,
+    fivPositive, felvPositive, fipPositive, fleaMiteTreatment, handicaps,
+    traitTrusting, traitPeopleOriented, traitQuiet, traitActive, traitNeedsTime,
+    traitAllowsTouch, traitAllowsLift, traitAllowsBrush, traitShowsLimits, traitSeeksCats,
+    traitInsecureCats, traitDominant, traitSubmissive, traitSensitiveNoise, traitLitterBox,
+    traitCompatCats, traitCompatDogs, traitCompatChildren,
     isCastrated, isChipped, hasRabiesVaccine, hasCatFluVaccine, isDewormed, hasEuPassport,
     compatCats, compatDogs, compatChildren,
     traitCurious, traitPlayful, traitAggressive, traitFearful, traitCuddly,
@@ -938,7 +1060,52 @@ export default function CreateCatPage() {
         notes_miscellaneous: notesMiscellaneous,
         is_published: isPublished,
         is_emergency: isEmergency,
+
+        slow_integration: slowIntegration,
+        partner_needed: partnerNeeded,
+        no_single_animal: noSingleAnimal,
+        needs_outdoor: needsOutdoor,
+        indoor_only: indoorOnly,
+        secured_balcony: securedBalcony,
+        for_beginners: forBeginners,
+        for_experienced: forExperienced,
+        quiet_home: quietHome,
+        patient_people: patientPeople,
+        needs_attention: needsAttention,
+        no_small_children: noSmallChildren,
+        suitable_seniors: suitableSeniors,
+        suitable_families: suitableFamilies,
         
+        not_castrated: notCastrated,
+        has_cat_plague_vaccine: hasCatPlagueVaccine,
+        vaccination_status_unknown: vaccinationStatusUnknown,
+        fiv_negative: fivNegative,
+        felv_negative: felvNegative,
+        fiv_positive: fivPositive,
+        felv_positive: felvPositive,
+        fip_positive: fipPositive,
+        flea_mite_treatment: fleaMiteTreatment,
+        handicaps: handicaps.trim() || undefined,
+
+        trait_trusting: traitTrusting,
+        trait_people_oriented: traitPeopleOriented,
+        trait_quiet: traitQuiet,
+        trait_active: traitActive,
+        trait_needs_time: traitNeedsTime,
+        trait_allows_touch: traitAllowsTouch,
+        trait_allows_lift: traitAllowsLift,
+        trait_allows_brush: traitAllowsBrush,
+        trait_shows_limits: traitShowsLimits,
+        trait_seeks_cats: traitSeeksCats,
+        trait_insecure_cats: traitInsecureCats,
+        trait_dominant: traitDominant,
+        trait_submissive: traitSubmissive,
+        trait_sensitive_noise: traitSensitiveNoise,
+        trait_litter_box: traitLitterBox,
+        trait_compat_cats: traitCompatCats,
+        trait_compat_dogs: traitCompatDogs,
+        trait_compat_children: traitCompatChildren,
+
         is_castrated: isCastrated,
         is_chipped: isChipped,
         has_rabies_vaccine: hasRabiesVaccine,
@@ -1142,25 +1309,25 @@ export default function CreateCatPage() {
             onClick={() => setActiveSection('basic')}
             className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'basic' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
           >
-            Eckdaten
+            {lang === 'DE' ? 'Eckdaten' : 'Pagrindiniai duomenys'}
           </button>
           <button
             onClick={() => setActiveSection('medical')}
             className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'medical' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
           >
-            Medizin
+            {lang === 'DE' ? 'Gesundheit' : 'Sveikata'}
           </button>
           <button
             onClick={() => setActiveSection('behavior')}
             className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'behavior' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
           >
-            Temperament
+            {lang === 'DE' ? 'Charakter / Verhalten' : 'Charakteris / Elgsena'}
           </button>
           <button
             onClick={() => setActiveSection('media')}
             className={`py-2 text-[10px] font-bold rounded-lg transition-all ${activeSection === 'media' ? 'bg-brandpink-600 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900'}`}
           >
-            Medien
+            {lang === 'DE' ? 'Medien' : 'Medija'}
           </button>
         </div>
 
@@ -1435,6 +1602,141 @@ export default function CreateCatPage() {
                 />
               </div>
 
+              {/* Vermittlung / Haltung Grid */}
+              <div className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm space-y-3">
+                <h4 className="text-xs font-bold text-stone-700 uppercase tracking-wider border-b border-stone-100 pb-2">
+                  {lang === 'DE' ? 'Vermittlung / Haltung' : 'Dovanojimas / Laikymo sąlygos'}
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={slowIntegration}
+                      onChange={(e) => setSlowIntegration(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'langsame Zusammenführung' : 'lėtas supažindinimas'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={partnerNeeded}
+                      onChange={(e) => setPartnerNeeded(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Vermittlung nur mit Partnertier' : 'dovanojama tik su kitu gyvūnu'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={noSingleAnimal}
+                      onChange={(e) => setNoSingleAnimal(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Keine Einzelhaltung' : 'negalima laikyti vieno'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={needsOutdoor}
+                      onChange={(e) => setNeedsOutdoor(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'braucht Freigang' : 'reikia galimybės išeiti į lauką'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={indoorOnly}
+                      onChange={(e) => setIndoorOnly(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'nur Wohnungshaltung' : 'tik laikymui bute/namuose'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={securedBalcony}
+                      onChange={(e) => setSecuredBalcony(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'gesicherter Balkon/Terrasse' : 'reikalingas apsaugotas balkonas/terasa'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={forBeginners}
+                      onChange={(e) => setForBeginners(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'für Anfänger geeignet' : 'tinka pradedantiesiems'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={forExperienced}
+                      onChange={(e) => setForExperienced(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'für katzenerfahrene Menschen' : 'tik turintiems kačių auginimo patirties'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={quietHome}
+                      onChange={(e) => setQuietHome(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'ruhiges Zuhause' : 'ramūs namai'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={patientPeople}
+                      onChange={(e) => setPatientPeople(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'geduldige Menschen' : 'kantrūs žmonės'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={needsAttention}
+                      onChange={(e) => setNeedsAttention(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'viel Aufmerksamkeit' : 'reikia daug dėmesio'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={noSmallChildren}
+                      onChange={(e) => setNoSmallChildren(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'keine kleinen Kinder' : 'be mažų vaikų'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={suitableSeniors}
+                      onChange={(e) => setSuitableSeniors(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Seniorenhaushalt geeignet' : 'tinka senjorų namams'}</span>
+                  </label>
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={suitableFamilies}
+                      onChange={(e) => setSuitableFamilies(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Familien geeignet' : 'tinka šeimoms'}</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center bg-white border border-stone-200 p-3.5 rounded-xl shadow-sm">
                   <div>
@@ -1465,39 +1767,469 @@ export default function CreateCatPage() {
             </div>
           )}
 
-          {/* 2. MEDICAL TOGGLES */}
+          {/* 2. GESUNDHEIT */}
           {activeSection === 'medical' && (
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
-                Medizinischer Status
+                {lang === 'DE' ? 'Gesundheit' : 'Sveikata'}
                 <HelpButton section="medical" />
               </h3>
-              <div className="grid grid-cols-2 gap-3 bg-white border border-stone-200 p-4 rounded-xl shadow-sm">
-                <ToggleSelect label="Kastriert" value={isCastrated} onChange={setIsCastrated} />
-                <ToggleSelect label="Gechipt" value={isChipped} onChange={setIsChipped} />
-                <ToggleSelect label="Tollwutimpfung" value={hasRabiesVaccine} onChange={setHasRabiesVaccine} />
-                <ToggleSelect label="Katzenschnupfen" value={hasCatFluVaccine} onChange={setHasCatFluVaccine} />
-                <ToggleSelect label="Entwurmt" value={isDewormed} onChange={setIsDewormed} />
-                <ToggleSelect label="EU-Heimtierausweis" value={hasEuPassport} onChange={setHasEuPassport} />
+
+              <div className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  {/* EU-Heimtierausweis */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={hasEuPassport}
+                      onChange={(e) => setHasEuPassport(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'EU-Heimtierausweis' : 'ES augintinio pasas'}</span>
+                  </label>
+
+                  {/* gechipt */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isChipped}
+                      onChange={(e) => setIsChipped(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'gechipt' : 'paženklintas mikroschema (čipu)'}</span>
+                  </label>
+
+                  {/* kastriert */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isCastrated}
+                      onChange={(e) => {
+                        setIsCastrated(e.target.checked);
+                        if (e.target.checked) setNotCastrated(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'kastriert' : 'kastruotas / sterilizuota'}</span>
+                  </label>
+
+                  {/* nicht kastriert */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={notCastrated}
+                      onChange={(e) => {
+                        setNotCastrated(e.target.checked);
+                        if (e.target.checked) setIsCastrated(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'nicht kastriert' : 'nekastruotas / nesterilizuota'}</span>
+                  </label>
+
+                  {/* Tollwutimpfung */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={hasRabiesVaccine}
+                      onChange={(e) => setHasRabiesVaccine(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Tollwutimpfung' : 'skiepas nuo pasiutligės'}</span>
+                  </label>
+
+                  {/* Katzenseuche-Impfung */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={hasCatPlagueVaccine}
+                      onChange={(e) => setHasCatPlagueVaccine(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Katzenseuche-Impfung' : 'skiepas nuo kačių maro'}</span>
+                  </label>
+
+                  {/* Katzenschnupfen-Impfung */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={hasCatFluVaccine}
+                      onChange={(e) => setHasCatFluVaccine(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Katzenschnupfen-Impfung' : 'skiepas nuo kačių slogos'}</span>
+                  </label>
+
+                  {/* Impfstatus unbekannt */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={vaccinationStatusUnknown}
+                      onChange={(e) => setVaccinationStatusUnknown(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Impfstatus unbekannt' : 'skiepų statusas nežinomas'}</span>
+                  </label>
+
+                  {/* FIV-Test negativ */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={fivNegative}
+                      onChange={(e) => {
+                        setFivNegative(e.target.checked);
+                        if (e.target.checked) setFivPositive(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'FIV-Test negativ' : 'FIV testas neigiamas'}</span>
+                  </label>
+
+                  {/* FeLV-Test negativ */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={felvNegative}
+                      onChange={(e) => {
+                        setFelvNegative(e.target.checked);
+                        if (e.target.checked) setFelvPositive(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'FeLV-Test negativ' : 'FeLV testas neigiamas'}</span>
+                  </label>
+
+                  {/* FIV positiv */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={fivPositive}
+                      onChange={(e) => {
+                        setFivPositive(e.target.checked);
+                        if (e.target.checked) setFivNegative(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'FIV positiv' : 'FIV teigiamas'}</span>
+                  </label>
+
+                  {/* FeLV positiv */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={felvPositive}
+                      onChange={(e) => {
+                        setFelvPositive(e.target.checked);
+                        if (e.target.checked) setFelvNegative(false);
+                      }}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'FeLV positiv' : 'FeLV teigiamas'}</span>
+                  </label>
+
+                  {/* FIP positiv */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={fipPositive}
+                      onChange={(e) => setFipPositive(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'FIP positiv' : 'FIP teigiamas'}</span>
+                  </label>
+
+                  {/* Entwurmung */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isDewormed}
+                      onChange={(e) => setIsDewormed(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Entwurmung' : 'nukirmintas'}</span>
+                  </label>
+
+                  {/* Floh-/Milbenbehandlung */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={fleaMiteTreatment}
+                      onChange={(e) => setFleaMiteTreatment(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'Floh-/Milbenbehandlung' : 'gydymas nuo parazitų (blusų/erkių)'}</span>
+                  </label>
+                </div>
+
+                {/* Handicaps Field */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+                    {lang === 'DE' ? 'Handicaps (z.B. Behinderungen, Blindheit)' : 'Fiziniai trūkumai / negalios'}
+                  </label>
+                  <textarea
+                    placeholder={lang === 'DE' ? 'Details zu eventuellen Handicaps...' : 'Informacija apie fizinius trūkumus...'}
+                    value={handicaps}
+                    onChange={(e) => setHandicaps(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm h-20 focus:ring-1 focus:ring-brandpink-500"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* 3. TEMPERAMENT & COMPATIBILITY */}
+          {/* 3. CHARAKTER / VERHALTEN */}
           {activeSection === 'behavior' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
-                Temperament &amp; Verträglichkeit
+                {lang === 'DE' ? 'Charakter / Verhalten' : 'Charakteris / Elgsena'}
                 <HelpButton section="behavior" />
               </h3>
-              <TripleSelect label="Verträglich mit anderen Katzen" value={compatCats} onChange={setCompatCats} />
-              <TripleSelect label="Verträglich mit Hunden" value={compatDogs} onChange={setCompatDogs} />
-              <TripleSelect label="Verträglich mit Kindern" value={compatChildren} onChange={setCompatChildren} />
-              <TripleSelect label="Neugierig" value={traitCurious} onChange={setTraitCurious} />
-              <TripleSelect label="Verspielt" value={traitPlayful} onChange={setTraitPlayful} />
-              <TripleSelect label="Aggressiv" value={traitAggressive} onChange={setTraitAggressive} />
-              <TripleSelect label="Ängstlich" value={traitFearful} onChange={setTraitFearful} />
-              <TripleSelect label="Verschmust" value={traitCuddly} onChange={setTraitCuddly} />
+
+              <div className="bg-white border border-stone-200 p-4 rounded-xl shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  {/* verschmust */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitCuddly === 'JA'}
+                      onChange={(e) => setTraitCuddly(e.target.checked ? 'JA' : 'NEIN')}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'verschmust' : 'meilus (-i)'}</span>
+                  </label>
+
+                  {/* zutraulich */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitTrusting}
+                      onChange={(e) => setTraitTrusting(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'zutraulich' : 'patiklus (-i)'}</span>
+                  </label>
+
+                  {/* sehr menschenbezogen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitPeopleOriented}
+                      onChange={(e) => setTraitPeopleOriented(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'sehr menschenbezogen' : 'labai orientuotas (-a) į žmones'}</span>
+                  </label>
+
+                  {/* verspielt */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitPlayful === 'JA'}
+                      onChange={(e) => setTraitPlayful(e.target.checked ? 'JA' : 'NEIN')}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'verspielt' : 'žaismingas (-a)'}</span>
+                  </label>
+
+                  {/* ruhig */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitQuiet}
+                      onChange={(e) => setTraitQuiet(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'ruhig' : 'ramus (-i)'}</span>
+                  </label>
+
+                  {/* aktiv */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitActive}
+                      onChange={(e) => setTraitActive(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'aktiv' : 'aktyvus (-i)'}</span>
+                  </label>
+
+                  {/* neugierig */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitCurious === 'JA'}
+                      onChange={(e) => setTraitCurious(e.target.checked ? 'JA' : 'NEIN')}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'neugierig' : 'smalsus (-i)'}</span>
+                  </label>
+
+                  {/* ängstlich / unsicher */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitFearful === 'JA'}
+                      onChange={(e) => setTraitFearful(e.target.checked ? 'JA' : 'NEIN')}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'ängstlich / unsicher' : 'baimingas (-a) / nesaugus (-i)'}</span>
+                  </label>
+
+                  {/* braucht Zeit zum Vertrauen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitNeedsTime}
+                      onChange={(e) => setTraitNeedsTime(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'braucht Zeit zum Vertrauen' : 'reikia laiko pasitikėjimui įgyti'}</span>
+                  </label>
+
+                  {/* lässt sich anfassen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitAllowsTouch}
+                      onChange={(e) => setTraitAllowsTouch(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'lässt sich anfassen' : 'leidžiasi glostomas (-a)'}</span>
+                  </label>
+
+                  {/* lässt sich hochheben */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitAllowsLift}
+                      onChange={(e) => setTraitAllowsLift(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'lässt sich hochheben' : 'leidžiasi pakeliamas (-a)'}</span>
+                  </label>
+
+                  {/* lässt sich bürsten */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitAllowsBrush}
+                      onChange={(e) => setTraitAllowsBrush(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'lässt sich bürsten' : 'leidžiasi šukuojamas (-a)'}</span>
+                  </label>
+
+                  {/* zeigt Grenzen deutlich */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitShowsLimits}
+                      onChange={(e) => setTraitShowsLimits(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'zeigt Grenzen deutlich' : 'aiškiai rodo savo ribas'}</span>
+                  </label>
+
+                  {/* sucht Kontakt zu anderen Katzen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitSeeksCats}
+                      onChange={(e) => setTraitSeeksCats(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'sucht Kontakt zu anderen Katzen' : 'ieško kontakto su kitomis katėmis'}</span>
+                  </label>
+
+                  {/* unsicher mit anderen Katzen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitInsecureCats}
+                      onChange={(e) => setTraitInsecureCats(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'unsicher mit anderen Katzen' : 'nesaugus (-i) su kitomis katėmis'}</span>
+                  </label>
+
+                  {/* verträglich mit anderen Katzen */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitCompatCats}
+                      onChange={(e) => setTraitCompatCats(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'verträglich mit anderen Katzen' : 'sutaria su kitomis katėmis'}</span>
+                  </label>
+
+                  {/* verträglich mit Hunden */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitCompatDogs}
+                      onChange={(e) => setTraitCompatDogs(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'verträglich mit Hunden' : 'sutaria su šunimis'}</span>
+                  </label>
+
+                  {/* verträglich mit Kindern */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitCompatChildren}
+                      onChange={(e) => setTraitCompatChildren(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'verträglich mit Kindern' : 'sutaria su vaikais'}</span>
+                  </label>
+
+                  {/* dominant */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitDominant}
+                      onChange={(e) => setTraitDominant(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'dominant' : 'dominantinis (-ė)'}</span>
+                  </label>
+
+                  {/* unterwürfig */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitSubmissive}
+                      onChange={(e) => setTraitSubmissive(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'unterwürfig' : 'paklusnus (-i)'}</span>
+                  </label>
+
+                  {/* reagiert empfindlich auf laute Geräusche */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitSensitiveNoise}
+                      onChange={(e) => setTraitSensitiveNoise(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'reagiert empfindlich auf laute Geräusche' : 'jautriai reaguoja į garsius triukšmus'}</span>
+                  </label>
+
+                  {/* benutzt Katzenklo zuverlässig */}
+                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={traitLitterBox}
+                      onChange={(e) => setTraitLitterBox(e.target.checked)}
+                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'benutzt Katzenklo zuverlässig' : 'patikimai naudojasi kraiko dėžute'}</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 

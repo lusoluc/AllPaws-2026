@@ -61,6 +61,55 @@ export interface Animal {
   trait_fearful: 'JA' | 'NEIN' | 'unbekannt';
   trait_cuddly: 'JA' | 'NEIN' | 'unbekannt';
 
+  slow_integration?: boolean;
+  partner_needed?: boolean;
+  no_single_animal?: boolean;
+  needs_outdoor?: boolean;
+  indoor_only?: boolean;
+  secured_balcony?: boolean;
+  for_beginners?: boolean;
+  for_experienced?: boolean;
+  quiet_home?: boolean;
+  patient_people?: boolean;
+  needs_attention?: boolean;
+  no_small_children?: boolean;
+  suitable_seniors?: boolean;
+  suitable_families?: boolean;
+
+  // Gesundheit (Health)
+  not_castrated?: boolean;
+  has_cat_plague_vaccine?: boolean;
+  vaccination_status_unknown?: boolean;
+  fiv_negative?: boolean;
+  felv_negative?: boolean;
+  fiv_positive?: boolean;
+  felv_positive?: boolean;
+  fip_positive?: boolean;
+  flea_mite_treatment?: boolean;
+  handicaps?: string;
+
+  // Charakter / Verhalten (Character / Behavior)
+  trait_trusting?: boolean;
+  trait_people_oriented?: boolean;
+  trait_quiet?: boolean;
+  trait_active?: boolean;
+  trait_needs_time?: boolean;
+  trait_allows_touch?: boolean;
+  trait_allows_lift?: boolean;
+  trait_allows_brush?: boolean;
+  trait_shows_limits?: boolean;
+  trait_seeks_cats?: boolean;
+  trait_insecure_cats?: boolean;
+  trait_dominant?: boolean;
+  trait_submissive?: boolean;
+  trait_sensitive_noise?: boolean;
+  trait_litter_box?: boolean;
+  trait_compat_cats?: boolean;
+  trait_compat_dogs?: boolean;
+  trait_compat_children?: boolean;
+
+
+
   // Media
   media_urls: string[]; // Base64 data URLs for photos
   passport_urls: string[]; // Base64 data URLs for passport/impfung photos
