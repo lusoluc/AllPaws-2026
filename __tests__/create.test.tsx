@@ -396,4 +396,45 @@ describe('CreateCatPage Validation, Multilingual, Offline & Edge Cases', () => {
       );
     });
   });
+
+  test('Negative/Exclusivity Path: ensures mutual exclusivity of Castration and FIV/FeLV test result checkboxes', async () => {
+    render(<CreateCatPage />);
+    
+    // Switch to Gesundheit tab
+    const medicalTabBtn = screen.getByRole('button', { name: 'Gesundheit' });
+    fireEvent.click(medicalTabBtn);
+
+    // Get checkboxes via role and name
+    const kastriertBox = screen.getByRole('checkbox', { name: 'kastriert' }) as HTMLInputElement;
+    const nichtKastriertBox = screen.getByRole('checkbox', { name: 'nicht kastriert' }) as HTMLInputElement;
+    
+    // Click "nicht kastriert"
+    fireEvent.click(nichtKastriertBox);
+    expect(nichtKastriertBox.checked).toBe(true);
+    expect(kastriertBox.checked).toBe(false);
+    
+    // Click "kastriert" - should auto-uncheck "nicht kastriert"
+    fireEvent.click(kastriertBox);
+    expect(kastriertBox.checked).toBe(true);
+    expect(nichtKastriertBox.checked).toBe(false);
+
+    // Click "nicht kastriert" again - should auto-uncheck "kastriert"
+    fireEvent.click(nichtKastriertBox);
+    expect(nichtKastriertBox.checked).toBe(true);
+    expect(kastriertBox.checked).toBe(false);
+
+    // FIV checkboxes
+    const fivNegBox = screen.getByRole('checkbox', { name: 'FIV-Test negativ' }) as HTMLInputElement;
+    const fivPosBox = screen.getByRole('checkbox', { name: 'FIV positiv' }) as HTMLInputElement;
+
+    // Check FIV negativ
+    fireEvent.click(fivNegBox);
+    expect(fivNegBox.checked).toBe(true);
+    expect(fivPosBox.checked).toBe(false);
+
+    // Check FIV positiv - should auto-uncheck FIV negativ
+    fireEvent.click(fivPosBox);
+    expect(fivPosBox.checked).toBe(true);
+    expect(fivNegBox.checked).toBe(false);
+  });
 });

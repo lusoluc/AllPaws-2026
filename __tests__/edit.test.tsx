@@ -267,4 +267,95 @@ describe('EditCatPage Happy & Negative Path Tests', () => {
       expect(screen.getByText(/Das Tier mit ID/)).toBeInTheDocument();
     });
   });
+
+  test('Happy Path: loads Haltung, Gesundheit, and Charakter traits and updates them successfully', async () => {
+    const paramsPromise = createResolvedPromise({ id: '1' });
+    render(<EditCatPage params={paramsPromise} />);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Luna')).toBeInTheDocument();
+    });
+
+    // Check basic tab checkboxes (slow Integration is false by default in mockAnimal)
+    const slowIntBox = screen.getByRole('checkbox', { name: 'langsame Zusammenführung' }) as HTMLInputElement;
+    expect(slowIntBox.checked).toBe(false);
+    fireEvent.click(slowIntBox);
+    expect(slowIntBox.checked).toBe(true);
+
+    // Switch to Gesundheit tab
+    const medicalTabBtn = screen.getByRole('button', { name: 'Gesundheit' });
+    fireEvent.click(medicalTabBtn);
+
+    // Verify pre-filled from mockAnimal (has_eu_passport is true)
+    const passportBox = screen.getByRole('checkbox', { name: 'EU-Heimtierausweis' }) as HTMLInputElement;
+    expect(passportBox.checked).toBe(true);
+
+    // Switch to Charakter tab
+    const behaviorTabBtn = screen.getByRole('button', { name: 'Charakter / Verhalten' });
+    fireEvent.click(behaviorTabBtn);
+
+    // Verify pre-filled trait_trusting (false in mockAnimal)
+    const trustingBox = screen.getByRole('checkbox', { name: 'zutraulich' }) as HTMLInputElement;
+    expect(trustingBox.checked).toBe(false);
+    fireEvent.click(trustingBox);
+    expect(trustingBox.checked).toBe(true);
+
+    // Save
+    const staffInput = screen.getByPlaceholderText('Dein Name oder Kürzel (z.B. Carlos)');
+    fireEvent.change(staffInput, { target: { value: 'Carlos' } });
+
+    const saveBtn = screen.getByRole('button', { name: 'Änderungen speichern' });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 1,
+          slow_integration: true,
+          trait_trusting: true,
+        })
+      );
+    });
+  });
+
+  test('Negative/Exclusivity Path: ensures mutual exclusivity of Castration and FIV/FeLV test result checkboxes on Edit Page', async () => {
+    const paramsPromise = createResolvedPromise({ id: '1' });
+    render(<EditCatPage params={paramsPromise} />);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Luna')).toBeInTheDocument();
+    });
+
+    // Switch to Gesundheit tab
+    const medicalTabBtn = screen.getByRole('button', { name: 'Gesundheit' });
+    fireEvent.click(medicalTabBtn);
+
+    // Get checkboxes via role and name
+    const kastriertBox = screen.getByRole('checkbox', { name: 'kastriert' }) as HTMLInputElement;
+    const nichtKastriertBox = screen.getByRole('checkbox', { name: 'nicht kastriert' }) as HTMLInputElement;
+    
+    // Click "nicht kastriert" - should auto-uncheck "kastriert"
+    fireEvent.click(nichtKastriertBox);
+    expect(nichtKastriertBox.checked).toBe(true);
+    expect(kastriertBox.checked).toBe(false);
+    
+    // Click "kastriert" - should auto-uncheck "nicht kastriert"
+    fireEvent.click(kastriertBox);
+    expect(kastriertBox.checked).toBe(true);
+    expect(nichtKastriertBox.checked).toBe(false);
+
+    // FIV checkboxes
+    const fivNegBox = screen.getByRole('checkbox', { name: 'FIV-Test negativ' }) as HTMLInputElement;
+    const fivPosBox = screen.getByRole('checkbox', { name: 'FIV positiv' }) as HTMLInputElement;
+
+    // Check FIV negativ
+    fireEvent.click(fivNegBox);
+    expect(fivNegBox.checked).toBe(true);
+    expect(fivPosBox.checked).toBe(false);
+
+    // Check FIV positiv - should auto-uncheck FIV negativ
+    fireEvent.click(fivPosBox);
+    expect(fivPosBox.checked).toBe(true);
+    expect(fivNegBox.checked).toBe(false);
+  });
 });
