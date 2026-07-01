@@ -15,7 +15,7 @@ The app helps shelters manage animal profiles, handle adoption inquiries, send n
 - **Created by**: [Carlos Lucas](https://www.linkedin.com/in/director-it-development/) and a crew of volunteer contributors who pour their free time (and often their own money) into this.
 - **Partner shelter**: VšĮ "Būk mano draugas" in Klaipėda, Lithuania — a real shelter doing real rescue work on the ground.
 - **License**: [MIT](./LICENSE) — fully open source. Fork it, adapt it, make it yours. Contributions are always welcome.
-- **Repository**: [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
+- **Repository**: [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
 
 Every single line of code, every design decision, every late-night debugging session — it's all privately contributed. 100% goes to helping the animals.
 
@@ -44,8 +44,8 @@ Ready? Let's get this running. It takes about two minutes:
 
 ```bash
 # Clone the repo
-git clone https://github.com/lusoluc/AllPaws-2026.git
-cd AllPaws-2026
+git clone https://github.com/lusoluc/katzen-app.git
+cd katzen-app
 
 # Install dependencies
 pnpm install

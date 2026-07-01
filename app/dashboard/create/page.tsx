@@ -29,8 +29,10 @@ import {
   Square,
   Cloud,
   CloudOff,
-  HelpCircle
+  HelpCircle,
+  Plus
 } from 'lucide-react';
+import { appendAudioBlobs } from '@/lib/audioStitcher';
 
 export default function CreateCatPage() {
   const router = useRouter();
@@ -88,8 +90,9 @@ export default function CreateCatPage() {
   const [cageName, setCageName] = useState('');
   
   // Audio Recording State
-  const [audioDraftUrl, setAudioDraftUrl] = useState('');
+  const [audioItems, setAudioItems] = useState<{ url: string; isSynced: boolean }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingIndex, setRecordingIndex] = useState<number | null>(null); // null = new, number = append index
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   
@@ -209,7 +212,11 @@ export default function CreateCatPage() {
         setShelterYear(d.shelterYear || '2026');
         setRoomName(d.roomName || '');
         setCageName(d.cageName || '');
-        setAudioDraftUrl(d.audioDraftUrl || '');
+        if (d.audioItems) {
+          setAudioItems(d.audioItems);
+        } else if (d.audioDraftUrl) {
+          setAudioItems([{ url: d.audioDraftUrl, isSynced: false }]);
+        }
         setReasonForShelter(d.reasonForShelter || '');
         setRestrictions(d.restrictions || '');
         setNotesMiscellaneous(d.notesMiscellaneous || '');
@@ -246,7 +253,7 @@ export default function CreateCatPage() {
     const draftObject = {
       name, gender, ageYears, shelterMonth, shelterYear,
       ageMode, ageMin, ageMax, ageExact, birthYear, birthMonth, birthDay,
-      roomName, cageName, audioDraftUrl,
+      roomName, cageName, audioItems,
       reasonForShelter, restrictions, notesMiscellaneous, isPublished, isEmergency,
       isCastrated, isChipped, hasRabiesVaccine, hasCatFluVaccine, isDewormed, hasEuPassport,
       compatCats, compatDogs, compatChildren,
@@ -275,7 +282,7 @@ export default function CreateCatPage() {
   }, [
     name, gender, ageYears, shelterMonth, shelterYear,
     ageMode, ageMin, ageMax, ageExact, birthYear, birthMonth, birthDay,
-    roomName, cageName, audioDraftUrl,
+    roomName, cageName, audioItems,
     reasonForShelter, restrictions, notesMiscellaneous, isPublished, isEmergency,
     isCastrated, isChipped, hasRabiesVaccine, hasCatFluVaccine, isDewormed, hasEuPassport,
     compatCats, compatDogs, compatChildren,
@@ -833,7 +840,11 @@ export default function CreateCatPage() {
     };
   }, [isRecording]);
 
-  const startRecording = async () => {
+  const startRecording = async (indexToAppend: number | null = null) => {
+    if (audioItems.length >= 10 && indexToAppend === null) {
+      alert('Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.');
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -845,17 +856,37 @@ export default function CreateCatPage() {
         }
       };
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+      recorder.onstop = async () => {
+        const newBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        let finalBlob = newBlob;
+        if (indexToAppend !== null) {
+          // Stitching mode: merge existing audio with new audio
+          const existingItem = audioItems[indexToAppend];
+          try {
+            const res = await fetch(existingItem.url);
+            const existingBlob = await res.blob();
+            finalBlob = await appendAudioBlobs(existingBlob, newBlob);
+          } catch (e) {
+            console.error('Failed to append audio blobs:', e);
+            alert('Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.');
+          }
+        }
+
         const reader = new FileReader();
-        reader.readAsDataURL(blob);
+        reader.readAsDataURL(finalBlob);
         reader.onloadend = () => {
           const base64data = reader.result as string;
-          setAudioDraftUrl(base64data);
+          if (indexToAppend !== null) {
+            setAudioItems(prev => prev.map((item, idx) => idx === indexToAppend ? { url: base64data, isSynced: false } : item));
+          } else {
+            setAudioItems(prev => [...prev, { url: base64data, isSynced: false }]);
+          }
         };
         stream.getTracks().forEach((track) => track.stop());
       };
 
+      setRecordingIndex(indexToAppend);
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
@@ -872,8 +903,8 @@ export default function CreateCatPage() {
     }
   };
 
-  const deleteAudio = () => {
-    setAudioDraftUrl('');
+  const deleteAudio = (index: number) => {
+    setAudioItems(prev => prev.filter((_, i) => i !== index));
   };
 
   // Submit Form
@@ -929,7 +960,8 @@ export default function CreateCatPage() {
         video_urls: videos.filter(v => v.isSynced && v.url).map(v => v.url!),
         room_name: roomName.trim() || undefined,
         cage_name: cageName.trim() || undefined,
-        audio_draft_url: audioDraftUrl || undefined,
+        audio_draft_url: audioItems.length > 0 ? JSON.stringify(audioItems.map(item => item.url)) : undefined,
+        audio_urls: [],
 
         // Store binary media files locally for background sync upload
         local_photos: photos.map((base64, index) => ({
@@ -945,13 +977,13 @@ export default function CreateCatPage() {
           blob: vid.blob,
           opfsKey: vid.opfsKey
         })),
-        local_audio: audioDraftUrl ? {
-          name: 'audio_note.webm',
-          blob: base64ToBlob(audioDraftUrl)
-        } : undefined,
+        local_audios: audioItems.map((item, index) => ({
+          name: `audio_note_${index}.wav`,
+          blob: base64ToBlob(item.url)
+        })),
 
         sync_pending: 1,
-        media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || !!audioDraftUrl) ? 1 : 0,
+        media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || audioItems.length > 0) ? 1 : 0,
         updated_at: new Date().toISOString()
       };
 
@@ -1879,65 +1911,77 @@ export default function CreateCatPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotiz aufnehmen</h3>
-                    <p className="text-[10px] text-stone-400">Sprachnotiz für interne Notizen oder Beschreibung</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotizen ({audioItems.length}/10)</h3>
+                    <p className="text-[10px] text-stone-400">Nimm bis zu 10 Sprachnotizen auf oder führe eine bestehende fort</p>
                   </div>
-                  {!audioDraftUrl && (
+                  {!isRecording && audioItems.length < 10 && (
                     <button
                       type="button"
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                        isRecording
-                          ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
-                          : 'bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100'
-                      }`}
+                      onClick={() => startRecording(null)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100 transition-all cursor-pointer"
                     >
-                      {isRecording ? (
-                        <>
-                          <Square className="w-3.5 h-3.5" />
-                          <span>Stoppen ({Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')})</span>
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="w-3.5 h-3.5" />
-                          <span>Aufnehmen</span>
-                        </>
-                      )}
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Neue Sprachnotiz</span>
                     </button>
                   )}
                 </div>
 
-                <div className="border border-stone-200 rounded-xl p-4 bg-stone-50 flex flex-col justify-center min-h-[90px]">
-                  {audioDraftUrl ? (
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-center justify-between bg-white border border-stone-200 p-2 rounded-lg shadow-sm">
-                        <div className="flex items-center space-x-2 flex-1">
-                          <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <audio src={audioDraftUrl} controls className="w-full max-h-10 outline-none accent-brandpink-500" />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={deleteAudio}
-                          className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Sprachnotiz löschen"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : isRecording ? (
-                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                <div className="border border-stone-200 rounded-xl p-4 bg-stone-50 space-y-3">
+                  {isRecording ? (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-3">
                       <div className="flex items-center space-x-2">
                         <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-                        <span className="text-xs font-semibold text-red-500">Aufnahme läuft...</span>
+                        <span className="text-xs font-semibold text-red-500">
+                          {recordingIndex !== null ? 'Hinzufügen läuft...' : 'Aufnahme läuft...'}
+                        </span>
                       </div>
-                      <span className="text-xl font-mono text-stone-700">
+                      <span className="text-2xl font-mono text-stone-700">
                         {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}
                       </span>
+                      <button
+                        type="button"
+                        onClick={stopRecording}
+                        className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold animate-pulse hover:bg-red-100 transition-all cursor-pointer"
+                      >
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Aufnahme stoppen & speichern</span>
+                      </button>
+                    </div>
+                  ) : audioItems.length > 0 ? (
+                    <div className="space-y-2">
+                      {audioItems.map((item, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-stone-200 p-2.5 rounded-xl shadow-sm gap-2">
+                          <div className="flex items-center space-x-2 flex-1">
+                            <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="text-[10px] font-bold text-stone-500 min-w-[45px] shrink-0">Note #{index + 1}</span>
+                            <audio src={item.url} controls className="w-full max-h-8 outline-none accent-brandpink-500" />
+                          </div>
+                          
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => startRecording(index)}
+                              className="px-2 py-1 bg-stone-100 hover:bg-brandpink-55 hover:text-brandpink-700 text-stone-600 text-[10px] font-bold rounded border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                              title="Diese Sprachnotiz fortsetzen"
+                            >
+                              <Mic className="w-3 h-3 text-brandpink-500" />
+                              <span>Fortsetzen</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteAudio(index)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-colors cursor-pointer"
+                              title="Löschen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="py-4 text-center text-xs text-stone-400">
-                      Keine Sprachnotiz aufgenommen. Klicke auf &quot;Aufnehmen&quot;, um eine Sprachnotiz zu starten.
+                    <div className="py-6 text-center text-xs text-stone-400">
+                      Keine Sprachnotizen aufgenommen. Klicke oben auf &quot;Neue Sprachnotiz&quot;, um zu starten.
                     </div>
                   )}
                 </div>

@@ -7,6 +7,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, formatAge } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import PublicHeader from '@/components/PublicHeader';
+import SharePanel from '@/components/SharePanel';
 import { 
   ArrowLeft, 
   Heart, 
@@ -58,6 +59,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
   // Share States & Methods
   const [shareCopied, setShareCopied] = useState(false);
   const [shareNotification, setShareNotification] = useState<string | null>(null);
+  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
 
   const getShareText = () => {
     const url = typeof window !== 'undefined' ? `${window.location.origin}/katzen/${cat?.id}` : '';
@@ -587,72 +589,17 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
             </h3>
             <p className="text-[11px] text-stone-600 leading-relaxed font-light">
               {lang === 'DE' 
-                ? 'Hilf uns, ein Zuhause zu finden! Teile das Profil direkt mit Freunden oder in sozialen Netzwerken.' 
-                : 'Padėkite mums rasti namus! Pasidalinkite profiliu su draugais arba socialiniuose tinkluose.'}
+                ? 'Erstelle eine wunderschöne Grafik für Social Media oder teile das Tierprofil direkt mit deinen Freunden, um die Vermittlungschancen zu erhöhen!' 
+                : 'Sukurkite gražų paveikslėlį socialiniams tinklams arba pasidalinkite profiliu su draugais, kad padidintumėte šio augintinio šansus rasti namus!'}
             </p>
             
-            {/* Share Buttons Row */}
-            <div className="flex flex-wrap gap-2.5">
-              {/* WhatsApp */}
-              <button
-                onClick={handleShareWhatsApp}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] text-white hover:bg-[#20ba56] transition-colors shadow-sm"
-                title="WhatsApp"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.966a9.9 9.9 0 0 0-6.98-2.879C6.222 1.01 1.797 5.381 1.793 10.81c-.001 1.639.425 3.24 1.232 4.679l-.992 3.626 3.716-.975zM17.47 15.39c-.3-.15-1.77-.874-2.04-.972-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.18.2-.35.22-.65.07-1.125-.56-1.92-1.077-2.69-2.39-.2-.35.2-.32.57-1.07.1-.2.05-.38-.02-.53-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.22 3.07c.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.63.72.23 1.37.2 1.89.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3 0-1.42-.05-.15-.25-.22-.55-.37z"/>
-                </svg>
-              </button>
-
-              {/* Facebook */}
-              <button
-                onClick={handleShareFacebook}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] text-white hover:bg-[#166fe5] transition-colors shadow-sm"
-                title="Facebook"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </button>
-
-              {/* Instagram */}
-              <button
-                onClick={handleShareInstagram}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white hover:opacity-90 transition-opacity shadow-sm"
-                title="Instagram"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
-                </svg>
-              </button>
-
-              {/* Email */}
-              <button
-                onClick={handleShareEmail}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-600 text-white hover:bg-stone-700 transition-colors shadow-sm"
-                title="Email"
-              >
-                <Mail className="w-5 h-5" />
-              </button>
-
-              {/* Copy Link */}
-              <button
-                onClick={handleCopyLink}
-                className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors shadow-sm ${
-                  shareCopied ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                }`}
-                title={lang === 'DE' ? 'Link kopieren' : 'Kopijuoti nuorodą'}
-              >
-                {shareCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-
-            {/* Notification message inside card */}
-            {shareNotification && (
-              <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-800 text-[10px] rounded-lg animate-fade-in font-medium leading-relaxed">
-                {shareNotification}
-              </div>
-            )}
+            <button
+              onClick={() => setIsSharePanelOpen(true)}
+              className="w-full flex items-center justify-center space-x-2 py-3 bg-brandpink-50 hover:bg-brandpink-100 text-brandpink-700 font-extrabold rounded-xl border border-brandpink-200/50 shadow-sm transition-all cursor-pointer text-xs"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>{lang === 'DE' ? 'Grafik erstellen & Profil teilen' : 'Sukurti paveikslėlį ir dalintis'}</span>
+            </button>
           </div>
 
           {/* Virtual Food Bowl Spendenmodul */}
@@ -741,13 +688,11 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
         {/* Action Buttons (Share & Email Inquiry) */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/90 border-t border-stone-200/85 backdrop-blur-md p-4 max-w-lg mx-auto z-40 flex space-x-3">
           <button
-            onClick={handleCopyLink}
-            className={`p-4 rounded-xl shadow-sm border active:scale-95 transition-all flex items-center justify-center ${
-              shareCopied ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-stone-100 border-stone-200 text-stone-600 hover:bg-stone-200'
-            }`}
-            title={lang === 'DE' ? 'Link kopieren' : 'Kopijuoti nuorodą'}
+            onClick={() => setIsSharePanelOpen(true)}
+            className="p-4 rounded-xl shadow-sm border active:scale-95 transition-all flex items-center justify-center bg-stone-100 border-stone-200 text-stone-600 hover:bg-stone-200 cursor-pointer"
+            title={lang === 'DE' ? 'Grafik erstellen & Profil teilen' : 'Sukurti paveikslėlį ir dalintis'}
           >
-            {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+            <Share2 className="w-5 h-5" />
           </button>
 
           <button
@@ -760,6 +705,13 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
         </div>
 
       </main>
+
+      {isSharePanelOpen && cat && (
+        <SharePanel 
+          animal={cat} 
+          onClose={() => setIsSharePanelOpen(false)} 
+        />
+      )}
     </div>
   );
 }

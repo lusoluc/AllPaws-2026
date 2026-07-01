@@ -149,12 +149,28 @@ async function pushLocalChanges(): Promise<void> {
     const uploadedPhotos: string[] = (animal.media_urls || []).filter(url => !url.startsWith('data:'));
     const uploadedPassports: string[] = (animal.passport_urls || []).filter(url => !url.startsWith('data:'));
     const uploadedVideos: string[] = (animal.video_urls || []).filter(url => !url.startsWith('data:'));
-    let uploadedAudio = animal.audio_draft_url && animal.audio_draft_url.startsWith('data:') ? undefined : animal.audio_draft_url;
+    
+    // Multi-audio parsing
+    let uploadedAudioUrls: string[] = [];
+    if (animal.audio_urls && animal.audio_urls.length > 0) {
+      uploadedAudioUrls = [...animal.audio_urls];
+    } else if (animal.audio_draft_url) {
+      if (animal.audio_draft_url.startsWith('[')) {
+        try {
+          uploadedAudioUrls = JSON.parse(animal.audio_draft_url);
+        } catch (e) {
+          uploadedAudioUrls = [animal.audio_draft_url];
+        }
+      } else if (!animal.audio_draft_url.startsWith('data:')) {
+        uploadedAudioUrls = [animal.audio_draft_url];
+      }
+    }
 
     let mediaUploadFailedOrPending = false;
     const remainingLocalPhotos: typeof animal.local_photos = [];
     const remainingLocalPassports: typeof animal.local_passports = [];
     const remainingLocalVideos: typeof animal.local_videos = [];
+    const remainingLocalAudios: typeof animal.local_audios = [];
     let remainingLocalAudio: typeof animal.local_audio = animal.local_audio;
 
     // Upload local_photos
@@ -247,7 +263,8 @@ async function pushLocalChanges(): Promise<void> {
       }
     }
 
-    // Upload local_audio
+    // Upload local_audio (legacy)
+    let uploadedAudio = uploadedAudioUrls[0] || undefined;
     if (animal.local_audio) {
       if (!animal.local_audio.blob) {
         mediaUploadFailedOrPending = true;
@@ -256,16 +273,44 @@ async function pushLocalChanges(): Promise<void> {
           const url = await uploadMediaBlob('audios', animal.local_audio.name, animal.local_audio.blob);
           if (url) {
             uploadedAudio = url;
+            uploadedAudioUrls = [url];
             remainingLocalAudio = undefined;
           } else {
             mediaUploadFailedOrPending = true;
           }
         } catch (e) {
-          console.error(`Failed to upload audio:`, e);
+          console.error(`Failed to upload legacy audio:`, e);
           mediaUploadFailedOrPending = true;
         }
       }
     }
+
+    // Upload local_audios (new multi-audio)
+    if (animal.local_audios && animal.local_audios.length > 0) {
+      for (const item of animal.local_audios) {
+        if (!item.blob) {
+          mediaUploadFailedOrPending = true;
+          remainingLocalAudios.push(item);
+          continue;
+        }
+        try {
+          const url = await uploadMediaBlob('audios', item.name, item.blob);
+          if (url) {
+            uploadedAudioUrls.push(url);
+          } else {
+            mediaUploadFailedOrPending = true;
+            remainingLocalAudios.push(item);
+          }
+        } catch (e) {
+          console.error(`Failed to upload audio ${item.name}:`, e);
+          mediaUploadFailedOrPending = true;
+          remainingLocalAudios.push(item);
+        }
+      }
+    }
+
+    // Convert multi-audio URLs to JSON string for Supabase storage column
+    const serializedAudioDraftUrl = uploadedAudioUrls.length > 0 ? JSON.stringify(uploadedAudioUrls) : undefined;
 
     const { 
       id: oldId, 
@@ -273,7 +318,8 @@ async function pushLocalChanges(): Promise<void> {
       local_photos, 
       local_passports, 
       local_videos, 
-      local_audio, 
+      local_audio,
+      local_audios,
       ...cleanAnimal 
     } = animal;
     
@@ -283,7 +329,7 @@ async function pushLocalChanges(): Promise<void> {
       media_urls: uploadedPhotos,
       passport_urls: uploadedPassports,
       video_urls: uploadedVideos,
-      audio_draft_url: uploadedAudio,
+      audio_draft_url: serializedAudioDraftUrl,
       media_pending: mediaUploadFailedOrPending ? 1 : 0,
       updated_at: updatedAt 
     };
@@ -328,11 +374,13 @@ async function pushLocalChanges(): Promise<void> {
         media_urls: uploadedPhotos,
         passport_urls: uploadedPassports,
         video_urls: uploadedVideos,
-        audio_draft_url: uploadedAudio,
+        audio_draft_url: serializedAudioDraftUrl,
+        audio_urls: uploadedAudioUrls,
         local_photos: remainingLocalPhotos.length > 0 ? remainingLocalPhotos : undefined,
         local_passports: remainingLocalPassports.length > 0 ? remainingLocalPassports : undefined,
         local_videos: remainingLocalVideos.length > 0 ? remainingLocalVideos : undefined,
         local_audio: remainingLocalAudio,
+        local_audios: remainingLocalAudios.length > 0 ? remainingLocalAudios : undefined,
         sync_pending: mediaUploadFailedOrPending ? 1 : 0,
         media_pending: mediaUploadFailedOrPending ? 1 : 0,
         updated_at: updatedAt
@@ -711,8 +759,23 @@ async function pullCloudChanges(): Promise<void> {
         continue;
       }
 
+      // Parse audio_draft_url to list of URLs
+      let pulledAudioUrls: string[] = [];
+      if (ca.audio_draft_url) {
+        if (ca.audio_draft_url.startsWith('[')) {
+          try {
+            pulledAudioUrls = JSON.parse(ca.audio_draft_url);
+          } catch (e) {
+            pulledAudioUrls = [ca.audio_draft_url];
+          }
+        } else {
+          pulledAudioUrls = [ca.audio_draft_url];
+        }
+      }
+
       await db.animals.put({
         ...ca,
+        audio_urls: pulledAudioUrls,
         sync_pending: 0
       });
     }

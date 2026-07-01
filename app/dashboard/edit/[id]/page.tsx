@@ -31,8 +31,10 @@ import {
   Square,
   Cloud,
   CloudOff,
-  HelpCircle
+  HelpCircle,
+  Plus
 } from 'lucide-react';
+import { appendAudioBlobs } from '@/lib/audioStitcher';
 
 export default function EditCatPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -65,8 +67,9 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
   const [roomName, setRoomName] = useState('');
   const [cageName, setCageName] = useState('');
 
-  const [audioDraftUrl, setAudioDraftUrl] = useState('');
+  const [audioItems, setAudioItems] = useState<{ url: string; isSynced: boolean }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingIndex, setRecordingIndex] = useState<number | null>(null); // null = new, number = append index
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
@@ -329,9 +332,38 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           }
           setVideos(mappedVideos);
 
-          if (animal.audio_draft_url) {
-            setAudioDraftUrl(animal.audio_draft_url);
+          // Load audios
+          const mappedAudios: { url: string; isSynced: boolean }[] = [];
+          if (animal.audio_urls && animal.audio_urls.length > 0) {
+            animal.audio_urls.forEach((url) => {
+              mappedAudios.push({ url, isSynced: true });
+            });
+          } else if (animal.audio_draft_url) {
+            if (animal.audio_draft_url.startsWith('[')) {
+              try {
+                const parsed: string[] = JSON.parse(animal.audio_draft_url);
+                parsed.forEach(url => mappedAudios.push({ url, isSynced: url.startsWith('http') }));
+              } catch (e) {
+                mappedAudios.push({ url: animal.audio_draft_url, isSynced: animal.audio_draft_url.startsWith('http') });
+              }
+            } else {
+              mappedAudios.push({ url: animal.audio_draft_url, isSynced: animal.audio_draft_url.startsWith('http') });
+            }
           }
+          
+          if (animal.local_audios && animal.local_audios.length > 0) {
+            for (const la of animal.local_audios) {
+              if (la.blob) {
+                try {
+                  const url = URL.createObjectURL(la.blob);
+                  mappedAudios.push({ url, isSynced: false });
+                } catch (e) {
+                  console.error('Failed to create object URL for local audio:', e);
+                }
+              }
+            }
+          }
+          setAudioItems(mappedAudios);
         }
       } catch (err) {
         console.error('Failed to retrieve animal details:', err);
@@ -901,7 +933,11 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     };
   }, [isRecording]);
 
-  const startRecording = async () => {
+  const startRecording = async (indexToAppend: number | null = null) => {
+    if (audioItems.length >= 10 && indexToAppend === null) {
+      alert('Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.');
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -913,17 +949,36 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
         }
       };
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+      recorder.onstop = async () => {
+        const newBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        let finalBlob = newBlob;
+        if (indexToAppend !== null) {
+          const existingItem = audioItems[indexToAppend];
+          try {
+            const res = await fetch(existingItem.url);
+            const existingBlob = await res.blob();
+            finalBlob = await appendAudioBlobs(existingBlob, newBlob);
+          } catch (e) {
+            console.error('Failed to append audio blobs:', e);
+            alert('Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.');
+          }
+        }
+
         const reader = new FileReader();
-        reader.readAsDataURL(blob);
+        reader.readAsDataURL(finalBlob);
         reader.onloadend = () => {
           const base64data = reader.result as string;
-          setAudioDraftUrl(base64data);
+          if (indexToAppend !== null) {
+            setAudioItems(prev => prev.map((item, idx) => idx === indexToAppend ? { url: base64data, isSynced: false } : item));
+          } else {
+            setAudioItems(prev => [...prev, { url: base64data, isSynced: false }]);
+          }
         };
         stream.getTracks().forEach((track) => track.stop());
       };
 
+      setRecordingIndex(indexToAppend);
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
@@ -940,8 +995,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const deleteAudio = () => {
-    setAudioDraftUrl('');
+  const deleteAudio = (index: number) => {
+    setAudioItems(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleDeleteAnimal = async () => {
@@ -1052,7 +1107,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
         video_urls: syncedVideos,
         room_name: roomName.trim() || undefined,
         cage_name: cageName.trim() || undefined,
-        audio_draft_url: audioDraftUrl.startsWith('http') ? audioDraftUrl : undefined,
+        audio_draft_url: audioItems.length > 0 ? JSON.stringify(audioItems.map(item => item.url)) : undefined,
+        audio_urls: audioItems.filter(item => item.isSynced).map(item => item.url),
 
         // Update local unsynced binary files
         local_photos: [
@@ -1070,13 +1126,13 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           }))
         ],
         local_videos: localVideos,
-        local_audio: audioDraftUrl && (audioDraftUrl.startsWith('data:') || audioDraftUrl.startsWith('blob:')) ? {
-          name: 'audio_note.webm',
-          blob: base64ToBlob(audioDraftUrl)
-        } : undefined,
+        local_audios: audioItems.filter(item => !item.isSynced).map((item, index) => ({
+          name: `audio_new_${Date.now()}_${index}.wav`,
+          blob: base64ToBlob(item.url)
+        })),
 
         sync_pending: 1,
-        media_pending: (photos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || passportPhotos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || localVideos.length > 0 || (!!audioDraftUrl && (audioDraftUrl.startsWith('data:') || audioDraftUrl.startsWith('blob:')))) ? 1 : 0,
+        media_pending: (photos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || passportPhotos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || localVideos.length > 0 || audioItems.some(item => !item.isSynced)) ? 1 : 0,
         updated_at: new Date().toISOString()
       };
 
@@ -2025,60 +2081,81 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotiz aufnehmen</h3>
-                    <p className="text-[10px] text-stone-400">Sprachnotiz für interne Notizen oder Beschreibung</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotizen ({audioItems.length}/10)</h3>
+                    <p className="text-[10px] text-stone-400">Nimm bis to 10 Sprachnotizen auf oder führe eine bestehende fort</p>
                   </div>
-                  {!audioDraftUrl && (
+                  {!isRecording && audioItems.length < 10 && (
                     <button
                       type="button"
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                        isRecording
-                          ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
-                          : 'bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100'
-                      }`}
+                      onClick={() => startRecording(null)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100 transition-all cursor-pointer"
                     >
-                      {isRecording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                      <span>{isRecording ? 'Stoppen' : 'Aufnehmen'}</span>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Neue Sprachnotiz</span>
                     </button>
                   )}
                 </div>
 
-                <div className="border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[60px] flex items-center justify-center">
-                  {audioDraftUrl ? (
-                    <div className="w-full space-y-2">
-                      <div className="flex items-center justify-between bg-white border border-stone-200 p-2 rounded-lg shadow-sm">
-                        <div className="flex items-center space-x-2 truncate">
-                          {audioDraftUrl.startsWith('http') ? (
-                            <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          ) : (
-                            <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          )}
-                          <audio src={audioDraftUrl} controls className="h-8 max-w-[200px]" />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={deleteAudio}
-                          className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Sprachnotiz löschen"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : isRecording ? (
-                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                <div className="border border-stone-200 rounded-xl p-4 bg-stone-50 space-y-3">
+                  {isRecording ? (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-3">
                       <div className="flex items-center space-x-2">
                         <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-                        <span className="text-xs font-semibold text-red-500">Aufnahme läuft...</span>
+                        <span className="text-xs font-semibold text-red-500">
+                          {recordingIndex !== null ? 'Hinzufügen läuft...' : 'Aufnahme läuft...'}
+                        </span>
                       </div>
-                      <span className="text-xl font-mono text-stone-700">
+                      <span className="text-2xl font-mono text-stone-700">
                         {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}
                       </span>
+                      <button
+                        type="button"
+                        onClick={stopRecording}
+                        className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold animate-pulse hover:bg-red-100 transition-all cursor-pointer"
+                      >
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Aufnahme stoppen & speichern</span>
+                      </button>
+                    </div>
+                  ) : audioItems.length > 0 ? (
+                    <div className="space-y-2">
+                      {audioItems.map((item, index) => (
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-stone-200 p-2.5 rounded-xl shadow-sm gap-2">
+                          <div className="flex items-center space-x-2 flex-1">
+                            {item.isSynced ? (
+                              <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Online synchronisiert" />
+                            ) : (
+                              <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" title="Lokal gespeichert" />
+                            )}
+                            <span className="text-[10px] font-bold text-stone-500 min-w-[45px] shrink-0">Note #{index + 1}</span>
+                            <audio src={item.url} controls className="w-full max-h-8 outline-none accent-brandpink-500" />
+                          </div>
+                          
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => startRecording(index)}
+                              className="px-2 py-1 bg-stone-100 hover:bg-brandpink-55 hover:text-brandpink-700 text-stone-600 text-[10px] font-bold rounded border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
+                              title="Diese Sprachnotiz fortsetzen"
+                            >
+                              <Mic className="w-3 h-3 text-brandpink-500" />
+                              <span>Fortsetzen</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteAudio(index)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-colors cursor-pointer"
+                              title="Löschen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="py-4 text-center text-xs text-stone-400">
-                      Keine Sprachnotiz aufgenommen. Klicke auf &quot;Aufnehmen&quot;, um eine Sprachnotiz zu starten.
+                    <div className="py-6 text-center text-xs text-stone-400">
+                      Keine Sprachnotizen aufgenommen. Klicke oben auf &quot;Neue Sprachnotiz&quot;, um zu starten.
                     </div>
                   )}
                 </div>
@@ -2229,7 +2306,23 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                                     setPhotos(data.media_urls || []);
                                     setPassportPhotos(data.passport_urls || []);
                                     setVideos(data.video_urls?.map((url: string) => ({ name: url.substring(url.lastIndexOf('/') + 1), url, isSynced: true })) || []);
-                                    setAudioDraftUrl(data.audio_draft_url || '');
+                                    
+                                    const histAudios: { url: string; isSynced: boolean }[] = [];
+                                    if (data.audio_urls && data.audio_urls.length > 0) {
+                                      data.audio_urls.forEach((url: string) => histAudios.push({ url, isSynced: true }));
+                                    } else if (data.audio_draft_url) {
+                                      if (data.audio_draft_url.startsWith('[')) {
+                                        try {
+                                          const parsed: string[] = JSON.parse(data.audio_draft_url);
+                                          parsed.forEach(url => histAudios.push({ url, isSynced: url.startsWith('http') }));
+                                        } catch (e) {
+                                          histAudios.push({ url: data.audio_draft_url, isSynced: data.audio_draft_url.startsWith('http') });
+                                        }
+                                      } else {
+                                        histAudios.push({ url: data.audio_draft_url, isSynced: data.audio_draft_url.startsWith('http') });
+                                      }
+                                    }
+                                    setAudioItems(histAudios);
                                     
                                     setActiveSection('basic');
                                     setAlertMessage({ type: 'warn', text: 'Die historische Version wurde geladen. Bitte überprüfe die Daten und klicke zum Übernehmen unten auf "Änderungen speichern".' });

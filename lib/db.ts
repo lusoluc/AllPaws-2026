@@ -71,11 +71,13 @@ export interface Animal {
   local_passports?: { name: string; blob?: Blob; opfsKey?: string }[];
   local_videos?: { name: string; blob?: Blob; opfsKey?: string }[];
   local_audio?: { name: string; blob?: Blob; opfsKey?: string };
+  local_audios?: { name: string; blob?: Blob; opfsKey?: string }[];
 
   // Location hierarchy & Audio
   room_name?: string;
   cage_name?: string;
   audio_draft_url?: string;
+  audio_urls?: string[];
   sync_pending?: number;
   media_pending?: number; // 0 = synced, 1 = media files queued locally
   updated_at?: string;
