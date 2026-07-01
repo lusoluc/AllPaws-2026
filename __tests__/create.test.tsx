@@ -282,4 +282,72 @@ describe('CreateCatPage Validation, Multilingual, Offline & Edge Cases', () => {
     expect(screen.getAllByText('Medizinischer Status').length).toBe(2);
     expect(screen.getByText(/Aktiviere die Knöpfe/)).toBeInTheDocument();
   });
+
+  test('Multi-Audio UI: displays empty audio state and registers/lists recorded voice notes', async () => {
+    // Mock navigator.mediaDevices.getUserMedia and MediaRecorder
+    const mockStream = {
+      getTracks: jest.fn().mockReturnValue([{ stop: jest.fn() }]),
+    };
+    const mockGetUserMedia = jest.fn().mockResolvedValue(mockStream);
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: {
+        getUserMedia: mockGetUserMedia,
+        enumerateDevices: jest.fn().mockResolvedValue([]),
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    class MockMediaRecorder {
+      state = 'inactive';
+      ondataavailable: any = null;
+      onstop: any = null;
+      start() {
+        this.state = 'recording';
+      }
+      stop() {
+        this.state = 'inactive';
+        if (this.ondataavailable) {
+          this.ondataavailable({ data: new Blob(['audio-data'], { type: 'audio/webm' }) });
+        }
+        if (this.onstop) {
+          this.onstop();
+        }
+      }
+    }
+    (window as any).MediaRecorder = MockMediaRecorder;
+
+    render(<CreateCatPage />);
+
+    // Switch to media tab
+    const mediaSectionBtn = screen.getByRole('button', { name: 'Medien' });
+    fireEvent.click(mediaSectionBtn);
+
+    // Verify empty state text
+    expect(screen.getByText(/Keine Sprachnotizen aufgenommen/i)).toBeInTheDocument();
+
+    // Find the record audio button
+    const recordBtn = screen.getByRole('button', { name: /Neue Sprachnotiz/i });
+    expect(recordBtn).toBeInTheDocument();
+
+    // Click to start recording
+    fireEvent.click(recordBtn);
+
+    // Wait for the recording state to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Aufnahme läuft.../i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Aufnahme stoppen & speichern/i })).toBeInTheDocument();
+    });
+
+    // Stop recording
+    const stopBtn = screen.getByRole('button', { name: /Aufnahme stoppen & speichern/i });
+    fireEvent.click(stopBtn);
+
+    // Wait for the new audio item to appear in the list
+    await waitFor(() => {
+      expect(screen.getByText(/Note #1/i)).toBeInTheDocument();
+      expect(screen.getByTitle(/Diese Sprachnotiz fortsetzen/i)).toBeInTheDocument();
+      expect(screen.getByTitle(/Löschen/i)).toBeInTheDocument();
+    });
+  });
 });
