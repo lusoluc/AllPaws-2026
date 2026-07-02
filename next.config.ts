@@ -11,9 +11,14 @@ try {
     swContent = swContent.replace(/const CACHE_NAME = 'bmd-cache-[^']+';/, `const CACHE_NAME = 'bmd-cache-${buildTimestamp}';`);
     fs.writeFileSync(swPath, swContent, 'utf8');
     console.log(`[PWA Builder] Updated CACHE_NAME to bmd-cache-${buildTimestamp}`);
+
+    // Generate version file for client-side display
+    const versionPath = path.join(process.cwd(), 'lib', 'version.ts');
+    const versionContent = `// Automatically generated version file\nexport const APP_VERSION = '0.1.0-build-${buildTimestamp}';\n`;
+    fs.writeFileSync(versionPath, versionContent, 'utf8');
   }
 } catch (error) {
-  console.error('[PWA Builder] Failed to update Service Worker cache name:', error);
+  console.error('[PWA Builder] Failed to update Service Worker cache name or version:', error);
 }
 
 const nextConfig: NextConfig = {

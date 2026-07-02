@@ -599,7 +599,16 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        let format = 'image/jpeg';
+        try {
+          const webpData = canvas.toDataURL('image/webp');
+          if (webpData.startsWith('data:image/webp')) {
+            format = 'image/webp';
+          }
+        } catch (e) {}
+
+        const dataUrl = canvas.toDataURL(format, quality);
         resolve(dataUrl);
       };
       img.onerror = () => {
