@@ -134,30 +134,22 @@ describe('SharePanel Social Exporter Component', () => {
   test('WhatsApp Share: opens a window with pre-formatted description and link', () => {
     render(<SharePanel animal={mockAnimal} onClose={mockOnClose} />);
 
-    const whatsappBtn = screen.getByRole('button', { name: /WhatsApp/i });
-    fireEvent.click(whatsappBtn);
-
-    expect(window.open).toHaveBeenCalledWith(
-      expect.stringContaining('https://api.whatsapp.com/send?text='),
-      '_blank'
-    );
-    const openUrl = (window.open as jest.Mock).mock.calls[0][0];
-    expect(openUrl).toContain(encodeURIComponent('ICH SUCHE DICH! MEIN NAME IST Mimi'));
-    expect(openUrl).toContain(encodeURIComponent('http://localhost/katzen/123'));
+    const whatsappLink = screen.getByRole('link', { name: /WhatsApp/i });
+    expect(whatsappLink).toHaveAttribute('href');
+    const href = whatsappLink.getAttribute('href') || '';
+    expect(href).toContain('https://api.whatsapp.com/send?text=');
+    expect(href).toContain(encodeURIComponent('ICH SUCHE DICH! MEIN NAME IST Mimi'));
+    expect(href).toContain(encodeURIComponent('http://localhost/katzen/123'));
   });
 
   test('Facebook Share: opens Facebook sharer with URL only', () => {
     render(<SharePanel animal={mockAnimal} onClose={mockOnClose} />);
 
-    const facebookBtn = screen.getByRole('button', { name: /Facebook/i });
-    fireEvent.click(facebookBtn);
-
-    expect(window.open).toHaveBeenCalledWith(
-      expect.stringContaining('https://www.facebook.com/sharer/sharer.php?u='),
-      '_blank'
-    );
-    const openUrl = (window.open as jest.Mock).mock.calls[0][0];
-    expect(openUrl).toContain(encodeURIComponent('http://localhost/katzen/123'));
+    const facebookLink = screen.getByRole('link', { name: /Facebook/i });
+    expect(facebookLink).toHaveAttribute('href');
+    const href = facebookLink.getAttribute('href') || '';
+    expect(href).toContain('https://www.facebook.com/sharer/sharer.php?u=');
+    expect(href).toContain(encodeURIComponent('http://localhost/katzen/123'));
   });
 
   test('Instagram Share: copies first-person post text and triggers success notification toast', async () => {
@@ -169,7 +161,7 @@ describe('SharePanel Social Exporter Component', () => {
     expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('ICH SUCHE DICH! MEIN NAME IST Mimi'));
     
     await waitFor(() => {
-      expect(screen.getByText(/Post-Text kopiert! Bereit zum Teilen/)).toBeInTheDocument();
+      expect(screen.getByText(/Post-Text kopiert! Leite zu Instagram weiter/)).toBeInTheDocument();
     });
   });
 
@@ -182,18 +174,18 @@ describe('SharePanel Social Exporter Component', () => {
     expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('http://localhost/katzen/123'));
     
     await waitFor(() => {
-      expect(screen.getByText(/Link für TikTok kopiert!/)).toBeInTheDocument();
+      expect(screen.getByText(/Link kopiert! Leite zu TikTok weiter/)).toBeInTheDocument();
     });
   });
 
   test('Email Share: opens mailto client with pre-filled subject and body', () => {
     render(<SharePanel animal={mockAnimal} onClose={mockOnClose} />);
 
-    const emailBtn = screen.getByRole('button', { name: /Email/i });
-    fireEvent.click(emailBtn);
-
-    expect((window as any).mockLocationAssign).toHaveBeenCalledWith(expect.stringContaining('mailto:?subject='));
-    expect((window as any).mockLocationAssign).toHaveBeenCalledWith(expect.stringContaining('Hilfe%20f%C3%BCr%20Mimi%20gesucht!'));
+    const emailLink = screen.getByRole('link', { name: /Email/i });
+    expect(emailLink).toHaveAttribute('href');
+    const href = emailLink.getAttribute('href') || '';
+    expect(href).toContain('mailto:?subject=');
+    expect(href).toContain(encodeURIComponent('Hilfe für Mimi gesucht!'));
   });
 
   test('Copy Text Button: copies description and shows copied banner', async () => {

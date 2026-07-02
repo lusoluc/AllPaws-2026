@@ -434,40 +434,28 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
   };
 
   // Social Share Handlers
-  const handleShareWhatsApp = () => {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(postText + '\n\nMehr Infos: ' + shareUrl)}`, '_blank');
-  };
-
-  const handleShareFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
-
   const handleShareInstagram = () => {
     navigator.clipboard.writeText(postText);
     setShareNotification(lang === 'DE' 
-      ? 'Post-Text kopiert! Bereit zum Teilen auf Instagram Stories/Beitrag. 📸' 
-      : 'Nukopijuota! Paruošta dalinimuisi „Instagram“ istorijose ar įrašuose. 📸'
+      ? 'Post-Text kopiert! Leite zu Instagram weiter... 📸' 
+      : 'Nukopijuota! Nukreipiama į „Instagram“... 📸'
     );
-    setTimeout(() => setShareNotification(null), 5000);
-  };
-
-  const handleShareEmail = () => {
-    const subject = lang === 'DE' ? `Hilfe für ${animal.name} gesucht!` : `Ieškoma pagalba katei ${animal.name}!`;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(postText + '\n\nLink: ' + shareUrl)}`;
-    if (typeof window !== 'undefined' && (window as any).mockLocationAssign) {
-      (window as any).mockLocationAssign(mailtoUrl);
-    } else {
-      window.location.assign(mailtoUrl);
-    }
+    setTimeout(() => {
+      setShareNotification(null);
+      window.open('https://www.instagram.com/', '_blank');
+    }, 1500);
   };
 
   const handleShareTikTok = () => {
     navigator.clipboard.writeText(shareUrl);
     setShareNotification(lang === 'DE' 
-      ? 'Link für TikTok kopiert! Du kannst ihn jetzt in deine Biografie einfügen oder in Nachrichten teilen. 🎵' 
-      : 'Nuoroda nukopijuota „TikTok“! Galite ją įklijuoti į savo biografiją arba siųsti žinute. 🎵'
+      ? 'Link kopiert! Leite zu TikTok weiter... 🎵' 
+      : 'Nuoroda nukopijuota! Nukreipiama į „TikTok“... 🎵'
     );
-    setTimeout(() => setShareNotification(null), 5000);
+    setTimeout(() => {
+      setShareNotification(null);
+      window.open('https://www.tiktok.com/', '_blank');
+    }, 1500);
   };
 
   // Dynamic Graphic Actions
@@ -592,27 +580,32 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Direkt teilen / Pasidalinti</span>
                 <div className="flex space-x-2.5">
-                  <button
-                    onClick={handleShareWhatsApp}
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(postText + '\n\nMehr Infos: ' + shareUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-center w-9 h-9 rounded-full bg-[#25D366] text-white hover:bg-[#20ba56] transition-colors cursor-pointer"
                     title="WhatsApp"
                   >
                     <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.966a9.9 9.9 0 0 0-6.98-2.879C6.222 1.01 1.797 5.381 1.793 10.81c-.001 1.639.425 3.24 1.232 4.679l-.992 3.626 3.716-.975zM17.47 15.39c-.3-.15-1.77-.874-2.04-.972-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.18.2-.35.22-.65.07-1.125-.56-1.92-1.077-2.69-2.39-.2-.35.2-.32.57-1.07.1-.2.05-.38-.02-.53-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.22 3.07c.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.63.72.23 1.37.2 1.89.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3 0-1.42-.05-.15-.25-.22-.55-.37z"/>
                     </svg>
-                  </button>
+                  </a>
 
-                  <button
-                    onClick={handleShareFacebook}
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center justify-center w-9 h-9 rounded-full bg-[#1877F2] text-white hover:bg-[#166fe5] transition-colors cursor-pointer"
                     title="Facebook"
                   >
                     <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                     </svg>
-                  </button>
+                  </a>
 
                   <button
+                    type="button"
                     onClick={handleShareInstagram}
                     className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white hover:opacity-90 transition-opacity cursor-pointer"
                     title="Instagram"
@@ -623,6 +616,7 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleShareTikTok}
                     className="flex items-center justify-center w-9 h-9 rounded-full bg-black text-white hover:bg-stone-900 transition-colors cursor-pointer"
                     title="TikTok"
@@ -632,13 +626,13 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
                     </svg>
                   </button>
 
-                  <button
-                    onClick={handleShareEmail}
+                  <a
+                    href={`mailto:?subject=${encodeURIComponent(lang === 'DE' ? `Hilfe für ${animal.name} gesucht!` : `Ieškoma pagalba katei ${animal.name}!`)}&body=${encodeURIComponent(postText + '\n\nLink: ' + shareUrl)}`}
                     className="flex items-center justify-center w-9 h-9 rounded-full bg-stone-600 text-white hover:bg-stone-700 transition-colors cursor-pointer"
                     title="Email"
                   >
                     <Mail className="w-4.5 h-4.5" />
-                  </button>
+                  </a>
                 </div>
               </div>
 
