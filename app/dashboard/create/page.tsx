@@ -30,7 +30,8 @@ import {
   Cloud,
   CloudOff,
   HelpCircle,
-  Plus
+  Plus,
+  Globe
 } from 'lucide-react';
 import { appendAudioBlobs } from '@/lib/audioStitcher';
 
@@ -44,12 +45,16 @@ export default function CreateCatPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('bmd_language') as 'DE' | 'LT';
-      if (savedLang) {
+      const savedLang = localStorage.getItem('bmd_lang') as 'DE' | 'LT';
+      if (savedLang && (savedLang === 'DE' || savedLang === 'LT')) {
         setLang(savedLang);
       }
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('bmd_lang', lang);
+  }, [lang]);
 
   // Form State
   const [name, setName] = useState('');
@@ -1272,13 +1277,29 @@ export default function CreateCatPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="font-bold text-sm tracking-wide text-stone-850">Katze registrieren</h1>
+            <h1 className="font-bold text-sm tracking-wide text-stone-850">
+              {lang === 'DE' ? 'Tier registrieren' : 'Registruoti gyvūną'}
+            </h1>
             <p className="text-[9px] text-stone-500 font-medium">Būk mano draugas</p>
           </div>
         </div>
 
-        {/* Connection status indicator */}
-        <div>
+        {/* Connection status and language selector */}
+        <div className="flex items-center space-x-2">
+          {/* Language Selector */}
+          <button 
+            type="button"
+            onClick={() => {
+              const nextLang = lang === 'DE' ? 'LT' : 'DE';
+              setLang(nextLang);
+              localStorage.setItem('bmd_lang', nextLang);
+            }}
+            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors border border-stone-200 shadow-sm"
+          >
+            <Globe className="w-3.5 h-3.5 text-stone-500" />
+            <span>{lang}</span>
+          </button>
+
           {isOnline ? (
             <div className="flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full text-emerald-700 text-[10px] font-bold">
               <Wifi className="w-3.5 h-3.5" />

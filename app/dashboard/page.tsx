@@ -49,6 +49,12 @@ export default function DashboardPage() {
       setIsAuthenticated(true);
       const devMode = localStorage.getItem('bmd_dev_mode') === 'true';
       setIsDev(devMode);
+      
+      const savedLang = localStorage.getItem('bmd_lang') as 'DE' | 'LT';
+      if (savedLang && (savedLang === 'DE' || savedLang === 'LT')) {
+        setLang(savedLang);
+      }
+
       logger.info('Dashboard', `Benutzer hat das Mitarbeiter-Dashboard aufgerufen (Entwickler-Modus: ${devMode}).`);
       
       // Trigger synchronization
@@ -192,7 +198,11 @@ export default function DashboardPage() {
 
           {/* Language Selector */}
           <button 
-            onClick={() => setLang(lang === 'DE' ? 'LT' : 'DE')}
+            onClick={() => {
+              const nextLang = lang === 'DE' ? 'LT' : 'DE';
+              setLang(nextLang);
+              localStorage.setItem('bmd_lang', nextLang);
+            }}
             className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors border border-stone-200 shadow-sm"
           >
             <Globe className="w-3.5 h-3.5 text-stone-500" />

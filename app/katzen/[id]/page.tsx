@@ -39,12 +39,17 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
   const catId = parseInt(resolvedParams.id);
   const router = useRouter();
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
+  const [isStaff, setIsStaff] = useState(false);
 
-  // Load language from localStorage on mount
+  // Load language and staff session from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('bmd_lang') as 'DE' | 'LT';
     if (saved && (saved === 'DE' || saved === 'LT')) {
       setLang(saved);
+    }
+    const session = localStorage.getItem('bmd_session');
+    if (session === 'authenticated') {
+      setIsStaff(true);
     }
   }, []);
 
@@ -571,7 +576,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
           )}
 
           {/* Audio voice descriptions */}
-          {((cat.audio_urls && cat.audio_urls.length > 0) || (cat.local_audios && cat.local_audios.length > 0)) && (
+          {isStaff && ((cat.audio_urls && cat.audio_urls.length > 0) || (cat.local_audios && cat.local_audios.length > 0)) && (
             <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center space-x-1.5 border-b border-stone-100 pb-2">
                 <Mic className="w-4 h-4 text-brandpink-500" />

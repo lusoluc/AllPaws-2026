@@ -320,6 +320,7 @@ async function pushLocalChanges(): Promise<void> {
       local_videos, 
       local_audio,
       local_audios,
+      audio_urls,
       ...cleanAnimal 
     } = animal;
     
