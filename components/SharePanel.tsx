@@ -313,11 +313,13 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
       ctx.fillRect(0, 0, 1080, 1080);
       
       const img = new Image();
-      const photoUrl = animal.media_urls?.[selectedPhotoIndex];
+      let photoUrl = animal.media_urls?.[selectedPhotoIndex];
       
       if (photoUrl) {
         if (photoUrl.startsWith('http')) {
           img.crossOrigin = 'anonymous';
+          // Append cache buster to prevent browser cache CORS issues
+          photoUrl = photoUrl + (photoUrl.includes('?') ? '&' : '?') + 'cb=' + Date.now();
         }
         img.src = photoUrl;
       } else {

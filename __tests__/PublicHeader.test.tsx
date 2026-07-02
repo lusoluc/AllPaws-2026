@@ -31,7 +31,7 @@ describe('PublicHeader Component', () => {
 
     // Action button & language toggle should be present
     expect(screen.getByText('DE')).toBeInTheDocument();
-    expect(screen.getByText('Helfer-Portal')).toBeInTheDocument();
+    expect(screen.getByText('Intern')).toBeInTheDocument();
   });
 
   test('Happy Path: Renders Lithuanian translations when lang is LT', () => {
@@ -41,7 +41,7 @@ describe('PublicHeader Component', () => {
     expect(screen.getByText('Mūsų globotiniai 🐾')).toBeInTheDocument();
     expect(screen.getByText('Kačių gidas')).toBeInTheDocument();
     expect(screen.getByText('Apie mus & Parama')).toBeInTheDocument();
-    expect(screen.getByText('Savanorių portalas')).toBeInTheDocument();
+    expect(screen.getByText('Internas')).toBeInTheDocument();
   });
 
   test('Happy Path: Clicking language switch button triggers setLang callback', () => {

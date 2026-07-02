@@ -147,7 +147,7 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
               href="/login" 
               className="text-xs font-bold text-stone-700 hover:text-stone-950 hover:bg-stone-100/90 transition-all py-1.5 px-3.5 bg-stone-50/50 rounded-xl border border-stone-200 shadow-sm"
             >
-              {lang === 'DE' ? 'Helfer-Portal' : 'Savanorių portalas'}
+              {lang === 'DE' ? 'Intern' : 'Internas'}
             </Link>
           </div>
 
@@ -203,7 +203,7 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
                 >
                   <User className="w-4.5 h-4.5 text-stone-400" />
                   <span className="text-xs tracking-wide">
-                    {lang === 'DE' ? 'Helfer-Portal' : 'Savanorių portalas'}
+                    {lang === 'DE' ? 'Intern' : 'Internas'}
                   </span>
                 </Link>
               </div>

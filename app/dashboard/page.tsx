@@ -107,12 +107,12 @@ export default function DashboardPage() {
     const matchesStatus = filterStatus === 'all' || animal.status_aktuell === filterStatus;
 
     return matchesSearch && matchesType && matchesStatus;
-  });
+  }).sort((a, b) => (b.id || 0) - (a.id || 0));
 
   // UI dictionary
   const ui = {
     DE: {
-      title: 'Mitarbeiter-Dashboard',
+      title: 'Intern',
       subtitle: 'Tiererfassung Klaipėda',
       addCat: 'Katze erfassen',
       routeBtn: 'Route zum Heim anzeigen',
@@ -136,7 +136,7 @@ export default function DashboardPage() {
       logout: 'Abmelden'
     },
     LT: {
-      title: 'Darbuotojų skydelis',
+      title: 'Internas',
       subtitle: 'Gyvūnų registracija Klaipėdoje',
       addCat: 'Registruoti katę',
       routeBtn: 'Rodyti maršrutą į prieglaudą',
