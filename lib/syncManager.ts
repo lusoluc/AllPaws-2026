@@ -309,8 +309,33 @@ async function pushLocalChanges(): Promise<void> {
       }
     }
 
-    // Convert multi-audio URLs to JSON string for Supabase storage column
-    const serializedAudioDraftUrl = uploadedAudioUrls.length > 0 ? JSON.stringify(uploadedAudioUrls) : undefined;
+    // Local-only fields that do not exist as columns in the remote Supabase animals table
+    const localOnlyKeys = [
+      'slow_integration', 'partner_needed', 'no_single_animal', 'needs_outdoor', 'indoor_only', 
+      'secured_balcony', 'for_beginners', 'for_experienced', 'quiet_home', 'patient_people', 
+      'needs_attention', 'no_small_children', 'suitable_seniors', 'suitable_families',
+      'not_castrated', 'has_cat_plague_vaccine', 'vaccination_status_unknown', 'fiv_negative', 
+      'felv_negative', 'fiv_positive', 'felv_positive', 'fip_positive', 'flea_mite_treatment', 
+      'handicaps', 'trait_trusting', 'trait_people_oriented', 'trait_quiet', 'trait_active', 
+      'trait_needs_time', 'trait_allows_touch', 'trait_allows_lift', 'trait_allows_brush', 
+      'trait_shows_limits', 'trait_seeks_cats', 'trait_insecure_cats', 'trait_dominant', 
+      'trait_submissive', 'trait_sensitive_noise', 'trait_litter_box', 'trait_compat_cats', 
+      'trait_compat_dogs', 'trait_compat_children'
+    ];
+
+    const customFields: Record<string, any> = {};
+    localOnlyKeys.forEach(key => {
+      if ((animal as any)[key] !== undefined) {
+        customFields[key] = (animal as any)[key];
+      }
+    });
+
+    // Package both multi-audio URLs and custom fields into the audio_draft_url JSON payload
+    const serializedAudioDraftUrl = JSON.stringify({
+      version: 2,
+      audio_urls: uploadedAudioUrls,
+      custom_fields: customFields
+    });
 
     const { 
       id: oldId, 
@@ -323,6 +348,11 @@ async function pushLocalChanges(): Promise<void> {
       audio_urls,
       ...cleanAnimal 
     } = animal;
+
+    // Delete custom fields from cleanAnimal payload to prevent Postgres column-not-found errors
+    localOnlyKeys.forEach(key => {
+      delete (cleanAnimal as any)[key];
+    });
     
     const updatedAt = new Date().toISOString();
     const dbData = { 
@@ -760,10 +790,20 @@ async function pullCloudChanges(): Promise<void> {
         continue;
       }
 
-      // Parse audio_draft_url to list of URLs
+      // Parse audio_draft_url to list of URLs and custom fields
       let pulledAudioUrls: string[] = [];
+      let pulledCustomFields: Record<string, any> = {};
+
       if (ca.audio_draft_url) {
-        if (ca.audio_draft_url.startsWith('[')) {
+        if (ca.audio_draft_url.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(ca.audio_draft_url);
+            pulledAudioUrls = parsed.audio_urls || [];
+            pulledCustomFields = parsed.custom_fields || {};
+          } catch (e) {
+            console.error('Failed to parse structured audio_draft_url:', e);
+          }
+        } else if (ca.audio_draft_url.startsWith('[')) {
           try {
             pulledAudioUrls = JSON.parse(ca.audio_draft_url);
           } catch (e) {
@@ -776,6 +816,7 @@ async function pullCloudChanges(): Promise<void> {
 
       await db.animals.put({
         ...ca,
+        ...pulledCustomFields,
         audio_urls: pulledAudioUrls,
         sync_pending: 0
       });

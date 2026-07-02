@@ -56,6 +56,101 @@ export default function CreateCatPage() {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
 
+  const ui = {
+    DE: {
+      name: 'Name *',
+      namePlaceholder: 'z.B. Luna',
+      room: 'Raum',
+      roomPlaceholder: 'z.B. Container 1',
+      cage: 'Käfig / Box',
+      cagePlaceholder: 'z.B. Box 3',
+      gender: 'Geschlecht',
+      genderFemale: 'Weiblich',
+      genderMale: 'Männlich',
+      ageLabel: 'Alter Angeben',
+      ageModeRange: 'Von-Bis',
+      ageModeExact: 'Exakt',
+      ageModeYear: 'Jahr',
+      ageEstimate: 'Alter schätzen (Jahre)',
+      ageMin: 'Minimum',
+      ageMax: 'Maximum',
+      ageExactLabel: 'Exaktes Alter',
+      ageYearsUnit: 'Jahre',
+      birthYear: 'Jahr',
+      birthMonth: 'Monat',
+      birthDay: 'Tag',
+      birthMonthPlaceholder: 'unbekannt',
+      birthDayPlaceholder: 'unbekannt',
+      typeLabel: 'Tierart',
+      typeCat: 'Katze',
+      typeDog: 'Hund',
+      typeOther: 'Andere',
+      admissionDate: 'Seit wann im Tierheim?',
+      reasonForShelter: 'Warum im Tierheim?',
+      reasonPlaceholder: 'Hintergründe der Abgabe...',
+      restrictions: 'Einschränkungen (z.B. Krankheiten)',
+      restrictionsPlaceholder: 'z.B. Nierendiät, mag keine Katzen...',
+      misc: 'Sonstiges',
+      miscPlaceholder: 'Besonderheiten der Katze...',
+      publishLabel: 'Galerie veröffentlichen',
+      publishDesc: 'Öffentlich anzeigen',
+      emergencyLabel: 'Sorgenfell / Notfall',
+      emergencyDesc: 'SOS rote Markierung',
+      status: 'Status',
+      statusAvailable: 'zu vermitteln',
+      statusReserved: 'reserviert',
+      statusAdopted: 'vermittelt',
+      saveBtn: 'Tier registrieren',
+      saving: 'Wird registriert...'
+    },
+    LT: {
+      name: 'Vardas *',
+      namePlaceholder: 'pvz., Luna',
+      room: 'Patalpa/Kambarys',
+      roomPlaceholder: 'pvz., 1 konteineris',
+      cage: 'Narvas / Boksas',
+      cagePlaceholder: 'pvz., 3 boksas',
+      gender: 'Lytis',
+      genderFemale: 'Patelė',
+      genderMale: 'Patinas',
+      ageLabel: 'Nurodyti amžių',
+      ageModeRange: 'Nuo-Iki',
+      ageModeExact: 'Tikslus',
+      ageModeYear: 'Metai',
+      ageEstimate: 'Amžiaus vertinimas (metais)',
+      ageMin: 'Minimumas',
+      ageMax: 'Maximumas',
+      ageExactLabel: 'Tikslus amžius',
+      ageYearsUnit: 'metai',
+      birthYear: 'Metai',
+      birthMonth: 'Mėnuo',
+      birthDay: 'Diena',
+      birthMonthPlaceholder: 'nežinoma',
+      birthDayPlaceholder: 'nežinoma',
+      typeLabel: 'Gyvūno rūšis',
+      typeCat: 'Katė',
+      typeDog: 'Šuo',
+      typeOther: 'Kita',
+      admissionDate: 'Nuo kada prieglaudoje?',
+      reasonForShelter: 'Kodėl prieglaudoje?',
+      reasonPlaceholder: 'Priėmimo aplinkybės...',
+      restrictions: 'Apribojimai (pvz., ligos)',
+      restrictionsPlaceholder: 'pvz., inkstų dieta, nemėgsta kitų kačių...',
+      misc: 'Kita',
+      miscPlaceholder: 'Gyvūno ypatybės...',
+      publishLabel: 'Viešinti galerijoje',
+      publishDesc: 'Rodyti viešai',
+      emergencyLabel: 'Ypatingas dėmesys / SOS',
+      emergencyDesc: 'SOS raudona žyma',
+      status: 'Būsena',
+      statusAvailable: 'ieško namų',
+      statusReserved: 'rezervuota',
+      statusAdopted: 'dovanota',
+      saveBtn: 'Registruoti gyvūną',
+      saving: 'Registruojama...'
+    }
+  }[lang];
+
   // Form State
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
@@ -1367,10 +1462,10 @@ export default function CreateCatPage() {
           {activeSection === 'basic' && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Name *<HelpButton section="name" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.name}<HelpButton section="name" /></label>
                 <input
                   type="text"
-                  placeholder="z.B. Luna"
+                  placeholder={ui.namePlaceholder}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
@@ -1380,10 +1475,10 @@ export default function CreateCatPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Raum<HelpButton section="roomCage" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.room}<HelpButton section="roomCage" /></label>
                   <input
                     type="text"
-                    placeholder="z.B. Container 1"
+                    placeholder={ui.roomPlaceholder}
                     value={roomName}
                     onChange={(e) => setRoomName(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
@@ -1391,10 +1486,10 @@ export default function CreateCatPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Käfig / Box<HelpButton section="roomCage" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.cage}<HelpButton section="roomCage" /></label>
                   <input
                     type="text"
-                    placeholder="z.B. Box 3"
+                    placeholder={ui.cagePlaceholder}
                     value={cageName}
                     onChange={(e) => setCageName(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
@@ -1404,14 +1499,14 @@ export default function CreateCatPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 sm:col-span-1 space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Geschlecht<HelpButton section="gender" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.gender}<HelpButton section="gender" /></label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'Weiblich' | 'Männlich')}
                     className="w-full px-3 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
                   >
-                    <option value="Weiblich">Weiblich</option>
-                    <option value="Männlich">Männlich</option>
+                    <option value="Weiblich">{ui.genderFemale}</option>
+                    <option value="Männlich">{ui.genderMale}</option>
                   </select>
                 </div>
               </div>
@@ -1419,7 +1514,7 @@ export default function CreateCatPage() {
               {/* Alter Section */}
               <div className="space-y-3 p-4 bg-stone-100/40 rounded-2xl border border-stone-200">
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
-                  Alter Angeben<HelpButton section="age" />
+                  {ui.ageLabel}<HelpButton section="age" />
                 </label>
                 
                 {/* Segmented Control / Tabs */}
@@ -1433,7 +1528,7 @@ export default function CreateCatPage() {
                         : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
-                    Alter (von - bis)
+                    {ui.ageModeRange}
                   </button>
                   <button
                     type="button"
@@ -1444,7 +1539,7 @@ export default function CreateCatPage() {
                         : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
-                    Alter (exakt)
+                    {ui.ageModeExact}
                   </button>
                   <button
                     type="button"
@@ -1455,7 +1550,7 @@ export default function CreateCatPage() {
                         : 'text-stone-400 hover:text-stone-600'
                     }`}
                   >
-                    Geburtsjahr
+                    {ui.ageModeYear}
                   </button>
                 </div>
 
@@ -1463,7 +1558,7 @@ export default function CreateCatPage() {
                 {ageMode === 'range' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">von (Min)</span>
+                      <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.ageMin}</span>
                       <select
                         value={ageMin}
                         onChange={(e) => {
@@ -1476,13 +1571,13 @@ export default function CreateCatPage() {
                         className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
                       >
                         {Array.from({ length: 21 }).map((_, i) => (
-                          <option key={i} value={i}>{i} {i === 1 ? 'Jahr' : 'Jahre'}</option>
+                          <option key={i} value={i}>{i} {i === 1 ? (lang === 'DE' ? 'Jahr' : 'metai') : ui.ageYearsUnit}</option>
                         ))}
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">bis (Max)</span>
+                      <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.ageMax}</span>
                       <select
                         value={ageMax}
                         onChange={(e) => setAgeMax(parseInt(e.target.value))}
@@ -1490,7 +1585,7 @@ export default function CreateCatPage() {
                       >
                         {Array.from({ length: 21 }).map((_, i) => (
                           i >= ageMin && (
-                            <option key={i} value={i}>{i} {i === 1 ? 'Jahr' : 'Jahre'}</option>
+                            <option key={i} value={i}>{i} {i === 1 ? (lang === 'DE' ? 'Jahr' : 'metai') : ui.ageYearsUnit}</option>
                           )
                         ))}
                       </select>
@@ -1500,14 +1595,14 @@ export default function CreateCatPage() {
 
                 {ageMode === 'exact' && (
                   <div className="space-y-1">
-                    <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">Genaues Alter</span>
+                    <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.ageExactLabel}</span>
                     <select
                       value={ageExact}
                       onChange={(e) => setAgeExact(parseInt(e.target.value))}
                       className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
                     >
                       {Array.from({ length: 21 }).map((_, i) => (
-                        <option key={i} value={i}>{i} {i === 1 ? 'Jahr' : 'Jahre'}</option>
+                        <option key={i} value={i}>{i} {i === 1 ? (lang === 'DE' ? 'Jahr' : 'metai') : ui.ageYearsUnit}</option>
                       ))}
                     </select>
                   </div>
@@ -1517,7 +1612,7 @@ export default function CreateCatPage() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-1">
-                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">Geburtsjahr</span>
+                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.birthYear}</span>
                         <select
                           value={birthYear}
                           onChange={(e) => setBirthYear(parseInt(e.target.value))}
@@ -1533,7 +1628,7 @@ export default function CreateCatPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">Monat (opt.)</span>
+                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.birthMonth}</span>
                         <select
                           value={birthMonth || ''}
                           onChange={(e) => {
@@ -1545,7 +1640,7 @@ export default function CreateCatPage() {
                           }}
                           className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
                         >
-                          <option value="">--</option>
+                          <option value="">{ui.birthMonthPlaceholder}</option>
                           {Array.from({ length: 12 }).map((_, i) => {
                             const m = i + 1;
                             const mLabel = String(m).padStart(2, '0');
@@ -1555,14 +1650,14 @@ export default function CreateCatPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">Tag (opt.)</span>
+                        <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider ml-1">{ui.birthDay}</span>
                         <select
                           value={birthDay || ''}
                           onChange={(e) => setBirthDay(e.target.value ? parseInt(e.target.value) : undefined)}
                           className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
                           disabled={!birthMonth}
                         >
-                          <option value="">--</option>
+                          <option value="">{ui.birthDayPlaceholder}</option>
                           {birthMonth && Array.from({ length: new Date(birthYear, birthMonth, 0).getDate() }).map((_, i) => {
                             const d = i + 1;
                             const dLabel = String(d).padStart(2, '0');
@@ -1577,7 +1672,7 @@ export default function CreateCatPage() {
 
               {/* Admission Date range 01/2015 to 12/2027 */}
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Seit wann im Tierheim?<HelpButton section="arrivalDate" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.admissionDate}<HelpButton section="arrivalDate" /></label>
                 <div className="grid grid-cols-2 gap-4">
                   <select
                     value={shelterMonth}
@@ -1603,9 +1698,9 @@ export default function CreateCatPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Warum im Tierheim?<HelpButton section="reason" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.reasonForShelter}<HelpButton section="reason" /></label>
                 <textarea
-                  placeholder="Hintergründe der Abgabe..."
+                  placeholder={ui.reasonPlaceholder}
                   value={reasonForShelter}
                   onChange={(e) => setReasonForShelter(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm h-20 focus:ring-1 focus:ring-brandpink-500"
@@ -1613,9 +1708,9 @@ export default function CreateCatPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Einschränkungen (z.B. Krankheiten)<HelpButton section="restrictions" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.restrictions}<HelpButton section="restrictions" /></label>
                 <textarea
-                  placeholder="Besondere Pflegehinweise oder Allergien..."
+                  placeholder={ui.restrictionsPlaceholder}
                   value={restrictions}
                   onChange={(e) => setRestrictions(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm h-20 focus:ring-1 focus:ring-brandpink-500"
@@ -1623,9 +1718,9 @@ export default function CreateCatPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Sonstiges<HelpButton section="misc" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.misc}<HelpButton section="misc" /></label>
                 <textarea
-                  placeholder="Zusätzliche Freitextnotizen..."
+                  placeholder={ui.miscPlaceholder}
                   value={notesMiscellaneous}
                   onChange={(e) => setNotesMiscellaneous(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 text-sm h-20 focus:ring-1 focus:ring-brandpink-500"
@@ -1770,8 +1865,8 @@ export default function CreateCatPage() {
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center bg-white border border-stone-200 p-3.5 rounded-xl shadow-sm">
                   <div>
-                    <span className="text-xs font-bold text-stone-700 block flex items-center">Galerie veröffentlichen<HelpButton section="publish" /></span>
-                    <span className="text-[10px] text-stone-400">Direkt auf der öffentlichen Webseite anzeigen</span>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">{ui.publishLabel}<HelpButton section="publish" /></span>
+                    <span className="text-[10px] text-stone-400">{ui.publishDesc}</span>
                   </div>
                   <input
                     type="checkbox"
@@ -1783,8 +1878,8 @@ export default function CreateCatPage() {
 
                 <div className="flex justify-between items-center bg-white border border-stone-200 p-3.5 rounded-xl shadow-sm">
                   <div>
-                    <span className="text-xs font-bold text-stone-700 block flex items-center">Sorgenfell / Notfall<HelpButton section="emergency" /></span>
-                    <span className="text-[10px] text-stone-400">Markiert als Notfall (SOS)</span>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">{ui.emergencyLabel}<HelpButton section="emergency" /></span>
+                    <span className="text-[10px] text-stone-400">{ui.emergencyDesc}</span>
                   </div>
                   <input
                     type="checkbox"
@@ -2759,7 +2854,7 @@ export default function CreateCatPage() {
               onClick={() => router.push('/dashboard')}
               className="flex-1 py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl border border-stone-250 transition-colors"
             >
-              Abbrechen
+              {lang === 'DE' ? 'Abbrechen' : 'Atšaukti'}
             </button>
             <button
               type="submit"
@@ -2767,7 +2862,11 @@ export default function CreateCatPage() {
               className="flex-1 flex items-center justify-center space-x-1.5 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brandpink-900/10 active:scale-98 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              <span>{isOnline ? 'Speichern' : 'Lokal speichern'}</span>
+              <span>
+                {isOnline 
+                  ? (lang === 'DE' ? 'Speichern' : 'Išsaugoti') 
+                  : (lang === 'DE' ? 'Lokal speichern' : 'Išsaugoti lokaliai')}
+              </span>
             </button>
           </div>
 

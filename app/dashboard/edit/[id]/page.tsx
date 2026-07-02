@@ -62,6 +62,101 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
+
+  const ui = {
+    DE: {
+      name: 'Name *',
+      namePlaceholder: 'z.B. Luna',
+      room: 'Raum',
+      roomPlaceholder: 'z.B. Container 1',
+      cage: 'Käfig / Box',
+      cagePlaceholder: 'z.B. Box 3',
+      gender: 'Geschlecht',
+      genderFemale: 'Weiblich',
+      genderMale: 'Männlich',
+      ageLabel: 'Alter Angeben',
+      ageModeRange: 'Von-Bis',
+      ageModeExact: 'Exakt',
+      ageModeYear: 'Jahr',
+      ageEstimate: 'Alter schätzen (Jahre)',
+      ageMin: 'Minimum',
+      ageMax: 'Maximum',
+      ageExactLabel: 'Exaktes Alter',
+      ageYearsUnit: 'Jahre',
+      birthYear: 'Jahr',
+      birthMonth: 'Monat',
+      birthDay: 'Tag',
+      birthMonthPlaceholder: 'unbekannt',
+      birthDayPlaceholder: 'unbekannt',
+      typeLabel: 'Tierart',
+      typeCat: 'Katze',
+      typeDog: 'Hund',
+      typeOther: 'Andere',
+      admissionDate: 'Seit wann im Tierheim?',
+      reasonForShelter: 'Warum im Tierheim?',
+      reasonPlaceholder: 'Hintergründe der Abgabe...',
+      restrictions: 'Einschränkungen (z.B. Krankheiten)',
+      restrictionsPlaceholder: 'z.B. Nierendiät, mag keine Katzen...',
+      misc: 'Sonstiges',
+      miscPlaceholder: 'Besonderheiten der Katze...',
+      publishLabel: 'Galerie veröffentlichen',
+      publishDesc: 'Öffentlich anzeigen',
+      emergencyLabel: 'Sorgenfell / Notfall',
+      emergencyDesc: 'SOS rote Markierung',
+      status: 'Status',
+      statusAvailable: 'zu vermitteln',
+      statusReserved: 'reserviert',
+      statusAdopted: 'vermittelt',
+      saveBtn: 'Änderungen speichern',
+      saving: 'Wird gespeichert...'
+    },
+    LT: {
+      name: 'Vardas *',
+      namePlaceholder: 'pvz., Luna',
+      room: 'Patalpa/Kambarys',
+      roomPlaceholder: 'pvz., 1 konteineris',
+      cage: 'Narvas / Boksas',
+      cagePlaceholder: 'pvz., 3 boksas',
+      gender: 'Lytis',
+      genderFemale: 'Patelė',
+      genderMale: 'Patinas',
+      ageLabel: 'Nurodyti amžių',
+      ageModeRange: 'Nuo-Iki',
+      ageModeExact: 'Tikslus',
+      ageModeYear: 'Metai',
+      ageEstimate: 'Amžiaus vertinimas (metais)',
+      ageMin: 'Minimumas',
+      ageMax: 'Maximumas',
+      ageExactLabel: 'Tikslus amžius',
+      ageYearsUnit: 'metai',
+      birthYear: 'Metai',
+      birthMonth: 'Mėnuo',
+      birthDay: 'Diena',
+      birthMonthPlaceholder: 'nežinoma',
+      birthDayPlaceholder: 'nežinoma',
+      typeLabel: 'Gyvūno rūšis',
+      typeCat: 'Katė',
+      typeDog: 'Šuo',
+      typeOther: 'Kita',
+      admissionDate: 'Nuo kada prieglaudoje?',
+      reasonForShelter: 'Kodėl prieglaudoje?',
+      reasonPlaceholder: 'Priėmimo aplinkybės...',
+      restrictions: 'Apribojimai (pvz., ligos)',
+      restrictionsPlaceholder: 'pvz., inkstų dieta, nemėgsta kitų kačių...',
+      misc: 'Kita',
+      miscPlaceholder: 'Gyvūno ypatybės...',
+      publishLabel: 'Viešinti galerijoje',
+      publishDesc: 'Rodyti viešai',
+      emergencyLabel: 'Ypatingas dėmesys / SOS',
+      emergencyDesc: 'SOS raudona žyma',
+      status: 'Būsena',
+      statusAvailable: 'ieško namų',
+      statusReserved: 'rezervuota',
+      statusAdopted: 'dovanota',
+      saveBtn: 'Išsaugoti pakeitimus',
+      saving: 'Saugoma...'
+    }
+  }[lang];
   
   // Loading & Entity State
   const [loading, setLoading] = useState(true);
@@ -1545,34 +1640,34 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           {activeSection === 'basic' && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Name *<HelpButton section="name" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.name}<HelpButton section="name" /></label>
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="z.B. Luna"
+                  placeholder={ui.namePlaceholder}
                   className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Raum<HelpButton section="roomCage" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.room}<HelpButton section="roomCage" /></label>
                   <input 
                     type="text" 
                     value={roomName}
                     onChange={(e) => setRoomName(e.target.value)}
-                    placeholder="z.B. Container 1"
+                    placeholder={ui.roomPlaceholder}
                     className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Käfig / Box<HelpButton section="roomCage" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.cage}<HelpButton section="roomCage" /></label>
                   <input 
                     type="text" 
                     value={cageName}
                     onChange={(e) => setCageName(e.target.value)}
-                    placeholder="z.B. Box 3"
+                    placeholder={ui.cagePlaceholder}
                     className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
                   />
                 </div>
@@ -1580,18 +1675,18 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Geschlecht<HelpButton section="gender" /></label>
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.gender}<HelpButton section="gender" /></label>
                   <select 
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'Weiblich' | 'Männlich')}
                     className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 text-xs font-semibold shadow-xs h-11"
                   >
-                    <option value="Weiblich">Weiblich</option>
-                    <option value="Männlich">Männlich</option>
+                    <option value="Weiblich">{ui.genderFemale}</option>
+                    <option value="Männlich">{ui.genderMale}</option>
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Alter Angeben<HelpButton section="age" /></span>
+                  <span className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.ageLabel}<HelpButton section="age" /></span>
                   <div className="grid grid-cols-3 gap-1 bg-stone-200/50 p-0.5 rounded-lg border border-stone-300">
                     {(['range', 'exact', 'birthyear'] as const).map((mode) => (
                       <button
@@ -1604,7 +1699,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                             : 'text-stone-500 hover:text-stone-850'
                         }`}
                       >
-                        {mode === 'range' ? 'Von-Bis' : mode === 'exact' ? 'Exakt' : 'Jahr'}
+                        {mode === 'range' ? ui.ageModeRange : mode === 'exact' ? ui.ageModeExact : ui.ageModeYear}
                       </button>
                     ))}
                   </div>
@@ -1616,12 +1711,12 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 {ageMode === 'range' && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-[10px] font-bold text-stone-500 uppercase">
-                      <span>Alter schätzen (Jahre)</span>
-                      <span className="text-brandpink-600">{ageMin} - {ageMax} Jahre</span>
+                      <span>{ui.ageEstimate}</span>
+                      <span className="text-brandpink-600">{ageMin} - {ageMax} {ui.ageYearsUnit}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="flex-1 flex flex-col space-y-1">
-                        <span className="text-[9px] font-semibold text-stone-400">Minimum</span>
+                        <span className="text-[9px] font-semibold text-stone-400">{ui.ageMin}</span>
                         <input 
                           type="range" 
                           min="0" 
@@ -1636,7 +1731,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         />
                       </div>
                       <div className="flex-1 flex flex-col space-y-1">
-                        <span className="text-[9px] font-semibold text-stone-400">Maximum</span>
+                        <span className="text-[9px] font-semibold text-stone-400">{ui.ageMax}</span>
                         <input 
                           type="range" 
                           min="0" 
@@ -1653,8 +1748,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 {ageMode === 'exact' && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-[10px] font-bold text-stone-500 uppercase">
-                      <span>Exaktes Alter</span>
-                      <span className="text-brandpink-600">{ageExact} Jahre</span>
+                      <span>{ui.ageExactLabel}</span>
+                      <span className="text-brandpink-600">{ageExact} {ui.ageYearsUnit}</span>
                     </div>
                     <input 
                       type="range" 
@@ -1670,7 +1765,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 {ageMode === 'birthyear' && (
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-stone-500 uppercase">Jahr</label>
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">{ui.birthYear}</label>
                       <input 
                         type="number" 
                         min="2000" 
@@ -1681,26 +1776,26 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-stone-500 uppercase">Monat</label>
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">{ui.birthMonth}</label>
                       <select
                         value={birthMonth || ''}
                         onChange={(e) => setBirthMonth(e.target.value ? parseInt(e.target.value) : undefined)}
                         className="w-full px-2 py-2 bg-white border border-stone-300 rounded-lg text-stone-900 text-xs font-semibold focus:outline-none h-[34px]"
                       >
-                        <option value="">unbekannt</option>
+                        <option value="">{ui.birthMonthPlaceholder}</option>
                         {Array.from({ length: 12 }, (_, i) => (
                           <option key={i + 1} value={i + 1}>{i + 1}</option>
                         ))}
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-stone-500 uppercase">Tag</label>
+                      <label className="text-[10px] font-bold text-stone-500 uppercase">{ui.birthDay}</label>
                       <select
                         value={birthDay || ''}
                         onChange={(e) => setBirthDay(e.target.value ? parseInt(e.target.value) : undefined)}
                         className="w-full px-2 py-2 bg-white border border-stone-300 rounded-lg text-stone-900 text-xs font-semibold focus:outline-none h-[34px]"
                       >
-                        <option value="">unbekannt</option>
+                        <option value="">{ui.birthDayPlaceholder}</option>
                         {Array.from({ length: 31 }, (_, i) => (
                           <option key={i + 1} value={i + 1}>{i + 1}</option>
                         ))}
@@ -1712,7 +1807,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
 
               {/* Admission Date */}
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Seit wann im Tierheim?<HelpButton section="arrivalDate" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.admissionDate}<HelpButton section="arrivalDate" /></label>
                 <div className="grid grid-cols-2 gap-3">
                   <select 
                     value={shelterMonth}
@@ -1736,34 +1831,34 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Warum im Tierheim?<HelpButton section="reason" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.reasonForShelter}<HelpButton section="reason" /></label>
                 <textarea 
                   value={reasonForShelter}
                   onChange={(e) => setReasonForShelter(e.target.value)}
-                  placeholder="Hintergründe der Abgabe..."
+                  placeholder={ui.reasonPlaceholder}
                   rows={2}
                   className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs resize-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Einschränkungen (z.B. Krankheiten)<HelpButton section="restrictions" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.restrictions}<HelpButton section="restrictions" /></label>
                 <input 
                   type="text" 
                   value={restrictions}
                   onChange={(e) => setRestrictions(e.target.value)}
-                  placeholder="z.B. Nierendiät, mag keine Katzen..."
+                  placeholder={ui.restrictionsPlaceholder}
                   className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Sonstiges<HelpButton section="misc" /></label>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.misc}<HelpButton section="misc" /></label>
                 <input 
                   type="text" 
                   value={notesMiscellaneous}
                   onChange={(e) => setNotesMiscellaneous(e.target.value)}
-                  placeholder="Besonderheiten der Katze..."
+                  placeholder={ui.miscPlaceholder}
                   className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
                 />
               </div>
@@ -1912,8 +2007,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                     className="w-4.5 h-4.5 accent-brandpink-600 cursor-pointer"
                   />
                   <div>
-                    <span className="text-xs font-bold text-stone-700 block flex items-center">Galerie veröffentlichen<HelpButton section="publish" /></span>
-                    <span className="text-[8px] text-stone-450 font-medium">Öffentlich anzeigen</span>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">{ui.publishLabel}<HelpButton section="publish" /></span>
+                    <span className="text-[8px] text-stone-450 font-medium">{ui.publishDesc}</span>
                   </div>
                 </label>
 
@@ -1925,8 +2020,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                     className="w-4.5 h-4.5 accent-brandpink-600 cursor-pointer"
                   />
                   <div>
-                    <span className="text-xs font-bold text-stone-700 block flex items-center">Sorgenfell / Notfall<HelpButton section="emergency" /></span>
-                    <span className="text-[8px] text-stone-450 font-medium">SOS rote Markierung</span>
+                    <span className="text-xs font-bold text-stone-700 block flex items-center">{ui.emergencyLabel}<HelpButton section="emergency" /></span>
+                    <span className="text-[8px] text-stone-450 font-medium">{ui.emergencyDesc}</span>
                   </div>
                 </label>
               </div>
@@ -3180,7 +3275,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               onClick={() => router.push('/dashboard')}
               className="flex-1 py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl border border-stone-250 transition-colors"
             >
-              Abbrechen
+              {lang === 'DE' ? 'Abbrechen' : 'Atšaukti'}
             </button>
             <button
               type="submit"
@@ -3188,7 +3283,11 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               className="flex-1 flex items-center justify-center space-x-1.5 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brandpink-900/10 active:scale-98 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              <span>{isOnline ? 'Änderungen speichern' : 'Lokal speichern'}</span>
+              <span>
+                {isOnline 
+                  ? (lang === 'DE' ? 'Änderungen speichern' : 'Išsaugoti pakeitimus') 
+                  : (lang === 'DE' ? 'Lokal speichern' : 'Išsaugoti lokaliai')}
+              </span>
             </button>
           </div>
 
