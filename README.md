@@ -1,8 +1,13 @@
 # AllPaws-2026 🐾
+### Free & Open-Source Animal Shelter Management Software & Volunteer Companion
 
 Welcome to **AllPaws-2026**, a warm, volunteer-driven, mobile-first web framework designed to simplify animal rescue, shelter management, and adoption coordination. 
 
 This framework was built from the ground up to help animal shelters save precious administrative time—time that goes directly back to caring for the animals.
+
+---
+
+![AllPaws-2026 Mobile UI Mockup](public/allpaws_mobile_mockup.png)
 
 ---
 
@@ -41,7 +46,7 @@ For complete, friendly guides on our vision, features, and examples, please expl
 
 To ensure reliability for every shelter that forks this repository, AllPaws-2026 comes with a comprehensive testing suite running on Jest. The test suites validate everything from IndexedDB offline storage to email newsletters and UI translation switches.
 
-Currently, the framework includes **14 test suites** validating **90 unique test scenarios**:
+Currently, the framework includes **15 test suites** validating **99 unique test scenarios**:
 *   `sync.test.tsx` - Tests background cloud sync queues and conflict resolution.
 *   `share.test.tsx` - Validates the dynamic canvas card generation and sharing strings.
 *   `login.test.tsx` - Validates the secure client-side password flow and developer mode.
@@ -88,3 +93,4 @@ cmd /c pnpm test
 ## ❤️ Credits
 Developed as a voluntary labor of love by **Carlos Lucas** (Germany).
 *   **LinkedIn**: [Carlos Lucas](https://www.linkedin.com/in/director-it-development/)
+
