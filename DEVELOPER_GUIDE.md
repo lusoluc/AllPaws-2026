@@ -186,12 +186,18 @@ Create a `.env.local` file in the project root:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_DASHBOARD_PASSWORD=BMD2026
-NEXT_PUBLIC_DEV_PASSWORD=DEVBMD2026
+
+# Client-side SHA-256 password hashes (defaults are SHA-256 of BMD2026 and DEVBMD2026)
+NEXT_PUBLIC_DASHBOARD_PASSWORD_HASH=465e25744db058cd9ec63f6fe36a6e5c9fc66255dec9de88ef9981b33651bd9d
+NEXT_PUBLIC_DEV_PASSWORD_HASH=6a02c4469c9b7c5975f09fb41584283959644f604ed7278c19d1e351277eb399
+
+# Server-only API authentication passwords (used for SMTP / send-email rate-limiting verification)
+DASHBOARD_PASSWORD=BMD2026
+DEV_PASSWORD=DEVBMD2026
 ```
 
 > [!NOTE]
-> Supabase variables are optional for local development. Without them, the app runs in pure offline mode — which is perfectly fine for most development work.
+> Supabase variables are optional for local development. Without them, the app runs in pure offline mode — which is perfectly fine for most development work. Defaults for hashes and server-side passwords are pre-baked into the app for local developer convenience.
 
 ---
 

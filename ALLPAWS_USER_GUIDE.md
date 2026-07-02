@@ -290,13 +290,14 @@ Um ein neues Tier zu registrieren, klicke im Dashboard auf das **„+"**-Symbol.
 - Tippe bei einer bestehenden Note auf den "Fortsetzen"-Knopf, um die Aufnahme zu erweitern (die Audio-Teile werden automatisch aneinandergeheftet).
 - Perfekt, wenn du im Tierheim schnell Notizen festhalten willst, ohne zu tippen.
 
-**Medizinischer Status:**
-- Kastriert ✓/✗ · Gechipt ✓/✗ · Tollwut-Impfung ✓/✗
-- Katzenschnupfen-Impfung ✓/✗ · Entwurmt ✓/✗ · EU-Pass ✓/✗
+**Vermittlung / Haltung:**
+- Spezifische Haltungsregeln ✓/✗ (z. B. Wohnungshaltung, Freigang, gesicherter Balkon, Verträglichkeit mit Hunden/Kindern, Anfängerkatze, erfahrene Hände, Einzelkatze oder paarweise Vermittlung).
 
-**Verträglichkeit & Temperament:**
-- Verträglich mit: Katzen / Hunden / Kindern (Ja / Nein / Unbekannt)
-- Charakter: Neugierig, Verspielt, Verschmust, Ängstlich, Aggressiv (Ja / Nein / Unbekannt)
+**Gesundheit:**
+- Impfstatus (Tollwut, Seuche, Schnupfen), Chip-Nummer, Kastrationsstatus, FIV- & FeLV-Teststatus, Entwurmung, Floh-/Milbenbehandlung sowie ein Textfeld für körperliche Handicaps.
+
+**Charakter / Verhalten:**
+- Detaillierte Wesenseigenschaften ✓/✗ (verschmust, zutraulich, aktiv, ruhig, ängstlich, braucht Zeit zum Vertrauen, lässt sich bürsten/anfassen, dominant, unterwürfig).
 
 **Veröffentlichung:**
 - Schalte „Veröffentlicht" ein, damit das Tier in der öffentlichen Galerie erscheint
@@ -326,13 +327,14 @@ Norėdami registruoti naują gyvūną, valdymo skyde bakstelėkite **„+"** sim
 - Bakstelėkite „Tęsti“ prie esamo įrašo, kad jį pratęstumėte (garso dalys bus apjungiamos fone).
 - Puikiai tinka, kai prieglaudoje norite greitai užsirašyti pastabas nerašydami teksto.
 
-**Medicininė būklė:**
-- Kastruotas ✓/✗ · Mikroschemelė ✓/✗ · Pasiutligės skiepas ✓/✗
-- Kačių sloga ✓/✗ · Nukirmintas ✓/✗ · ES pasas ✓/✗
+**Apsigyvenimas / Sąlygos:**
+- Konkrečios laikymo taisyklės ✓/✗ (pvz., tik bute, reikalingas lauko kiemas, saugus balkonas, tinka pradedantiesiems, tinka patyrusiems, sutaria su šunimis/vaikais).
 
-**Suderinamumas ir temperamentas:**
-- Sutaria su: katėmis / šunimis / vaikais (Taip / Ne / Nežinoma)
-- Charakteris: Smalsus, Žaismingas, Meilus, Baikštus, Agresyvus (Taip / Ne / Nežinoma)
+**Sveikata:**
+- Skiepų statusas (pasiutligė, kačių maras, sloga), mikroschemelė, kastracija, FIV ir FeLV testų rezultatai, nukirminimas, vaistai nuo blusų/erkių ir fizinė negalia.
+
+**Charakteris / Elgsena:**
+- Detalios būdo savybės ✓/✗ (meilus, pasitikintis, aktyvus, ramus, baikštus, reikia laiko pasitikėjimui įgyti, leidžiasi šukuojamas/liečiamas, dominantas, paklusnus).
 
 **Publikavimas:**
 - Įjunkite „Publikuotas", kad gyvūnas atsirastų viešojoje galerijoje
@@ -362,13 +364,14 @@ To register a new animal, tap the **"+"** icon in the dashboard.
 - Tap "Continue" on an existing recording to append new audio (the segments will stitch automatically).
 - Perfect when you want to capture quick notes at the shelter without typing.
 
-**Medical status:**
-- Castrated ✓/✗ · Microchipped ✓/✗ · Rabies vaccine ✓/✗
-- Cat flu vaccine ✓/✗ · Dewormed ✓/✗ · EU passport ✓/✗
+**Adoption / Housing Criteria:**
+- Specific placement rules ✓/✗ (e.g. indoor only, secured balcony, outdoor access, compatibility with dogs/kids, suitable for beginners, experienced hands needed, single cat placement, or partner cat needed).
 
-**Compatibility & Temperament:**
-- Compatible with: Cats / Dogs / Children (Yes / No / Unknown)
-- Traits: Curious, Playful, Cuddly, Fearful, Aggressive (Yes / No / Unknown)
+**Health Status:**
+- Vaccination status (rabies, cat flu, feline distemper), microchip number, castration, FIV & FeLV test status, deworming, flea/tick treatment, and physical handicaps text details.
+
+**Character & Behavior:**
+- Detailed personality traits ✓/✗ (cuddly, trusting, active, calm, fearful, needs time to build trust, allows brushing/touching, dominant, submissive).
 
 **Publishing:**
 - Toggle "Published" to make the animal appear in the public gallery
