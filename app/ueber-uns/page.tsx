@@ -60,7 +60,8 @@ export default function UeberUnsPage() {
       iban: 'IBAN',
       bic: 'BIC / SWIFT',
       purpose: 'Verwendungszweck',
-      paypal: 'PayPal-Konto'
+      paypal: 'PayPal-Konto',
+      bankDetailsSub: 'Bankverbindung (Swedbank)'
     },
     LT: {
       title: 'Apie mus ir komandą',
@@ -87,7 +88,8 @@ export default function UeberUnsPage() {
       iban: 'Sąskaita (IBAN)',
       bic: 'BIC / SWIFT',
       purpose: 'Mokėjimo paskirtis',
-      paypal: 'PayPal sąskaita'
+      paypal: 'PayPal sąskaita',
+      bankDetailsSub: 'Banko sąskaita (Swedbank)'
     }
   };
 

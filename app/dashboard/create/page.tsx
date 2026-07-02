@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { syncWithCloud, uploadMediaBlob } from '@/lib/syncManager';
@@ -56,7 +57,7 @@ export default function CreateCatPage() {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
 
-  const ui = {
+  const defaultUi = {
     DE: {
       name: 'Name *',
       namePlaceholder: 'z.B. Luna',
@@ -101,7 +102,68 @@ export default function CreateCatPage() {
       statusReserved: 'reserviert',
       statusAdopted: 'vermittelt',
       saveBtn: 'Tier registrieren',
-      saving: 'Wird registriert...'
+      saving: 'Wird registriert...',
+      
+      // Media Tab
+      uploadMediaHeader: 'Fotos & Videos hochladen',
+      deviceCheckHeader: 'Geräte- & Speicher-Check',
+      deviceCheckSub: 'Berechtigungen für Kamera & Mikrofon',
+      recheckBtn: 'Erneut prüfen',
+      checkingText: 'Prüft...',
+      cameraStatusLabel: 'Kamera',
+      micStatusLabel: 'Mikrofon',
+      storageTypeLabel: 'Speicher-Typ',
+      storageProtectionLabel: 'Speicher-Schutz',
+      readyText: 'Bereit',
+      blockedText: 'Blockiert',
+      uncheckedText: 'Ungeprüft',
+      optimizedText: 'Optimiert',
+      standardText: 'Standard',
+      protectedText: 'Geschützt',
+      temporaryText: 'Temporär',
+      
+      opfsNote: 'Dein Gerät unterstützt das moderne OPFS-Dateisystem nicht. Videos werden im Standard-Datenbankspeicher abgelegt. Bitte lade Videos vorzugsweise hoch, wenn du online bist, um Speicher-Engpässe zu vermeiden.',
+      persistentNote: 'Der Speicher ist als temporär eingestufen. Falls der Speicher deines Handys sehr voll wird, könnte der Browser ungesynchronisierte Entwürfe löschen. Synchronisiere deine Einträge bitte zeitnah!',
+      howToAllowHeader: 'Wie du den Zugriff erlauben kannst:',
+      howToAllowCam: 'Klicke oben links neben der Webadresse (in der Adressleiste deines Browsers) auf das kleine Schloss-Symbol 🔒 und stelle Kamera auf "Zulassen" / "Erlauben".',
+      howToAllowMic: 'Klicke ebenfalls auf das Schloss-Symbol 🔒 und erlaube den Zugriff auf das Mikrofon, damit du Sprachnotizen aufnehmen kannst.',
+      howToAllowMobile: 'Gehe in die Handy-Einstellungen unter Apps → Browser (z.B. Chrome/Safari) → Berechtigungen und erlaube dort Kamera/Mikrofon. Lade danach diese Seite neu.',
+      
+      galleryPhotosHeader: 'Galeriefotos (max. 20)',
+      galleryPhotosSub: 'Bilder für die Vermittlungsgalerie',
+      passportPhotosHeader: 'Dokumente / Impfpässe (max. 5)',
+      passportPhotosSub: 'Nur intern für Mitarbeiter sichtbar',
+      videosHeader: 'Videos (max. 5, max. 5 Min., unter 200 MB)',
+      videosSub: 'Direkter Cloud-Upload & Offline-Speicherung (OPFS) unterstützt',
+      videoTip: 'Direkt in der App aufgenommene Videos werden automatisch optimal komprimiert. Größere Videos aus der Galerie werden im Hintergrund verkleinert, oder du teilst sie vorab kurz per WhatsApp/Telegram, um sie sofort zu schrumpfen.',
+      
+      cameraBtn: 'Kamera',
+      galleryBtn: 'Galerie',
+      recordBtn: 'Aufnehmen',
+      uploadBtn: 'Galerie',
+      
+      noPhotosText: 'Keine Fotos aufgenommen.',
+      noPassportsText: 'Keine Pässe aufgenommen.',
+      noVideosText: 'Keine Videos geladen.',
+      localBadge: 'Lokal',
+      onlineBadge: 'Online',
+      
+      optimizingText: 'Optimierung',
+      compressProgressText: 'Video wird für den schnellen Upload verkleinert, bitte warten...',
+      
+      audioHeader: 'Sprachnotizen',
+      audioSub: 'Nimm bis zu 10 Sprachnotizen auf oder führe eine bestehende fort',
+      newAudioBtn: 'Neue Sprachnotiz',
+      addingAudioText: 'Hinzufügen läuft...',
+      recordingAudioText: 'Aufnahme läuft...',
+      stopRecordingBtn: 'Aufnahme stoppen & speichern',
+      noAudioText: 'Keine Sprachnotizen aufgenommen. Klicke oben auf "Neue Sprachnotiz", um zu starten.',
+      continueBtn: 'Fortsetzen',
+      deleteBtn: 'Löschen',
+      
+      editedByLabel: 'Wer nimmt diese Änderung vor? *',
+      editedByPlaceholder: 'Dein Name oder Kürzel (z.B. Carlos)',
+      editedByDesc: 'Dies hilft dem Team nachzuvollziehen, wer welche Version bearbeitet hat.'
     },
     LT: {
       name: 'Vardas *',
@@ -147,13 +209,88 @@ export default function CreateCatPage() {
       statusReserved: 'rezervuota',
       statusAdopted: 'dovanota',
       saveBtn: 'Registruoti gyvūną',
-      saving: 'Registruojama...'
+      saving: 'Registruojama...',
+      
+      // Media Tab
+      uploadMediaHeader: 'Įkelti nuotraukas ir vaizdo įrašus',
+      deviceCheckHeader: 'Įrenginio ir atminties patikra',
+      deviceCheckSub: 'Kameros ir mikrofono leidimai',
+      recheckBtn: 'Tikrinti iš naujo',
+      checkingText: 'Tikrinama...',
+      cameraStatusLabel: 'Kamera',
+      micStatusLabel: 'Mikrofonas',
+      storageTypeLabel: 'Atminties tipas',
+      storageProtectionLabel: 'Atminties apsauga',
+      readyText: 'Paruošta',
+      blockedText: 'Blokuojama',
+      uncheckedText: 'Netikrinta',
+      optimizedText: 'Optimizuota',
+      standardText: 'Standartinė',
+      protectedText: 'Apsaugota',
+      temporaryText: 'Laikina',
+      
+      opfsNote: 'Jūsų įrenginys nepalaiko modernios OPFS failų sistemų. Vaizdo įrašai bus saugomi standartinėje duomenų bazėje. Rekomenduojame vaizdo įrašus kelti prisijungus prie interneto, kad išvengtumėte atminties trūkumo.',
+      persistentNote: 'Atmintis pažymėta kaip laikina. Jei telefono atmintis bus pilna, naršyklė gali ištrinti nesinchronizuotus juodraščius. Prašome kuo greičiau sinchronizuoti įrašus!',
+      howToAllowHeader: 'Kaip suteikti prieigą:',
+      howToAllowCam: 'Spustelėkite spynos piktogramą 🔒 šalia interneto adreso (naršyklės adreso juostoje) ir nustatykite Kamerą į „Leisti“.',
+      howToAllowMic: 'Taip pat spustelėkite spynos piktogramą 🔒 ir leiskite prieigą prie mikrofono, kad galėtumėte įrašyti balso pastabas.',
+      howToAllowMobile: 'Telefono nustatymuose eikite į Programos → Naršyklė (pvz., Chrome/Safari) → Leidimai ir ten leiskite kamerą/mikrofoną. Tada atnaujinkite šį puslapį.',
+      
+      galleryPhotosHeader: 'Galerijos nuotraukos (maks. 20)',
+      galleryPhotosSub: 'Nuotraukos viešai galerijai',
+      passportPhotosHeader: 'Dokumentai / Skiepų pasai (maks. 5)',
+      passportPhotosSub: 'Matoma tik darbuotojams (vidiniam naudojimui)',
+      videosHeader: 'Vaizdo įrašai (maks. 5, maks. 5 min., iki 200 MB)',
+      videosSub: 'Palaikomas tiesioginis įkėlimas į debesį ir saugojimas neprisijungus (OPFS)',
+      videoTip: 'Tiesiogiai programėlėje įrašyti vaizdo įrašai yra automatiškai optimizuojami. Didesni vaizdo įrašai iš galerijos bus sumažinti fone, arba galite prieš tai juos trumpai pasidalinti per WhatsApp/Telegram, kad iškart sumažintumėte dydį.',
+      
+      cameraBtn: 'Kamera',
+      galleryBtn: 'Galerija',
+      recordBtn: 'Įrašyti',
+      uploadBtn: 'Galerija',
+      
+      noPhotosText: 'Nuotraukų nėra.',
+      noPassportsText: 'Dokumentų nėra.',
+      noVideosText: 'Vaizdo įrašų nėra.',
+      localBadge: 'Vietinis',
+      onlineBadge: 'Internetinis',
+      
+      optimizingText: 'Optimizavimas',
+      compressProgressText: 'Vaizdo įrašas mažinamas greitesniam įkėlimui, prašome palaukti...',
+      
+      audioHeader: 'Balso pastabos',
+      audioSub: 'Įrašykite iki 10 balso pastabų arba tęskite esamą',
+      newAudioBtn: 'Nauja balso pastaba',
+      addingAudioText: 'Pridedama...',
+      recordingAudioText: 'Įrašoma...',
+      stopRecordingBtn: 'Sustabdyti ir išsaugoti',
+      noAudioText: 'Balso pastabų nėra. Spustelėkite „Nauja balso pastaba“ viršuje, kad pradėtumėte.',
+      continueBtn: 'Tęsti',
+      deleteBtn: 'Ištrinti',
+      
+      editedByLabel: 'Kas atlieka šį pakeitimą? *',
+      editedByPlaceholder: 'Jūsų vardas arba inicialai (pvz., Karolis)',
+      editedByDesc: 'Tai padeda komandai sekti, kas redagavo kurią versiją.'
     }
-  }[lang];
+  };
+
+  const uiTexts = useLiveQuery(() => db.uiTexts.toArray());
+  const ui = { ...defaultUi[lang] };
+  if (uiTexts) {
+    uiTexts.forEach((item) => {
+      if (item.key.startsWith('edit.')) {
+        const subKey = item.key.split('.')[1];
+        if (subKey in ui) {
+          (ui as any)[subKey] = item[lang] || (ui as any)[subKey];
+        }
+      }
+    });
+  }
 
   // Form State
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
+  const [statusAktuell, setStatusAktuell] = useState<'zu vermitteln' | 'reserviert' | 'vermittelt'>('zu vermitteln');
   const [ageYears, setAgeYears] = useState(0);
   const [ageMode, setAgeMode] = useState<'range' | 'exact' | 'birthyear'>('range');
   const [ageMin, setAgeMin] = useState(2);
@@ -359,6 +496,7 @@ export default function CreateCatPage() {
         const d = JSON.parse(draft);
         setName(d.name || '');
         setGender(d.gender || 'Weiblich');
+        setStatusAktuell(d.statusAktuell || 'zu vermitteln');
         setAgeYears(d.ageYears ?? 0);
         setAgeMode(d.ageMode || 'range');
         setAgeMin(d.ageMin ?? 2);
@@ -455,7 +593,7 @@ export default function CreateCatPage() {
   // Write draft to localStorage on any state change
   useEffect(() => {
     const draftObject = {
-      name, gender, ageYears, shelterMonth, shelterYear,
+      name, gender, statusAktuell, ageYears, shelterMonth, shelterYear,
       ageMode, ageMin, ageMax, ageExact, birthYear, birthMonth, birthDay,
       roomName, cageName, audioItems,
       reasonForShelter, restrictions, notesMiscellaneous, isPublished, isEmergency,
@@ -483,7 +621,9 @@ export default function CreateCatPage() {
           localStorage.setItem('bmd_cat_draft', JSON.stringify(textOnlyDraft));
           setAlertMessage({ 
             type: 'warn', 
-            text: 'Speicherlimit des Browsers überschritten. Entwurfsbilder werden bei Neuladen nicht wiederhergestellt, aber alle Textfelder wurden lokal gesichert.' 
+            text: lang === 'DE'
+              ? 'Speicherlimit des Browsers überschritten. Entwurfsbilder werden bei Neuladen nicht wiederhergestellt, aber alle Textfelder wurden lokal gesichert.'
+              : 'Viršytas naršyklės atminties limitas. Juodraštiniai paveikslėliai perkrovus puslapį nebus atkurti, tačiau visi teksto laukai sėkmingai išsaugoti.'
           });
         } catch (innerErr) {
           console.error('Failed to save even text draft', innerErr);
@@ -671,7 +811,10 @@ export default function CreateCatPage() {
     const files = Array.from(e.target.files);
 
     if (photos.length + files.length > 20) {
-      setAlertMessage({ type: 'error', text: 'Maximal 20 Fotos pro Tier erlaubt.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Maximal 20 Fotos pro Tier erlaubt.' : 'Leidžiama įkelti ne daugiau kaip 20 nuotraukų.'
+      });
       return;
     }
 
@@ -680,14 +823,18 @@ export default function CreateCatPage() {
       if (!file.type.startsWith('image/')) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien aus.` 
+          text: lang === 'DE'
+            ? `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien aus.`
+            : `Oi! Failas „${file.name}“ nėra nuotrauka. Prašome pasirinkti tik paveikslėlių failus.`
         });
         return;
       }
       if (file.size > 15 * 1024 * 1024) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Das Foto "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB etwas zu groß. Bitte wähle ein Foto unter 15 MB.` 
+          text: lang === 'DE'
+            ? `Das Foto "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB etwas zu groß. Bitte wähle ein Foto unter 15 MB.`
+            : `Nuotrauka „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelė. Prašome pasirinkti nuotrauką iki 15 MB.`
         });
         return;
       }
@@ -713,14 +860,18 @@ export default function CreateCatPage() {
       if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
         setAlertMessage({ 
           type: 'error', 
-          text: `Die Datei "${file.name}" ist kein unterstütztes Dokument. Bitte wähle ein Foto oder eine PDF-Datei.` 
+          text: lang === 'DE'
+            ? `Die Datei "${file.name}" ist kein unterstütztes Dokument. Bitte wähle ein Foto oder eine PDF-Datei.`
+            : `Failas „${file.name}“ nėra palaikomas dokumentas. Prašome pasirinkti nuotrauką arba PDF failą.`
         });
         return;
       }
       if (file.size > 15 * 1024 * 1024) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Das Dokument "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Dokument unter 15 MB.` 
+          text: lang === 'DE'
+            ? `Das Dokument "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Dokument unter 15 MB.`
+            : `Dokumentas „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelis. Prašome pasirinkti dokumentą iki 15 MB.`
         });
         return;
       }
@@ -731,7 +882,10 @@ export default function CreateCatPage() {
       setPassportPhotos(prev => [...prev, ...base64s]);
     } catch (err) {
       console.error('Failed to compress passport scans:', err);
-      setAlertMessage({ type: 'error', text: 'Fehler beim Verarbeiten der Dokumente.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler beim Verarbeiten der Dokumente.' : 'Klaida apdorojant dokumentus.'
+      });
     }
   };
 
@@ -922,19 +1076,29 @@ export default function CreateCatPage() {
   const processAndUploadVideo = async (file: File) => {
     // If offline, show error and abort upload
     if (!isOnline) {
-      setAlertMessage({ type: 'error', text: 'Video-Upload erfordert eine stabile Internetverbindung. Bitte im Online-Bereich hochladen.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE'
+          ? 'Video-Upload erfordert eine stabile Internetverbindung. Bitte im Online-Bereich hochladen.'
+          : 'Vaizdo įrašų įkėlimui reikalingas stabilus interneto ryšys. Prašome įkelti prisijungus prie interneto.'
+      });
       return;
     }
 
     if (videos.length >= 5) {
-      setAlertMessage({ type: 'error', text: 'Maximal 5 Videos pro Tier erlaubt.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Maximal 5 Videos pro Tier erlaubt.' : 'Leidžiama įkelti ne daugiau kaip 5 vaizdo įrašus.'
+      });
       return;
     }
 
     if (!file.type.startsWith('video/')) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Huch! Die Datei "${file.name}" ist kein Video. Bitte wähle nur Videodateien (z.B. MP4).` 
+        text: lang === 'DE'
+          ? `Huch! Die Datei "${file.name}" ist kein Video. Bitte wähle nur Videodateien (z.B. MP4).`
+          : `Oi! Failas „${file.name}“ nėra vaizdo įrašas. Prašome pasirinkti tik vaizdo failus (pvz., MP4).`
       });
       return;
     }
@@ -943,7 +1107,9 @@ export default function CreateCatPage() {
     if (file.size > 200 * 1024 * 1024) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Das Video "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Video unter 200 MB.` 
+        text: lang === 'DE'
+          ? `Das Video "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Video unter 200 MB.`
+          : `Vaizdo įrašas „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelis. Prašome pasirinkti vaizdo įrašą iki 200 MB.`
       });
       return;
     }
@@ -952,7 +1118,9 @@ export default function CreateCatPage() {
     if (duration > 300) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Das Video "${file.name}" überschreitet die maximale Länge von 5 Minuten (${Math.round(duration)} Sek).` 
+        text: lang === 'DE'
+          ? `Das Video "${file.name}" überschreitet die maximale Länge von 5 Minuten (${Math.round(duration)} Sek).`
+          : `Vaizdo įrašas „${file.name}“ viršija maksimalią 5 minučių trukmę (${Math.round(duration)} sek).`
       });
       return;
     }
@@ -1073,7 +1241,7 @@ export default function CreateCatPage() {
 
   const startRecording = async (indexToAppend: number | null = null) => {
     if (audioItems.length >= 10 && indexToAppend === null) {
-      alert('Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.');
+      alert(lang === 'DE' ? 'Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.' : 'Vienam gyvūnui galite išsaugoti ne daugiau kaip 10 balso pastabų.');
       return;
     }
     try {
@@ -1100,7 +1268,7 @@ export default function CreateCatPage() {
             finalBlob = await appendAudioBlobs(existingBlob, newBlob);
           } catch (e) {
             console.error('Failed to append audio blobs:', e);
-            alert('Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.');
+            alert(lang === 'DE' ? 'Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.' : 'Nepavyko pratęsti garso įrašo. Vietoj to buvo sukurtas naujas įrašas.');
           }
         }
 
@@ -1123,7 +1291,7 @@ export default function CreateCatPage() {
       setIsRecording(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      alert('Zugriff auf das Mikrofon verweigert oder nicht unterstützt.');
+      alert(lang === 'DE' ? 'Zugriff auf das Mikrofon verweigert oder nicht unterstützt.' : 'Prieiga prie mikrofono atmesta arba nepalaikoma.');
     }
   };
 
@@ -1144,7 +1312,10 @@ export default function CreateCatPage() {
     setAlertMessage(null);
 
     if (!name.trim()) {
-      setAlertMessage({ type: 'error', text: 'Bitte gib einen Namen für das Tier ein.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Bitte gib einen Namen für das Tier ein.' : 'Prašome įvesti gyvūno vardą.'
+      });
       setActiveSection('basic');
       return;
     }
@@ -1154,7 +1325,7 @@ export default function CreateCatPage() {
         name,
         created_at: new Date().toISOString(),
         type: 'Katze' as const,
-        status_aktuell: 'zu vermitteln' as const,
+        status_aktuell: statusAktuell,
         gender,
         age_years: ageYears,
         age_mode: ageMode,
@@ -1282,7 +1453,10 @@ export default function CreateCatPage() {
     } catch (err) {
       console.error(err);
       await logger.error('AnimalCreation', `Fehler beim Erstellen des Tiers: ${name}`, err);
-      setAlertMessage({ type: 'error', text: 'Fehler beim Speichern in der lokalen Datenbank.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler beim Speichern in der lokalen Datenbank.' : 'Klaida išsaugant vietinėje duomenų bazėje.'
+      });
     }
   };
 
@@ -1507,6 +1681,19 @@ export default function CreateCatPage() {
                   >
                     <option value="Weiblich">{ui.genderFemale}</option>
                     <option value="Männlich">{ui.genderMale}</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1 space-y-1">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.status}<HelpButton section="status" /></label>
+                  <select
+                    value={statusAktuell}
+                    onChange={(e) => setStatusAktuell(e.target.value as 'zu vermitteln' | 'reserviert' | 'vermittelt')}
+                    className="w-full px-3 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 focus:outline-none focus:border-brandpink-500 text-sm focus:ring-1 focus:ring-brandpink-500"
+                  >
+                    <option value="zu vermitteln">{ui.statusAvailable}</option>
+                    <option value="reserviert">{ui.statusReserved}</option>
+                    <option value="vermittelt">{ui.statusAdopted}</option>
                   </select>
                 </div>
               </div>
@@ -2362,7 +2549,7 @@ export default function CreateCatPage() {
           {activeSection === 'media' && (
             <div className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
-                Fotos &amp; Videos hochladen
+                {ui.uploadMediaHeader}
                 <HelpButton section="media" />
               </h3>
               
@@ -2372,8 +2559,8 @@ export default function CreateCatPage() {
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-5 h-5 text-brandpink-500 animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-bold text-stone-850 uppercase tracking-wide">Geräte- &amp; Speicher-Check</h4>
-                      <p className="text-[10px] text-stone-500 font-medium">Berechtigungen für Kamera &amp; Mikrofon</p>
+                      <h4 className="text-xs font-bold text-stone-850 uppercase tracking-wide">{ui.deviceCheckHeader}</h4>
+                      <p className="text-[10px] text-stone-500 font-medium">{ui.deviceCheckSub}</p>
                     </div>
                   </div>
                   <button
@@ -2382,7 +2569,7 @@ export default function CreateCatPage() {
                     disabled={deviceCheckLoading}
                     className="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-[10px] font-bold rounded-lg border border-stone-300 transition-all select-none disabled:opacity-50"
                   >
-                    {deviceCheckLoading ? 'Prüft...' : 'Erneut prüfen'}
+                    {deviceCheckLoading ? ui.checkingText : ui.recheckBtn}
                   </button>
                 </div>
 
@@ -2396,7 +2583,7 @@ export default function CreateCatPage() {
                       : 'bg-stone-50 border-stone-200 text-stone-600'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Kamera</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.cameraStatusLabel}</span>
                       {cameraStatus === 'granted' ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : cameraStatus === 'denied' ? (
@@ -2406,7 +2593,7 @@ export default function CreateCatPage() {
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {cameraStatus === 'granted' ? 'Bereit 📸' : cameraStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                      {cameraStatus === 'granted' ? `${ui.readyText} 📸` : cameraStatus === 'denied' ? `${ui.blockedText} 🔒` : `${ui.uncheckedText} 🔍`}
                     </span>
                   </div>
 
@@ -2419,7 +2606,7 @@ export default function CreateCatPage() {
                       : 'bg-stone-50 border-stone-200 text-stone-600'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Mikrofon</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.micStatusLabel}</span>
                       {micStatus === 'granted' ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : micStatus === 'denied' ? (
@@ -2429,7 +2616,7 @@ export default function CreateCatPage() {
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {micStatus === 'granted' ? 'Bereit 🎤' : micStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                      {micStatus === 'granted' ? `${ui.readyText} 🎤` : micStatus === 'denied' ? `${ui.blockedText} 🔒` : `${ui.uncheckedText} 🔍`}
                     </span>
                   </div>
                 </div>
@@ -2443,7 +2630,7 @@ export default function CreateCatPage() {
                       : 'bg-amber-50/50 border-amber-150 text-amber-800'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Typ</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.storageTypeLabel}</span>
                       {opfsSupported ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : (
@@ -2451,7 +2638,7 @@ export default function CreateCatPage() {
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {opfsSupported ? 'OPFS (Optimiert) ⚡' : 'IndexedDB (Standard) 📦'}
+                      {opfsSupported ? `${ui.optimizedText} ⚡` : `${ui.standardText} 📦`}
                     </span>
                   </div>
 
@@ -2462,7 +2649,7 @@ export default function CreateCatPage() {
                       : 'bg-amber-50/50 border-amber-150 text-amber-800'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Schutz</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.storageProtectionLabel}</span>
                       {storagePersistent ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : (
@@ -2470,7 +2657,7 @@ export default function CreateCatPage() {
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {storagePersistent ? 'Geschützt 🛡️' : 'Temporär ⏳'}
+                      {storagePersistent ? `${ui.protectedText} 🛡️` : `${ui.temporaryText} ⏳`}
                     </span>
                   </div>
                 </div>
@@ -2480,12 +2667,12 @@ export default function CreateCatPage() {
                   <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl text-[10px] text-stone-600 leading-relaxed font-normal space-y-1.5 mt-2">
                     {!opfsSupported && (
                       <p>
-                        ⚠️ <strong>Hinweis zum Speicher-Typ:</strong> Dein Gerät unterstützt das moderne OPFS-Dateisystem nicht. Videos werden im Standard-Datenbankspeicher abgelegt. Bitte lade Videos vorzugsweise hoch, wenn du online bist, um Speicher-Engpässe zu vermeiden.
+                        ⚠️ <strong>{lang === 'DE' ? 'Hinweis zum Speicher-Typ:' : 'Pastaba dėl atminties tipo:'}</strong> {ui.opfsNote}
                       </p>
                     )}
                     {!storagePersistent && (
                       <p>
-                        ⚠️ <strong>Hinweis zum Speicher-Schutz:</strong> Der Speicher ist als temporär eingestuft. Falls der Speicher deines Handys sehr voll wird, könnte der Browser ungesynchronisierte Entwürfe löschen. Synchronisiere deine Einträge bitte zeitnah!
+                        ⚠️ <strong>{lang === 'DE' ? 'Hinweis zum Speicher-Schutz:' : 'Pastaba dėl atminties apsaugos:'}</strong> {ui.persistentNote}
                       </p>
                     )}
                   </div>
@@ -2496,21 +2683,21 @@ export default function CreateCatPage() {
                   <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 leading-relaxed font-medium space-y-1.5 shadow-sm">
                     <span className="font-bold flex items-center space-x-1">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>Wie du den Zugriff erlauben kannst:</span>
+                      <span>{ui.howToAllowHeader}</span>
                     </span>
                     <ol className="list-decimal list-inside space-y-1 pl-1 text-[10px]">
                       {cameraStatus === 'denied' && (
                         <li>
-                          <strong>Kamera freigeben:</strong> Klicke oben links neben der Webadresse (in der Adressleiste deines Browsers) auf das kleine Schloss-Symbol 🔒 und stelle <strong>Kamera</strong> auf &quot;Zulassen&quot; / &quot;Erlauben&quot;.
+                          <strong>{lang === 'DE' ? 'Kamera freigeben:' : 'Leisti kamerą:'}</strong> {ui.howToAllowCam}
                         </li>
                       )}
                       {micStatus === 'denied' && (
                         <li>
-                          <strong>Mikrofon freigeben:</strong> Klicke ebenfalls auf das Schloss-Symbol 🔒 und erlaube den Zugriff auf das <strong>Mikrofon</strong>, damit du Sprachnotizen aufnehmen kannst.
+                          <strong>{lang === 'DE' ? 'Mikrofon freigeben:' : 'Leisti mikrofoną:'}</strong> {ui.howToAllowMic}
                         </li>
                       )}
                       <li>
-                        <strong>Am Handy:</strong> Gehe in die Handy-Einstellungen unter <em>Apps &rarr; Browser (z.B. Chrome/Safari) &rarr; Berechtigungen</em> und erlaube dort Kamera/Mikrofon. Lade danach diese Seite neu.
+                        <strong>{lang === 'DE' ? 'Am Handy:' : 'Telefonu:'}</strong> {ui.howToAllowMobile}
                       </li>
                     </ol>
                   </div>
@@ -2521,8 +2708,8 @@ export default function CreateCatPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Galeriefotos (max. 20)</h3>
-                    <p className="text-[10px] text-stone-400">Bilder für die Vermittlungsgalerie</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.galleryPhotosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.galleryPhotosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2531,7 +2718,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-brandpink-50 text-brandpink-700 hover:bg-brandpink-100 rounded-lg text-[10px] font-bold border border-brandpink-250 transition-all shadow-sm"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Kamera</span>
+                      <span>{ui.cameraBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2539,7 +2726,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Galerie</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2564,7 +2751,7 @@ export default function CreateCatPage() {
                 <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
                   {photos.length === 0 ? (
                     <div className="col-span-4 py-4 text-center text-xs text-stone-400">
-                      Keine Fotos aufgenommen.
+                      {ui.noPhotosText}
                     </div>
                   ) : (
                     photos.map((base64, index) => (
@@ -2573,7 +2760,7 @@ export default function CreateCatPage() {
                         <img src={base64} alt={`Photo ${index}`} className="w-full h-full object-cover" />
                         <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                           <CloudOff className="w-2.5 h-2.5 text-amber-500" />
-                          <span>Lokal</span>
+                          <span>{ui.localBadge}</span>
                         </div>
                         <button
                           type="button"
@@ -2592,8 +2779,8 @@ export default function CreateCatPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Pässe &amp; Impfdokumente</h3>
-                    <p className="text-[10px] text-stone-400">Nur zur internen Archivierung</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.passportPhotosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.passportPhotosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2602,7 +2789,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Scannen</span>
+                      <span>{ui.cameraBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2610,7 +2797,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Datei wählen</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2635,7 +2822,7 @@ export default function CreateCatPage() {
                 <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
                   {passportPhotos.length === 0 ? (
                     <div className="col-span-4 py-4 text-center text-xs text-stone-400">
-                      Keine Dokumentenscans.
+                      {ui.noPassportsText}
                     </div>
                   ) : (
                     passportPhotos.map((base64, index) => (
@@ -2644,7 +2831,7 @@ export default function CreateCatPage() {
                         <img src={base64} alt={`Document ${index}`} className="w-full h-full object-cover" />
                         <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                           <CloudOff className="w-2.5 h-2.5 text-amber-500" />
-                          <span>Lokal</span>
+                          <span>{ui.localBadge}</span>
                         </div>
                         <button
                           type="button"
@@ -2662,8 +2849,8 @@ export default function CreateCatPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Videos (max. 5, max. 5 Min., unter 200 MB)</h3>
-                    <p className="text-[10px] text-stone-400">Direkter Cloud-Upload &amp; Offline-Speicherung (OPFS) unterstützt</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.videosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.videosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2673,7 +2860,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-bold border border-emerald-200 transition-all shadow-sm disabled:opacity-50"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Aufnehmen</span>
+                      <span>{ui.recordBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2682,7 +2869,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm disabled:opacity-50"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Galerie</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2705,17 +2892,15 @@ export default function CreateCatPage() {
 
                 {/* 💡 Video size warning tip */}
                 <div className="text-[10px] text-stone-500 bg-stone-100 border border-stone-200/60 rounded-lg p-2.5 flex items-start space-x-1.5">
-                  <span className="shrink-0 text-amber-600 font-bold">💡 Tipp:</span>
-                  <span>
-                    Direkt in der App aufgenommene Videos werden automatisch optimal komprimiert. Größere Videos aus der Galerie werden im Hintergrund verkleinert, oder du teilst sie vorab kurz per WhatsApp/Telegram, um sie sofort zu schrumpfen.
-                  </span>
+                  <span className="shrink-0 text-amber-600 font-bold">{lang === 'DE' ? '💡 Tipp:' : '💡 Patarimas:'}</span>
+                  <span>{ui.videoTip}</span>
                 </div>
 
                 <div className="border border-stone-200 rounded-xl p-3 bg-stone-50 space-y-2 min-h-[90px] flex flex-col justify-center">
                   {compressingVideoName && (
                     <div className="flex flex-col space-y-1.5 p-3 bg-brandpink-50/50 border border-brandpink-100 rounded-lg text-xs">
                       <div className="flex justify-between font-semibold text-brandpink-800">
-                        <span className="truncate max-w-[250px]">Optimierung: {compressingVideoName}</span>
+                        <span className="truncate max-w-[250px]">{ui.optimizingText}: {compressingVideoName}</span>
                         <span>{compressionProgress}%</span>
                       </div>
                       <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
@@ -2724,24 +2909,27 @@ export default function CreateCatPage() {
                           style={{ width: `${compressionProgress}%` }}
                         />
                       </div>
-                      <p className="text-[10px] text-stone-400">Video wird für den schnellen Upload verkleinert, bitte warten...</p>
+                      <p className="text-[10px] text-stone-400">{ui.compressProgressText}</p>
                     </div>
                   )}
 
                   {videos.length === 0 ? (
                     <div className="py-4 text-center text-xs text-stone-400">
-                      Keine Videos hochgeladen.
+                      {ui.noVideosText}
                     </div>
                   ) : (
                     videos.map((vid, index) => (
                       <div key={index} className="flex justify-between items-center p-2 bg-white border border-stone-200 rounded-lg text-xs shadow-sm">
                         <div className="flex items-center space-x-2 truncate">
                           {vid.isSynced ? (
-                            <span title="Online hochgeladen" className="shrink-0 flex items-center">
+                            <span title={lang === 'DE' ? "Online hochgeladen" : "Įkelta į debesį"} className="shrink-0 flex items-center">
                               <Cloud className="w-3.5 h-3.5 text-emerald-500" />
                             </span>
                           ) : (
-                            <span title={vid.opfsKey ? "Lokal gesichert (OPFS) ⚡" : "Lokal gesichert (IndexedDB) 📦"} className="shrink-0 flex items-center">
+                            <span title={vid.opfsKey 
+                              ? (lang === 'DE' ? "Lokal gesichert (OPFS) ⚡" : "Išsaugota lokaliai (OPFS) ⚡")
+                              : (lang === 'DE' ? "Lokal gesichert (IndexedDB) 📦" : "Išsaugota lokaliai (IndexedDB) 📦")
+                            } className="shrink-0 flex items-center">
                               <CloudOff className="w-3.5 h-3.5 text-amber-500" />
                             </span>
                           )}
@@ -2753,7 +2941,7 @@ export default function CreateCatPage() {
                           <button
                             type="button"
                             onClick={() => deleteVideo(index)}
-                            className="p-1 text-red-650 hover:bg-red-50 rounded transition-colors"
+                            className="p-1 text-red-655 hover:bg-red-50 rounded transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -2768,8 +2956,8 @@ export default function CreateCatPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotizen ({audioItems.length}/10)</h3>
-                    <p className="text-[10px] text-stone-400">Nimm bis zu 10 Sprachnotizen auf oder führe eine bestehende fort</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.audioHeader} ({audioItems.length}/10)</h3>
+                    <p className="text-[10px] text-stone-400">{ui.audioSub}</p>
                   </div>
                   {!isRecording && audioItems.length < 10 && (
                     <button
@@ -2778,7 +2966,7 @@ export default function CreateCatPage() {
                       className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100 transition-all cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Neue Sprachnotiz</span>
+                      <span>{ui.newAudioBtn}</span>
                     </button>
                   )}
                 </div>
@@ -2789,7 +2977,7 @@ export default function CreateCatPage() {
                       <div className="flex items-center space-x-2">
                         <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
                         <span className="text-xs font-semibold text-red-500">
-                          {recordingIndex !== null ? 'Hinzufügen läuft...' : 'Aufnahme läuft...'}
+                          {recordingIndex !== null ? ui.addingAudioText : ui.recordingAudioText}
                         </span>
                       </div>
                       <span className="text-2xl font-mono text-stone-700">
@@ -2801,7 +2989,7 @@ export default function CreateCatPage() {
                         className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold animate-pulse hover:bg-red-100 transition-all cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5" />
-                        <span>Aufnahme stoppen & speichern</span>
+                        <span>{ui.stopRecordingBtn}</span>
                       </button>
                     </div>
                   ) : audioItems.length > 0 ? (
@@ -2819,16 +3007,16 @@ export default function CreateCatPage() {
                               type="button"
                               onClick={() => startRecording(index)}
                               className="px-2 py-1 bg-stone-100 hover:bg-brandpink-55 hover:text-brandpink-700 text-stone-600 text-[10px] font-bold rounded border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
-                              title="Diese Sprachnotiz fortsetzen"
+                              title={lang === 'DE' ? "Diese Sprachnotiz fortsetzen" : "Tęsti šią balso pastabą"}
                             >
                               <Mic className="w-3 h-3 text-brandpink-500" />
-                              <span>Fortsetzen</span>
+                              <span>{ui.continueBtn}</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => deleteAudio(index)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-colors cursor-pointer"
-                              title="Löschen"
+                              className="p-1.5 text-red-655 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-colors cursor-pointer"
+                              title={ui.deleteBtn}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -2838,7 +3026,7 @@ export default function CreateCatPage() {
                     </div>
                   ) : (
                     <div className="py-6 text-center text-xs text-stone-400">
-                      Keine Sprachnotizen aufgenommen. Klicke oben auf &quot;Neue Sprachnotiz&quot;, um zu starten.
+                      {ui.noAudioText}
                     </div>
                   )}
                 </div>

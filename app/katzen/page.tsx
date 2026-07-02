@@ -95,7 +95,13 @@ export default function PublicGalleryPage() {
       emergency: 'Sorgenfell / Dringend 🆘',
       shelterBadge: 'Būk mano draugas',
       years: 'Jahre',
-      year: 'Jahr'
+      year: 'Jahr',
+      genderLabel: 'Geschlecht',
+      ageLabel: 'Alter',
+      noMedia: 'Keine Medien',
+      noDesc: 'Zurzeit liegt keine detaillierte Beschreibung vor. Klicke auf Details für Kontaktdaten.',
+      regCode: 'Registrierungs-Code',
+      shareTitle: 'Teilen'
     },
     LT: {
       title: 'Mūsų globotiniai ieško namų 🏡',
@@ -115,7 +121,13 @@ export default function PublicGalleryPage() {
       emergency: 'Skubi pagalba 🆘',
       shelterBadge: 'Būk mano draugas',
       years: 'metai',
-      year: 'metai'
+      year: 'metai',
+      genderLabel: 'Lytis',
+      ageLabel: 'Amžius',
+      noMedia: 'Nėra medijos',
+      noDesc: 'Šiuo metu detalaus aprašymo nėra. Spustelėkite peržiūrėti profilį norėdami pamatyti kontaktus.',
+      regCode: 'Registracijos kodas',
+      shareTitle: 'Dalintis'
     }
   }[lang];
 
@@ -160,7 +172,7 @@ export default function PublicGalleryPage() {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">Geschlecht</label>
+              <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">{ui.genderLabel}</label>
               <select
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value)}
@@ -173,7 +185,7 @@ export default function PublicGalleryPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">Alter</label>
+              <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">{ui.ageLabel}</label>
               <select
                 value={filterAge}
                 onChange={(e) => setFilterAge(e.target.value)}
@@ -224,7 +236,7 @@ export default function PublicGalleryPage() {
                         ) : (
                           <div className="flex flex-col items-center justify-center text-stone-400">
                             <HelpCircle className="w-8 h-8 mb-1" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Keine Medien</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider">{ui.noMedia}</span>
                           </div>
                         )}
 
@@ -284,7 +296,7 @@ export default function PublicGalleryPage() {
                   </div>
 
                   <p className="text-xs text-stone-600 line-clamp-3 mb-5 leading-relaxed flex-1">
-                    {cat.reason_for_shelter || 'Zurzeit liegt keine detaillierte Beschreibung vor. Klicke auf Details für Kontaktdaten.'}
+                    {cat.reason_for_shelter || ui.noDesc}
                   </p>
 
                   <div className="flex space-x-2">
@@ -297,7 +309,7 @@ export default function PublicGalleryPage() {
                     <button
                       onClick={() => setSelectedShareCat(cat)}
                       className="px-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-xl shadow-sm active:scale-98 transition-all flex items-center justify-center"
-                      title="Teilen"
+                      title={ui.shareTitle}
                     >
                       <Share2 className="w-4 h-4" />
                     </button>
@@ -317,7 +329,7 @@ export default function PublicGalleryPage() {
       {/* Footer */}
       <footer className="py-6 border-t border-stone-200 text-center text-xs text-stone-500 bg-stone-100/60 mt-12">
         <p>© 2026 VšĮ "Būk mano draugas". Kaukėnų g. 9, Glaudėnai, Litauen.</p>
-        <p className="mt-1">Registrierungs-Code: 302639996</p>
+        <p className="mt-1">{ui.regCode}: 302639996</p>
       </footer>
 
       {selectedShareCat && (

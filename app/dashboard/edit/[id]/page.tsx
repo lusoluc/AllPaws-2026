@@ -3,6 +3,7 @@
 import { use, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db, Animal } from '@/lib/db';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -63,7 +64,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
 
-  const ui = {
+  const defaultUi = {
     DE: {
       name: 'Name *',
       namePlaceholder: 'z.B. Luna',
@@ -108,7 +109,79 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       statusReserved: 'reserviert',
       statusAdopted: 'vermittelt',
       saveBtn: 'Änderungen speichern',
-      saving: 'Wird gespeichert...'
+      saving: 'Wird gespeichert...',
+      
+      // Media Tab
+      uploadMediaHeader: 'Fotos & Videos hochladen',
+      deviceCheckHeader: 'Geräte- & Speicher-Check',
+      deviceCheckSub: 'Berechtigungen für Kamera & Mikrofon',
+      recheckBtn: 'Erneut prüfen',
+      checkingText: 'Prüft...',
+      cameraStatusLabel: 'Kamera',
+      micStatusLabel: 'Mikrofon',
+      storageTypeLabel: 'Speicher-Typ',
+      storageProtectionLabel: 'Speicher-Schutz',
+      readyText: 'Bereit',
+      blockedText: 'Blockiert',
+      uncheckedText: 'Ungeprüft',
+      optimizedText: 'Optimiert',
+      standardText: 'Standard',
+      protectedText: 'Geschützt',
+      temporaryText: 'Temporär',
+      
+      opfsNote: 'Dein Gerät unterstützt das moderne OPFS-Dateisystem nicht. Videos werden im Standard-Datenbankspeicher abgelegt. Bitte lade Videos vorzugsweise hoch, wenn du online bist, um Speicher-Engpesste zu vermeiden.',
+      persistentNote: 'Der Speicher ist als temporär eingestufen. Falls der Speicher deines Handys sehr voll wird, könnte der Browser ungesynchronisierte Entwürfe löschen. Synchronisiere deine Einträge bitte zeitnah!',
+      howToAllowHeader: 'Wie du den Zugriff erlauben kannst:',
+      howToAllowCam: 'Klicke oben links neben der Webadresse (in der Adressleiste deines Browsers) auf das Schloss-Symbol 🔒 und stelle Kamera auf "Zulassen" / "Erlauben".',
+      howToAllowMic: 'Klicke ebenfalls auf das Schloss-Symbol 🔒 und erlaube den Zugriff auf das Mikrofon, damit du Sprachnotizen aufnehmen kannst.',
+      howToAllowMobile: 'Gehe in die Handy-Einstellungen unter Apps → Browser (z.B. Chrome/Safari) → Berechtigungen und erlaube dort Kamera/Mikrofon. Lade danach diese Seite neu.',
+      
+      galleryPhotosHeader: 'Galeriefotos (max. 20)',
+      galleryPhotosSub: 'Bilder für die Vermittlungsgalerie',
+      passportPhotosHeader: 'Dokumente / Impfpässe (max. 5)',
+      passportPhotosSub: 'Nur intern für Mitarbeiter sichtbar',
+      videosHeader: 'Videos (max. 5, max. 5 Min., unter 200 MB)',
+      videosSub: 'Direkter Cloud-Upload & Offline-Speicherung (OPFS) unterstützt',
+      videoTip: 'Direkt in der App aufgenommene Videos werden automatisch optimal komprimiert. Größere Videos aus der Galerie werden im Hintergrund verkleinert, oder du teilst sie vorab kurz per WhatsApp/Telegram, um sie sofort zu schrumpfen.',
+      
+      cameraBtn: 'Kamera',
+      galleryBtn: 'Galerie',
+      recordBtn: 'Aufnehmen',
+      uploadBtn: 'Galerie',
+      
+      noPhotosText: 'Keine Fotos aufgenommen.',
+      noPassportsText: 'Keine Pässe aufgenommen.',
+      noVideosText: 'Keine Videos geladen.',
+      localBadge: 'Lokal',
+      onlineBadge: 'Online',
+      
+      optimizingText: 'Optimierung',
+      compressProgressText: 'Video wird für den schnellen Upload verkleinert, bitte warten...',
+      
+      audioHeader: 'Sprachnotizen',
+      audioSub: 'Nimm bis zu 10 Sprachnotizen auf oder führe eine bestehende fort',
+      newAudioBtn: 'Neue Sprachnotiz',
+      addingAudioText: 'Hinzufügen läuft...',
+      recordingAudioText: 'Aufnahme läuft...',
+      stopRecordingBtn: 'Aufnahme stoppen & speichern',
+      noAudioText: 'Keine Sprachnotizen aufgenommen. Klicke oben auf "Neue Sprachnotiz", um zu starten.',
+      continueBtn: 'Fortsetzen',
+      deleteBtn: 'Löschen',
+      
+      editedByLabel: 'Wer nimmt diese Änderung vor? *',
+      editedByPlaceholder: 'Dein Name oder Kürzel (z.B. Carlos)',
+      editedByDesc: 'Dies hilft dem Team nachzuvollziehen, wer welche Version bearbeitet hat.',
+      
+      // Revisions Tab
+      revisionsHeader: 'Versionsverlauf (Die letzten 10 Änderungen)',
+      revisionsSub: 'Hier siehst du, wer dieses Profil wann bearbeitet hat. Du kannst eine frühere Version direkt in das Formular laden, um sie zu überprüfen und wieder aktiv zu speichern.',
+      loadingRevisions: 'Versionsverlauf wird geladen...',
+      noRevisions: 'Bisher wurden keine früheren Versionen für dieses Tier gespeichert.',
+      compareBtn: 'Vergleichen',
+      restoreConfirm: 'Möchten Sie das Formular wirklich auf den Stand vom {date} zurücksetzen? Ungespeicherte aktuelle Änderungen gehen dabei verloren.',
+      identicalBadge: 'Aktuell identisch',
+      diffOne: 'Unterschied',
+      diffMany: 'Unterschiede'
     },
     LT: {
       name: 'Vardas *',
@@ -154,9 +227,94 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       statusReserved: 'rezervuota',
       statusAdopted: 'dovanota',
       saveBtn: 'Išsaugoti pakeitimus',
-      saving: 'Saugoma...'
+      saving: 'Saugoma...',
+      
+      // Media Tab
+      uploadMediaHeader: 'Įkelti nuotraukas ir vaizdo įrašus',
+      deviceCheckHeader: 'Įrenginio ir atminties patikra',
+      deviceCheckSub: 'Kameros ir mikrofono leidimai',
+      recheckBtn: 'Tikrinti iš naujo',
+      checkingText: 'Tikrinama...',
+      cameraStatusLabel: 'Kamera',
+      micStatusLabel: 'Mikrofonas',
+      storageTypeLabel: 'Atminties tipas',
+      storageProtectionLabel: 'Atminties apsauga',
+      readyText: 'Paruošta',
+      blockedText: 'Blokuojama',
+      uncheckedText: 'Netikrinta',
+      optimizedText: 'Optimizuota',
+      standardText: 'Standartinė',
+      protectedText: 'Apsaugota',
+      temporaryText: 'Laikina',
+      
+      opfsNote: 'Jūsų įrenginys nepalaiko modernios OPFS failų sistemų. Vaizdo įrašai bus saugomi standartinėje duomenų bazėje. Rekomenduojame vaizdo įrašus kelti prisijungus prie interneto, kad išvengtumėte atminties trūkumo.',
+      persistentNote: 'Atmintis pažymėta kaip laikina. Jei telefono atmintis bus pilna, naršyklė gali ištrinti nesinchronizuotus juodraščius. Prašome kuo greičiau sinchronizuoti įrašus!',
+      howToAllowHeader: 'Kaip suteikti prieigą:',
+      howToAllowCam: 'Spustelėkite spynos piktogramą 🔒 šalia interneto adreso (naršyklės adreso juostoje) ir nustatykite Kamerą į „Leisti“.',
+      howToAllowMic: 'Taip pat spustelėkite spynos piktogramą 🔒 ir leiskite prieigą prie mikrofono, kad galėtumėte įrašyti balso pastabas.',
+      howToAllowMobile: 'Telefono nustatymuose eikite į Programos → Naršyklė (pvz., Chrome/Safari) → Leidimai ir ten leiskite kamerą/mikrofoną. Tada atnaujinkite šį puslapį.',
+      
+      galleryPhotosHeader: 'Galerijos nuotraukos (maks. 20)',
+      galleryPhotosSub: 'Nuotraukos viešai galerijai',
+      passportPhotosHeader: 'Dokumentai / Skiepų pasai (maks. 5)',
+      passportPhotosSub: 'Matoma tik darbuotojams (vidiniam naudojimui)',
+      videosHeader: 'Vaizdo įrašai (maks. 5, maks. 5 min., iki 200 MB)',
+      videosSub: 'Palaikomas tiesioginis įkėlimas į debesį ir saugojimas neprisijungus (OPFS)',
+      videoTip: 'Tiesiogiai programėlėje įrašyti vaizdo įrašai yra automatiškai optimizuojami. Didesni vaizdo įrašai iš galerijos bus sumažinti fone, arba galite prieš tai juos trumpai pasidalinti per WhatsApp/Telegram, kad iškart sumažintumėte dydį.',
+      
+      cameraBtn: 'Kamera',
+      galleryBtn: 'Galerija',
+      recordBtn: 'Įrašyti',
+      uploadBtn: 'Galerija',
+      
+      noPhotosText: 'Nuotraukų nėra.',
+      noPassportsText: 'Dokumentų nėra.',
+      noVideosText: 'Vaizdo įrašų nėra.',
+      localBadge: 'Vietinis',
+      onlineBadge: 'Internetinis',
+      
+      optimizingText: 'Optimizavimas',
+      compressProgressText: 'Vaizdo įrašas mažinamas greitesniam įkėlimui, prašome palaukti...',
+      
+      audioHeader: 'Balso pastabos',
+      audioSub: 'Įrašykite iki 10 balso pastabų arba tęskite esamą',
+      newAudioBtn: 'Nauja balso pastaba',
+      addingAudioText: 'Pridedama...',
+      recordingAudioText: 'Įrašoma...',
+      stopRecordingBtn: 'Sustabdyti ir išsaugoti',
+      noAudioText: 'Balso pastabų nėra. Spustelėkite „Nauja balso pastaba“ viršuje, kad pradėtumėte.',
+      continueBtn: 'Tęsti',
+      deleteBtn: 'Ištrinti',
+      
+      editedByLabel: 'Kas atlieka šį pakeitimą? *',
+      editedByPlaceholder: 'Jūsų vardas arba inicialai (pvz., Karolis)',
+      editedByDesc: 'Tai padeda komandai sekti, kas redagavo kurią versiją.',
+      
+      // Revisions Tab
+      revisionsHeader: 'Versijų istorija (Paskutiniai 10 pakeitimų)',
+      revisionsSub: 'Čia galite matyti, kas ir kada redagavo šį profilį. Galite įkelti ankstesnę versiją tiesiai į formą, kad ją peržiūrėtumėte ir vėl išsaugotumėte.',
+      loadingRevisions: 'Kraunama istorija...',
+      noRevisions: 'Šiam gyvūnui ankstesnių versijų dar neišsaugota.',
+      compareBtn: 'Palyginti',
+      restoreConfirm: 'Ar tikrai norite atkurti formos būseną iš {date}? Neišsaugoti dabartiniai pakeitimai bus prarasti.',
+      identicalBadge: 'Šiuo metu identiška',
+      diffOne: 'skirtumas',
+      diffMany: 'skirtumai'
     }
-  }[lang];
+  };
+
+  const uiTexts = useLiveQuery(() => db.uiTexts.toArray());
+  const ui = { ...defaultUi[lang] };
+  if (uiTexts) {
+    uiTexts.forEach((item) => {
+      if (item.key.startsWith('edit.')) {
+        const subKey = item.key.split('.')[1];
+        if (subKey in ui) {
+          (ui as any)[subKey] = item[lang] || (ui as any)[subKey];
+        }
+      }
+    });
+  }
   
   // Loading & Entity State
   const [loading, setLoading] = useState(true);
@@ -165,6 +323,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
   // Form State
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
+  const [statusAktuell, setStatusAktuell] = useState<'zu vermitteln' | 'reserviert' | 'vermittelt'>('zu vermitteln');
   const [ageYears, setAgeYears] = useState(0);
   const [ageMode, setAgeMode] = useState<'range' | 'exact' | 'birthyear'>('range');
   const [ageMin, setAgeMin] = useState(2);
@@ -248,55 +407,60 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
 
   const getChangedFields = (revData: any) => {
     const changes: { label: string; oldVal: string; newVal: string }[] = [];
-    const compare = (label: string, oldVal: any, newVal: any) => {
-      const formattedOld = oldVal === true ? 'Ja' : oldVal === false ? 'Nein' : String(oldVal ?? '-').trim();
-      const formattedNew = newVal === true ? 'Ja' : newVal === false ? 'Nein' : String(newVal ?? '-').trim();
+    const isDe = lang === 'DE';
+    const yesText = isDe ? 'Ja' : 'Taip';
+    const noText = isDe ? 'Nein' : 'Ne';
+
+    const compare = (labelDe: string, labelLt: string, oldVal: any, newVal: any) => {
+      const formattedOld = oldVal === true ? yesText : oldVal === false ? noText : String(oldVal ?? '-').trim();
+      const formattedNew = newVal === true ? yesText : newVal === false ? noText : String(newVal ?? '-').trim();
       if (formattedOld !== formattedNew) {
-        changes.push({ label, oldVal: formattedOld, newVal: formattedNew });
+        changes.push({ label: isDe ? labelDe : labelLt, oldVal: formattedOld, newVal: formattedNew });
       }
     };
 
-    compare('Name', revData.name, name);
-    compare('Raum', revData.room_name, roomName);
-    compare('Käfig', revData.cage_name, cageName);
-    compare('Geschlecht', revData.gender, gender);
+    compare('Name', 'Vardas', revData.name, name);
+    compare('Raum', 'Kambarys', revData.room_name, roomName);
+    compare('Käfig', 'Narvas', revData.cage_name, cageName);
+    compare('Geschlecht', 'Lytis', revData.gender, gender);
+    compare('Status', 'Statusas', revData.status_aktuell, statusAktuell);
     
     // Age comparisons
-    compare('Alter-Modus', revData.age_mode, ageMode);
+    compare('Alter-Modus', 'Amžiaus režimas', revData.age_mode, ageMode);
     if (ageMode === 'range') {
-      compare('Mindestalter (Jahre)', revData.age_min, ageMin);
-      compare('Maximalalter (Jahre)', revData.age_max, ageMax);
+      compare('Mindestalter (Jahre)', 'Minimalus amžius (metais)', revData.age_min, ageMin);
+      compare('Maximalalter (Jahre)', 'Maksimalus amžius (metais)', revData.age_max, ageMax);
     } else if (ageMode === 'exact') {
-      compare('Exaktes Alter (Jahre)', revData.age_years, ageExact);
+      compare('Exaktes Alter (Jahre)', 'Tikslus amžius (metais)', revData.age_years, ageExact);
     } else if (ageMode === 'birthyear') {
-      compare('Geburtsjahr', revData.birth_year, birthYear);
-      compare('Geburtsmonat', revData.birth_month, birthMonth);
-      compare('Geburtstag', revData.birth_day, birthDay);
+      compare('Geburtsjahr', 'Gimimo metai', revData.birth_year, birthYear);
+      compare('Geburtsmonat', 'Gimimo mėnuo', revData.birth_month, birthMonth);
+      compare('Geburtstag', 'Gimimo diena', revData.birth_day, birthDay);
     }
 
-    compare('Aufnahmedatum (Jahr-Monat)', revData.shelter_admission_date, `${shelterYear}-${shelterMonth}`);
-    compare('Grund für Aufnahme', revData.reason_for_shelter, reasonForShelter);
-    compare('Einschränkungen', revData.restrictions, restrictions);
-    compare('Interne Notizen / Beschreibung', revData.notes_miscellaneous, notesMiscellaneous);
-    compare('Öffentlich sichtbar', revData.is_published, isPublished);
-    compare('Dringender Notfall', revData.is_emergency, isEmergency);
+    compare('Aufnahmedatum (Jahr-Monat)', 'Priėmimo data (metai-mėnuo)', revData.shelter_admission_date, `${shelterYear}-${shelterMonth}`);
+    compare('Grund für Aufnahme', 'Priėmimo priežastis', revData.reason_for_shelter, reasonForShelter);
+    compare('Einschränkungen', 'Apribojimai', revData.restrictions, restrictions);
+    compare('Interne Notizen / Beschreibung', 'Vidinės pastabos / aprašymas', revData.notes_miscellaneous, notesMiscellaneous);
+    compare('Öffentlich sichtbar', 'Viešai matomas', revData.is_published, isPublished);
+    compare('Dringender Notfall', 'Skubus atvejis', revData.is_emergency, isEmergency);
     
-    compare('Kastriert', revData.is_castrated, isCastrated);
-    compare('Gechipt', revData.is_chipped, isChipped);
-    compare('Tollwut-Impfung', revData.has_rabies_vaccine, hasRabiesVaccine);
-    compare('Katzenschnupfen-Impfung', revData.has_cat_flu_vaccine, hasCatFluVaccine);
-    compare('Entwurmt', revData.is_dewormed, isDewormed);
-    compare('EU-Heimtierausweis', revData.has_eu_passport, hasEuPassport);
+    compare('Kastriert', 'Kastruotas', revData.is_castrated, isCastrated);
+    compare('Gechipt', 'Paženklintas mikroschema', revData.is_chipped, isChipped);
+    compare('Tollwut-Impfung', 'Skiepas nuo pasiutligės', revData.has_rabies_vaccine, hasRabiesVaccine);
+    compare('Katzenschnupfen-Impfung', 'Skiepas nuo kačių gripo', revData.has_cat_flu_vaccine, hasCatFluVaccine);
+    compare('Entwurmt', 'Nukirmintas', revData.is_dewormed, isDewormed);
+    compare('EU-Heimtierausweis', 'ES gyvūno augintinio pasas', revData.has_eu_passport, hasEuPassport);
     
-    compare('Katzen-Verträglichkeit', revData.compat_cats, compatCats);
-    compare('Hunde-Verträglichkeit', revData.compat_dogs, compatDogs);
-    compare('Kinder-Verträglichkeit', revData.compat_children, compatChildren);
+    compare('Katzen-Verträglichkeit', 'Suderinamumas su katėmis', revData.compat_cats, compatCats);
+    compare('Hunde-Verträglichkeit', 'Suderinamumas su šunimis', revData.compat_dogs, compatDogs);
+    compare('Kinder-Verträglichkeit', 'Suderinamumas su vaikais', revData.compat_children, compatChildren);
     
-    compare('Neugierig', revData.trait_curious, traitCurious);
-    compare('Verspielt', revData.trait_playful, traitPlayful);
-    compare('Aggressiv', revData.trait_aggressive, traitAggressive);
-    compare('Ängstlich', revData.trait_fearful, traitFearful);
-    compare('Verschmust', revData.trait_cuddly, traitCuddly);
+    compare('Neugierig', 'Smalsus', revData.trait_curious, traitCurious);
+    compare('Verspielt', 'Žaismingas', revData.trait_playful, traitPlayful);
+    compare('Aggressiv', 'Agresyvus', revData.trait_aggressive, traitAggressive);
+    compare('Ängstlich', 'Baimingas', revData.trait_fearful, traitFearful);
+    compare('Verschmust', 'Meilus', revData.trait_cuddly, traitCuddly);
     
     return changes;
   };
@@ -431,6 +595,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           setExistingAnimal(animal);
           setName(animal.name || '');
           setGender(animal.gender || 'Weiblich');
+          setStatusAktuell(animal.status_aktuell || 'zu vermitteln');
           setAgeYears(animal.age_years || 0);
           setAgeMode(animal.age_mode || 'range');
           if (animal.age_mode === 'range') {
@@ -739,7 +904,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     const files = Array.from(e.target.files);
 
     if (photos.length + files.length > 20) {
-      setAlertMessage({ type: 'error', text: 'Maximal 20 Bilder pro Tier erlaubt.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Maximal 20 Bilder pro Tier erlaubt.' : 'Leidžiama įkelti ne daugiau kaip 20 nuotraukų.'
+      });
       return;
     }
 
@@ -748,14 +916,18 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       if (!file.type.startsWith('image/')) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG, HEIC).` 
+          text: lang === 'DE'
+            ? `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG, HEIC).`
+            : `Oi! Failas „${file.name}“ nėra nuotrauka. Prašome pasirinkti tik paveikslėlių failus (PNG, JPG, HEIC).`
         });
         return;
       }
       if (file.size > 15 * 1024 * 1024) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Das Foto "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB etwas zu groß. Wir bitten dich, Fotos unter 15 MB auszuwählen.` 
+          text: lang === 'DE'
+            ? `Das Foto "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB etwas zu groß. Wir bitten dich, Fotos unter 15 MB auszuwählen.`
+            : `Nuotrauka „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelė. Prašome pasirinkti nuotrauką iki 15 MB.`
         });
         return;
       }
@@ -768,7 +940,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       setPhotos(prev => [...prev, ...compressedBase64s]);
     } catch (err) {
       console.error(err);
-      setAlertMessage({ type: 'error', text: 'Ein Fehler ist beim Verkleinern der Fotos aufgetreten.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Ein Fehler ist beim Verkleinern der Fotos aufgetreten.' : 'Klaida mažinant nuotraukas.'
+      });
     }
   };
 
@@ -779,7 +954,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     const files = Array.from(e.target.files);
 
     if (passportPhotos.length + files.length > 5) {
-      setAlertMessage({ type: 'error', text: 'Maximal 5 Impfpässe pro Tier erlaubt.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Maximal 5 Impfpässe pro Tier erlaubt.' : 'Leidžiama įkelti ne daugiau kaip 5 skiepų pasus.'
+      });
       return;
     }
 
@@ -788,14 +966,18 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       if (!file.type.startsWith('image/')) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG).` 
+          text: lang === 'DE'
+            ? `Huch! Die Datei "${file.name}" ist kein Foto. Bitte wähle nur Bilddateien (PNG, JPG).`
+            : `Oi! Failas „${file.name}“ nėra nuotrauka. Prašome pasirinkti tik paveikslėlių failus (PNG, JPG).`
         });
         return;
       }
       if (file.size > 15 * 1024 * 1024) {
         setAlertMessage({ 
           type: 'error', 
-          text: `Die Datei "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte unter 15 MB bleiben.` 
+          text: lang === 'DE'
+            ? `Die Datei "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte unter 15 MB bleiben.`
+            : `Failas „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelis. Prašome pasirinkti failą iki 15 MB.`
         });
         return;
       }
@@ -808,7 +990,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       setPassportPhotos(prev => [...prev, ...compressedBase64s]);
     } catch (err) {
       console.error(err);
-      setAlertMessage({ type: 'error', text: 'Fehler beim Komprimieren des Reisepasses.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler beim Komprimieren des Reisepasses.' : 'Klaida suspaudžiant pasą.'
+      });
     }
   };
 
@@ -999,19 +1184,29 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
   const processAndUploadVideo = async (file: File) => {
     // If offline, show error and abort upload
     if (!isOnline) {
-      setAlertMessage({ type: 'error', text: 'Video-Upload erfordert eine stabile Internetverbindung. Bitte im Online-Bereich hochladen.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE'
+          ? 'Video-Upload erfordert eine stabile Internetverbindung. Bitte im Online-Bereich hochladen.'
+          : 'Vaizdo įrašų įkėlimui reikalingas stabilus interneto ryšys. Prašome įkelti prisijungus prie interneto.'
+      });
       return;
     }
 
     if (videos.length >= 5) {
-      setAlertMessage({ type: 'error', text: 'Maximal 5 Videos pro Tier erlaubt.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Maximal 5 Videos pro Tier erlaubt.' : 'Leidžiama įkelti ne daugiau kaip 5 vaizdo įrašus.'
+      });
       return;
     }
 
     if (!file.type.startsWith('video/')) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Huch! Die Datei "${file.name}" ist kein Video. Bitte wähle nur Videodateien (z.B. MP4).` 
+        text: lang === 'DE'
+          ? `Huch! Die Datei "${file.name}" ist kein Video. Bitte wähle nur Videodateien (z.B. MP4).`
+          : `Oi! Failas „${file.name}“ nėra vaizdo įrašas. Prašome pasirinkti tik vaizdo failus (pvz., MP4).`
       });
       return;
     }
@@ -1020,7 +1215,9 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     if (file.size > 200 * 1024 * 1024) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Das Video "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Video unter 200 MB.` 
+        text: lang === 'DE'
+          ? `Das Video "${file.name}" ist mit ${(file.size / (1024 * 1024)).toFixed(1)} MB zu groß. Bitte wähle ein Video unter 200 MB.`
+          : `Vaizdo įrašas „${file.name}“ užima ${(file.size / (1024 * 1024)).toFixed(1)} MB ir yra per didelis. Prašome pasirinkti vaizdo įrašą iki 200 MB.`
       });
       return;
     }
@@ -1029,7 +1226,9 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     if (duration > 300) {
       setAlertMessage({ 
         type: 'error', 
-        text: `Das Video "${file.name}" überschreitet die maximale Länge von 5 Minuten (${Math.round(duration)} Sek).` 
+        text: lang === 'DE'
+          ? `Das Video "${file.name}" überschreitet die maximale Länge von 5 Minuten (${Math.round(duration)} Sek).`
+          : `Vaizdo įrašas „${file.name}“ viršija maksimalią 5 minučių trukmę (${Math.round(duration)} sek).`
       });
       return;
     }
@@ -1150,7 +1349,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
 
   const startRecording = async (indexToAppend: number | null = null) => {
     if (audioItems.length >= 10 && indexToAppend === null) {
-      alert('Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.');
+      alert(lang === 'DE' ? 'Du kannst maximal 10 Audio-Aufnahmen pro Schützling speichern.' : 'Vienam gyvūnui galite išsaugoti ne daugiau kaip 10 balso pastabų.');
       return;
     }
     try {
@@ -1176,7 +1375,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
             finalBlob = await appendAudioBlobs(existingBlob, newBlob);
           } catch (e) {
             console.error('Failed to append audio blobs:', e);
-            alert('Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.');
+            alert(lang === 'DE' ? 'Das Audio konnte nicht fortgesetzt werden. Es wurde stattdessen ein neues Audio erstellt.' : 'Nepavyko pratęsti garso įrašo. Vietoj to buvo sukurtas naujas įrašas.');
           }
         }
 
@@ -1199,7 +1398,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       setIsRecording(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      alert('Zugriff auf das Mikrofon verweigert oder nicht unterstützt.');
+      alert(lang === 'DE' ? 'Zugriff auf das Mikrofon verweigert oder nicht unterstützt.' : 'Prieiga prie mikrofono atmesta arba nepalaikoma.');
     }
   };
 
@@ -1215,7 +1414,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
   };
 
   const handleDeleteAnimal = async () => {
-    if (!window.confirm('Möchten Sie dieses Tierprofil wirklich endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.')) {
+    if (!window.confirm(lang === 'DE' 
+      ? 'Möchten Sie dieses Tierprofil wirklich endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.' 
+      : 'Ar tikrai norite visam laikui ištrinti šį gyvūno profilį? Šio veiksmo atšaukti nebus įmanoma.'
+    )) {
       return;
     }
 
@@ -1254,7 +1456,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     } catch (err) {
       console.error(err);
       await logger.error('AnimalEdit', `Fehler beim Löschen des Tiers: ${name}`, err);
-      setAlertMessage({ type: 'error', text: 'Fehler beim Löschen des Tierprofils.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler beim Löschen des Tierprofils.' : 'Klaida trinant gyvūno profilį.'
+      });
     }
   };
 
@@ -1264,18 +1469,29 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     setAlertMessage(null);
 
     if (!name.trim()) {
-      setAlertMessage({ type: 'error', text: 'Bitte gib einen Namen für das Tier ein.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Bitte gib einen Namen für das Tier ein.' : 'Prašome įvesti gyvūno vardą.'
+      });
       setActiveSection('basic');
       return;
     }
 
     if (!staffName.trim()) {
-      setAlertMessage({ type: 'error', text: 'Bitte gib deinen Namen oder dein Kürzel an, damit wir wissen, wer die Änderung vorgenommen hat.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE'
+          ? 'Bitte gib deinen Namen oder dein Kürzel an, damit wir wissen, wer die Änderung vorgenommen hat.'
+          : 'Prašome įvesti savo vardą arba inicialus, kad žinotume, kas atliko pakeitimą.'
+      });
       return;
     }
 
     if (!existingAnimal) {
-      setAlertMessage({ type: 'error', text: 'Fehler: Zu bearbeitendes Tier wurde nicht gefunden.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler: Zu bearbeitendes Tier wurde nicht gefunden.' : 'Klaida: nerastas redaguojamas gyvūnas.'
+      });
       return;
     }
 
@@ -1287,6 +1503,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
         ...existingAnimal,
         name,
         gender,
+        status_aktuell: statusAktuell,
         age_years: ageMode === 'exact' ? ageExact : ageYears,
         age_mode: ageMode,
         age_min: ageMode === 'range' ? ageMin : undefined,
@@ -1430,7 +1647,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
     } catch (err) {
       console.error(err);
       await logger.error('AnimalEdit', `Fehler beim Editieren des Tiers: ${name}`, err);
-      setAlertMessage({ type: 'error', text: 'Fehler beim Speichern in der lokalen Datenbank.' });
+      setAlertMessage({
+        type: 'error',
+        text: lang === 'DE' ? 'Fehler beim Speichern in der lokalen Datenbank.' : 'Klaida išsaugant vietinėje duomenų bazėje.'
+      });
     }
   };
 
@@ -1673,7 +1893,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.gender}<HelpButton section="gender" /></label>
                   <select 
@@ -1683,6 +1903,18 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                   >
                     <option value="Weiblich">{ui.genderFemale}</option>
                     <option value="Männlich">{ui.genderMale}</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.status}<HelpButton section="status" /></label>
+                  <select 
+                    value={statusAktuell}
+                    onChange={(e) => setStatusAktuell(e.target.value as 'zu vermitteln' | 'reserviert' | 'vermittelt')}
+                    className="w-full px-4 py-3 bg-white border border-stone-350 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 text-xs font-semibold shadow-xs h-11"
+                  >
+                    <option value="zu vermitteln">{ui.statusAvailable}</option>
+                    <option value="reserviert">{ui.statusReserved}</option>
+                    <option value="vermittelt">{ui.statusAdopted}</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -2498,7 +2730,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           {activeSection === 'media' && (
             <div className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center">
-                Fotos &amp; Videos hochladen
+                {ui.uploadMediaHeader}
                 <HelpButton section="media" />
               </h3>
               
@@ -2508,8 +2740,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-5 h-5 text-brandpink-500 animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-bold text-stone-850 uppercase tracking-wide">Geräte- &amp; Speicher-Check</h4>
-                      <p className="text-[10px] text-stone-500 font-medium">Berechtigungen für Kamera &amp; Mikrofon</p>
+                      <h4 className="text-xs font-bold text-stone-850 uppercase tracking-wide">{ui.deviceCheckHeader}</h4>
+                      <p className="text-[10px] text-stone-500 font-medium">{ui.deviceCheckSub}</p>
                     </div>
                   </div>
                   <button
@@ -2518,10 +2750,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                     disabled={deviceCheckLoading}
                     className="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-[10px] font-bold rounded-lg border border-stone-300 transition-all select-none disabled:opacity-50"
                   >
-                    {deviceCheckLoading ? 'Prüft...' : 'Erneut prüfen'}
+                    {deviceCheckLoading ? ui.checkingText : ui.recheckBtn}
                   </button>
                 </div>
-
+ 
                 <div className="grid grid-cols-2 gap-3">
                   {/* Camera Status */}
                   <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
@@ -2532,7 +2764,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       : 'bg-stone-50 border-stone-200 text-stone-600'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Kamera</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.cameraStatusLabel}</span>
                       {cameraStatus === 'granted' ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : cameraStatus === 'denied' ? (
@@ -2542,10 +2774,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {cameraStatus === 'granted' ? 'Bereit 📸' : cameraStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                      {cameraStatus === 'granted' ? `${ui.readyText} 📸` : cameraStatus === 'denied' ? `${ui.blockedText} 🔒` : `${ui.uncheckedText} 🔍`}
                     </span>
                   </div>
-
+ 
                   {/* Mic Status */}
                   <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
                     micStatus === 'granted'
@@ -2555,7 +2787,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       : 'bg-stone-50 border-stone-200 text-stone-600'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Mikrofon</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.micStatusLabel}</span>
                       {micStatus === 'granted' ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : micStatus === 'denied' ? (
@@ -2565,11 +2797,11 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {micStatus === 'granted' ? 'Bereit 🎤' : micStatus === 'denied' ? 'Blockiert 🔒' : 'Ungeprüft 🔍'}
+                      {micStatus === 'granted' ? `${ui.readyText} 🎤` : micStatus === 'denied' ? `${ui.blockedText} 🔒` : `${ui.uncheckedText} 🔍`}
                     </span>
                   </div>
                 </div>
-
+ 
                 {/* Speicher- und Verbindungs-Diagnose */}
                 <div className="grid grid-cols-2 gap-3 mt-3 border-t border-stone-200/80 pt-3">
                   {/* Speicher-Typ Status */}
@@ -2579,7 +2811,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       : 'bg-amber-50/50 border-amber-150 text-amber-800'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Typ</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.storageTypeLabel}</span>
                       {opfsSupported ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : (
@@ -2587,10 +2819,10 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {opfsSupported ? 'OPFS (Optimiert) ⚡' : 'IndexedDB (Standard) 📦'}
+                      {opfsSupported ? `${ui.optimizedText} ⚡` : `${ui.standardText} 📦`}
                     </span>
                   </div>
-
+ 
                   {/* Speicher-Schutz Status */}
                   <div className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
                     storagePersistent
@@ -2598,7 +2830,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       : 'bg-amber-50/50 border-amber-150 text-amber-800'
                   }`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Speicher-Schutz</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{ui.storageProtectionLabel}</span>
                       {storagePersistent ? (
                         <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
                       ) : (
@@ -2606,59 +2838,59 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <span className="text-xs font-bold mt-1">
-                      {storagePersistent ? 'Geschützt 🛡️' : 'Temporär ⏳'}
+                      {storagePersistent ? `${ui.protectedText} 🛡️` : `${ui.temporaryText} ⏳`}
                     </span>
                   </div>
                 </div>
-
+ 
                 {/* Storage Explanations/Troubleshooting */}
                 {(!opfsSupported || !storagePersistent) && (
                   <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl text-[10px] text-stone-600 leading-relaxed font-normal space-y-1.5 mt-2">
                     {!opfsSupported && (
                       <p>
-                        ⚠️ <strong>Hinweis zum Speicher-Typ:</strong> Dein Gerät unterstützt das moderne OPFS-Dateisystem nicht. Videos werden im Standard-Datenbankspeicher abgelegt. Bitte lade Videos vorzugsweise hoch, wenn du online bist, um Speicher-Engpässe zu vermeiden.
+                        ⚠️ <strong>{lang === 'DE' ? 'Hinweis zum Speicher-Typ:' : 'Pastaba dėl atminties tipo:'}</strong> {ui.opfsNote}
                       </p>
                     )}
                     {!storagePersistent && (
                       <p>
-                        ⚠️ <strong>Hinweis zum Speicher-Schutz:</strong> Der Speicher ist als temporär eingestuft. Falls der Speicher deines Handys sehr voll wird, könnte der Browser ungesynchronisierte Entwürfe löschen. Synchronisiere deine Einträge bitte zeitnah!
+                        ⚠️ <strong>{lang === 'DE' ? 'Hinweis zum Speicher-Schutz:' : 'Pastaba dėl atminties apsaugos:'}</strong> {ui.persistentNote}
                       </p>
                     )}
                   </div>
                 )}
-
+ 
                 {/* troubleshooting help */}
                 {(cameraStatus === 'denied' || micStatus === 'denied') && (
                   <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 leading-relaxed font-medium space-y-1.5 shadow-sm">
                     <span className="font-bold flex items-center space-x-1">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>Wie du den Zugriff erlauben kannst:</span>
+                      <span>{ui.howToAllowHeader}</span>
                     </span>
                     <ol className="list-decimal list-inside space-y-1 pl-1 text-[10px]">
                       {cameraStatus === 'denied' && (
                         <li>
-                          <strong>Kamera freigeben:</strong> Klicke oben links neben der Webadresse (in der Adressleiste deines Browsers) auf das kleine Schloss-Symbol 🔒 und stelle <strong>Kamera</strong> auf &quot;Zulassen&quot; / &quot;Erlauben&quot;.
+                          <strong>{lang === 'DE' ? 'Kamera freigeben:' : 'Leisti kamerą:'}</strong> {ui.howToAllowCam}
                         </li>
                       )}
                       {micStatus === 'denied' && (
                         <li>
-                          <strong>Mikrofon freigeben:</strong> Klicke ebenfalls auf das Schloss-Symbol 🔒 und erlaube den Zugriff auf das <strong>Mikrofon</strong>, damit du Sprachnotizen aufnehmen kannst.
+                          <strong>{lang === 'DE' ? 'Mikrofon freigeben:' : 'Leisti mikrofoną:'}</strong> {ui.howToAllowMic}
                         </li>
                       )}
                       <li>
-                        <strong>Am Handy:</strong> Gehe in die Handy-Einstellungen unter <em>Apps &rarr; Browser (z.B. Chrome/Safari) &rarr; Berechtigungen</em> und erlaube dort Kamera/Mikrofon. Lade danach diese Seite neu.
+                        <strong>{lang === 'DE' ? 'Am Handy:' : 'Telefonu:'}</strong> {ui.howToAllowMobile}
                       </li>
                     </ol>
                   </div>
                 )}
               </div>
-
+ 
               {/* Main Animal photos */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Galeriefotos (max. 20)</h3>
-                    <p className="text-[10px] text-stone-400">Bilder für die Vermittlungsgalerie</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.galleryPhotosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.galleryPhotosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2667,7 +2899,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-brandpink-50 text-brandpink-700 hover:bg-brandpink-100 rounded-lg text-[10px] font-bold border border-brandpink-250 transition-all shadow-sm"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Kamera</span>
+                      <span>{ui.cameraBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2675,7 +2907,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Galerie</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2700,7 +2932,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
                   {photos.length === 0 ? (
                     <div className="col-span-4 py-4 text-center text-xs text-stone-400">
-                      Keine Fotos aufgenommen.
+                      {ui.noPhotosText}
                     </div>
                   ) : (
                     photos.map((urlOrBase64, index) => (
@@ -2711,12 +2943,12 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         {urlOrBase64.startsWith('data:') || urlOrBase64.startsWith('blob:') ? (
                           <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                             <CloudOff className="w-2.5 h-2.5 text-amber-500" />
-                            <span>Lokal</span>
+                            <span>{ui.localBadge}</span>
                           </div>
                         ) : (
                           <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-emerald-50/90 border border-emerald-250 text-emerald-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                             <Cloud className="w-2.5 h-2.5 text-emerald-500" />
-                            <span>Online</span>
+                            <span>{ui.onlineBadge}</span>
                           </div>
                         )}
 
@@ -2737,8 +2969,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Dokumente / Impfpässe (max. 5)</h3>
-                    <p className="text-[10px] text-stone-400">Nur intern für Mitarbeiter sichtbar</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.passportPhotosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.passportPhotosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2747,7 +2979,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-brandpink-50 text-brandpink-700 hover:bg-brandpink-100 rounded-lg text-[10px] font-bold border border-brandpink-250 transition-all shadow-sm"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Kamera</span>
+                      <span>{ui.cameraBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2755,7 +2987,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Galerie</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2780,7 +3012,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                 <div className="grid grid-cols-4 gap-2 border border-stone-200 rounded-xl p-3 bg-stone-50 min-h-[90px] items-center">
                   {passportPhotos.length === 0 ? (
                     <div className="col-span-4 py-4 text-center text-xs text-stone-400">
-                      Keine Pässe aufgenommen.
+                      {ui.noPassportsText}
                     </div>
                   ) : (
                     passportPhotos.map((urlOrBase64, index) => (
@@ -2791,12 +3023,12 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         {urlOrBase64.startsWith('data:') || urlOrBase64.startsWith('blob:') ? (
                           <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-amber-50/90 border border-amber-200 text-amber-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                             <CloudOff className="w-2.5 h-2.5 text-amber-500" />
-                            <span>Lokal</span>
+                            <span>{ui.localBadge}</span>
                           </div>
                         ) : (
                           <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-emerald-50/90 border border-emerald-250 text-emerald-700 text-[8px] font-bold flex items-center space-x-0.5 backdrop-blur-sm select-none">
                             <Cloud className="w-2.5 h-2.5 text-emerald-500" />
-                            <span>Online</span>
+                            <span>{ui.onlineBadge}</span>
                           </div>
                         )}
 
@@ -2837,8 +3069,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Videos (max. 5, max. 5 Min., unter 200 MB)</h3>
-                    <p className="text-[10px] text-stone-400">Direkter Cloud-Upload &amp; Offline-Speicherung (OPFS) unterstützt</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.videosHeader}</h3>
+                    <p className="text-[10px] text-stone-400">{ui.videosSub}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -2848,7 +3080,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-bold border border-emerald-200 transition-all shadow-sm disabled:opacity-50"
                     >
                       <Camera className="w-3.5 h-3.5 mr-1" />
-                      <span>Aufnehmen</span>
+                      <span>{ui.recordBtn}</span>
                     </button>
                     <button
                       type="button"
@@ -2857,7 +3089,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-lg text-[10px] font-bold border border-stone-250 transition-all shadow-sm disabled:opacity-50"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
-                      <span>Galerie</span>
+                      <span>{ui.galleryBtn}</span>
                     </button>
                   </div>
                   <input
@@ -2880,17 +3112,15 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
 
                 {/* 💡 Video size warning tip */}
                 <div className="text-[10px] text-stone-500 bg-stone-100 border border-stone-200/60 rounded-lg p-2.5 flex items-start space-x-1.5">
-                  <span className="shrink-0 text-amber-600 font-bold">💡 Tipp:</span>
-                  <span>
-                    Direkt in der App aufgenommene Videos werden automatisch optimal komprimiert. Größere Videos aus der Galerie werden im Hintergrund verkleinert, oder du teilst sie vorab kurz per WhatsApp/Telegram, um sie sofort zu schrumpfen.
-                  </span>
+                  <span className="shrink-0 text-amber-600 font-bold">{lang === 'DE' ? '💡 Tipp:' : '💡 Patarimas:'}</span>
+                  <span>{ui.videoTip}</span>
                 </div>
 
                 <div className="border border-stone-200 rounded-xl p-3 bg-stone-50 space-y-2 min-h-[70px] flex flex-col justify-center">
                   {compressingVideoName && (
                     <div className="flex flex-col space-y-1.5 p-3 bg-brandpink-50/50 border border-brandpink-100 rounded-lg text-xs">
                       <div className="flex justify-between font-semibold text-brandpink-800">
-                        <span className="truncate max-w-[250px]">Optimierung: {compressingVideoName}</span>
+                        <span className="truncate max-w-[250px]">{ui.optimizingText}: {compressingVideoName}</span>
                         <span>{compressionProgress}%</span>
                       </div>
                       <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
@@ -2899,24 +3129,27 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                           style={{ width: `${compressionProgress}%` }}
                         />
                       </div>
-                      <p className="text-[10px] text-stone-400">Video wird für den schnellen Upload verkleinert, bitte warten...</p>
+                      <p className="text-[10px] text-stone-400">{ui.compressProgressText}</p>
                     </div>
                   )}
 
                   {videos.length === 0 ? (
                     <div className="py-2 text-center text-xs text-stone-400">
-                      Keine Videos geladen.
+                      {ui.noVideosText}
                     </div>
                   ) : (
                     videos.map((vid, index) => (
                       <div key={index} className="flex justify-between items-center p-2 bg-white border border-stone-200 rounded-lg text-xs shadow-sm">
                         <div className="flex items-center space-x-2 truncate">
                           {vid.isSynced ? (
-                            <span title="Online hochgeladen" className="shrink-0 flex items-center">
+                            <span title={lang === 'DE' ? "Online hochgeladen" : "Įkelta į debesį"} className="shrink-0 flex items-center">
                               <Cloud className="w-3.5 h-3.5 text-emerald-500" />
                             </span>
                           ) : (
-                            <span title={vid.opfsKey ? "Lokal gesichert (OPFS) ⚡" : "Lokal gesichert (IndexedDB) 📦"} className="shrink-0 flex items-center">
+                            <span title={vid.opfsKey 
+                              ? (lang === 'DE' ? "Lokal gesichert (OPFS) ⚡" : "Išsaugota lokaliai (OPFS) ⚡")
+                              : (lang === 'DE' ? "Lokal gesichert (IndexedDB) 📦" : "Išsaugota lokaliai (IndexedDB) 📦")
+                            } className="shrink-0 flex items-center">
                               <CloudOff className="w-3.5 h-3.5 text-amber-500" />
                             </span>
                           )}
@@ -2943,8 +3176,8 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">Sprachnotizen ({audioItems.length}/10)</h3>
-                    <p className="text-[10px] text-stone-400">Nimm bis to 10 Sprachnotizen auf oder führe eine bestehende fort</p>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">{ui.audioHeader} ({audioItems.length}/10)</h3>
+                    <p className="text-[10px] text-stone-400">{ui.audioSub}</p>
                   </div>
                   {!isRecording && audioItems.length < 10 && (
                     <button
@@ -2953,7 +3186,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-brandpink-50 text-brandpink-700 border-brandpink-200/50 hover:bg-brandpink-100 transition-all cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Neue Sprachnotiz</span>
+                      <span>{ui.newAudioBtn}</span>
                     </button>
                   )}
                 </div>
@@ -2964,7 +3197,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       <div className="flex items-center space-x-2">
                         <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
                         <span className="text-xs font-semibold text-red-500">
-                          {recordingIndex !== null ? 'Hinzufügen läuft...' : 'Aufnahme läuft...'}
+                          {recordingIndex !== null ? ui.addingAudioText : ui.recordingAudioText}
                         </span>
                       </div>
                       <span className="text-2xl font-mono text-stone-700">
@@ -2976,7 +3209,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold animate-pulse hover:bg-red-100 transition-all cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5" />
-                        <span>Aufnahme stoppen & speichern</span>
+                        <span>{ui.stopRecordingBtn}</span>
                       </button>
                     </div>
                   ) : audioItems.length > 0 ? (
@@ -2985,11 +3218,11 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                         <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-stone-200 p-2.5 rounded-xl shadow-sm gap-2">
                           <div className="flex items-center space-x-2 flex-1">
                             {item.isSynced ? (
-                              <span title="Online synchronisiert" className="flex items-center">
+                              <span title={lang === 'DE' ? "Online synchronisiert" : "Sinchronizuota su debesimi"} className="flex items-center">
                                 <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                               </span>
                             ) : (
-                              <span title="Lokal gespeichert" className="flex items-center">
+                              <span title={lang === 'DE' ? "Lokal gespeichert" : "Išsaugota lokaliai"} className="flex items-center">
                                 <CloudOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                               </span>
                             )}
@@ -3002,16 +3235,16 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                               type="button"
                               onClick={() => startRecording(index)}
                               className="px-2 py-1 bg-stone-100 hover:bg-brandpink-55 hover:text-brandpink-700 text-stone-600 text-[10px] font-bold rounded border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
-                              title="Diese Sprachnotiz fortsetzen"
+                              title={lang === 'DE' ? "Diese Sprachnotiz fortsetzen" : "Tęsti šią balso pastabą"}
                             >
                               <Mic className="w-3 h-3 text-brandpink-500" />
-                              <span>Fortsetzen</span>
+                              <span>{ui.continueBtn}</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => deleteAudio(index)}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-colors cursor-pointer"
-                              title="Löschen"
+                              title={ui.deleteBtn}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -3021,7 +3254,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                     </div>
                   ) : (
                     <div className="py-6 text-center text-xs text-stone-400">
-                      Keine Sprachnotizen aufgenommen. Klicke oben auf &quot;Neue Sprachnotiz&quot;, um zu starten.
+                      {ui.noAudioText}
                     </div>
                   )}
                 </div>
@@ -3034,7 +3267,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           {activeSection !== 'revisions' && (
             <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3 mt-4">
               <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider">
-                Wer nimmt diese Änderung vor? *
+                {ui.editedByLabel}
               </label>
               <input
                 type="text"
@@ -3045,12 +3278,12 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                     localStorage.setItem('bmd_staff_name', e.target.value);
                   }
                 }}
-                placeholder="Dein Name oder Kürzel (z.B. Carlos)"
+                placeholder={ui.editedByPlaceholder}
                 className="w-full px-4 py-3 bg-stone-50 border border-stone-300 focus:border-brandpink-500 focus:outline-none rounded-xl text-stone-900 placeholder-stone-400 text-xs font-semibold shadow-xs"
               />
 
               <p className="text-[10px] text-stone-400">
-                Dies hilft dem Team nachzuvollziehen, wer welche Version bearbeitet hat.
+                {ui.editedByDesc}
               </p>
             </div>
           )}
@@ -3059,18 +3292,18 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
           {activeSection === 'revisions' && (
             <div className="space-y-4 pb-20">
               <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-3">
-                <h3 className="text-xs font-bold text-stone-850 uppercase tracking-wider">Versionsverlauf (Die letzten 10 Änderungen)</h3>
+                <h3 className="text-xs font-bold text-stone-850 uppercase tracking-wider">{ui.revisionsHeader}</h3>
                 <p className="text-[10px] text-stone-400">
-                  Hier siehst du, wer dieses Profil wann bearbeitet hat. Du kannst eine frühere Version direkt in das Formular laden, um sie zu überprüfen und wieder aktiv zu speichern.
+                  {ui.revisionsSub}
                 </p>
                 
                 {loadingRevisions ? (
                   <div className="py-6 text-center text-xs text-stone-500 font-semibold">
-                    Versionsverlauf wird geladen...
+                    {ui.loadingRevisions}
                   </div>
                 ) : revisions.length === 0 ? (
                   <div className="py-6 text-center text-xs text-stone-400 font-medium bg-stone-50 rounded-xl border border-dashed border-stone-250">
-                    Bisher wurden keine früheren Versionen für dieses Tier gespeichert.
+                    {ui.noRevisions}
                   </div>
                 ) : (
                   <div className="divide-y divide-stone-100">
@@ -3081,7 +3314,7 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                       } catch (e) {
                         console.error(e);
                       }
-                      const formattedDate = new Date(rev.created_at).toLocaleString('de-DE', {
+                      const formattedDate = new Date(rev.created_at).toLocaleString(lang === 'DE' ? 'de-DE' : 'lt-LT', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -3097,19 +3330,19 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                           <div className="flex items-start justify-between">
                             <div className="min-w-0 flex-1">
                               <span className="text-[11px] font-bold text-stone-850 block">
-                                {formattedDate} Uhr
+                                {formattedDate} {lang === 'DE' ? 'Uhr' : 'val.'}
                               </span>
                               <span className="text-[10px] text-stone-500 font-medium block mt-0.5">
-                                Geändert von: <strong className="text-stone-700">{rev.edited_by}</strong>
+                                {lang === 'DE' ? 'Geändert von: ' : 'Pakeitė: '} <strong className="text-stone-700">{rev.edited_by}</strong>
                               </span>
                               <div className="flex items-center space-x-2 mt-1.5">
                                 {changes.length === 0 ? (
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
-                                    Aktuell identisch
+                                    {ui.identicalBadge}
                                   </span>
                                 ) : (
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-250">
-                                    {changes.length} {changes.length === 1 ? 'Unterschied' : 'Unterschiede'}
+                                    {changes.length} {changes.length === 1 ? ui.diffOne : ui.diffMany}
                                   </span>
                                 )}
                               </div>
@@ -3120,15 +3353,16 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                                 onClick={() => setExpandedRevisionId(isExpanded ? null : rev.id)}
                                 className="px-2 py-1.5 hover:bg-stone-105 text-stone-500 hover:text-stone-800 text-[10px] font-bold rounded-lg border border-stone-200 transition-colors flex items-center space-x-1 cursor-pointer"
                               >
-                                <span>Vergleichen</span>
+                                <span>{ui.compareBtn}</span>
                                 {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (window.confirm(`Möchten Sie das Formular wirklich auf den Stand vom ${formattedDate} zurücksetzen? Ungespeicherte aktuelle Änderungen gehen dabei verloren.`)) {
+                                  if (window.confirm(ui.restoreConfirm.replace('{date}', formattedDate))) {
                                     setName(data.name || '');
                                     setGender(data.gender || 'Weiblich');
+                                    setStatusAktuell(data.status_aktuell || 'zu vermitteln');
                                     setAgeYears(data.age_years || 0);
                                     setAgeMode(data.age_mode || 'range');
                                     setAgeMin(data.age_min ?? 2);
@@ -3191,12 +3425,17 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                                     setAudioItems(histAudios);
                                     
                                     setActiveSection('basic');
-                                    setAlertMessage({ type: 'warn', text: 'Die historische Version wurde geladen. Bitte überprüfe die Daten und klicke zum Übernehmen unten auf "Änderungen speichern".' });
+                                    setAlertMessage({
+                                      type: 'warn',
+                                      text: lang === 'DE'
+                                        ? 'Die historische Version wurde geladen. Bitte überprüfe die Daten und klicke zum Übernehmen unten auf "Änderungen speichern".'
+                                        : 'Istorinė versija sėkmingai įkelta. Prašome patikrinti duomenis ir spustelėti „Išsaugoti pakeitimus“ puslapio apačioje.'
+                                    });
                                   }
                                 }}
                                 className="px-3 py-1.5 bg-brandpink-50 hover:bg-brandpink-100 text-brandpink-700 text-[10px] font-bold rounded-lg border border-brandpink-200 transition-colors cursor-pointer"
                               >
-                                Laden
+                                {lang === 'DE' ? 'Laden' : 'Įkelti'}
                               </button>
                             </div>
                           </div>
@@ -3205,18 +3444,22 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                             <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 space-y-3 text-[11px] animate-fade-in">
                               {changes.length === 0 ? (
                                 <p className="text-stone-500 font-medium text-center py-1">
-                                  Diese Version entspricht exakt den aktuellen Werten im Bearbeitungsformular.
+                                  {lang === 'DE'
+                                    ? 'Diese Version entspricht exakt den aktuellen Werten im Bearbeitungsformular.'
+                                    : 'Ši versija tiksliai atitinka dabartines redagavimo formos reikšmes.'}
                                 </p>
                               ) : (
                                 <div className="space-y-2">
-                                  <span className="font-bold text-stone-600 block text-[10px] uppercase tracking-wider">Unterschiede zur aktuellen Ansicht:</span>
+                                  <span className="font-bold text-stone-600 block text-[10px] uppercase tracking-wider">
+                                    {lang === 'DE' ? 'Unterschiede zur aktuellen Ansicht:' : 'Skirtumai nuo dabartinio vaizdo:'}
+                                  </span>
                                   <div className="overflow-hidden border border-stone-200 rounded-lg bg-white">
                                     <table className="min-w-full divide-y divide-stone-200 text-left">
                                       <thead className="bg-stone-50 font-bold text-stone-500 text-[9px] uppercase">
                                         <tr>
-                                          <th className="px-3 py-2">Feld</th>
-                                          <th className="px-3 py-2 text-amber-700">Diese Version</th>
-                                          <th className="px-3 py-2 text-stone-500">Aktuell im Formular</th>
+                                          <th className="px-3 py-2">{lang === 'DE' ? 'Feld' : 'Laukas'}</th>
+                                          <th className="px-3 py-2 text-amber-700">{lang === 'DE' ? 'Diese Version' : 'Ši versija'}</th>
+                                          <th className="px-3 py-2 text-stone-500">{lang === 'DE' ? 'Aktuell im Formular' : 'Dabartinė formoje'}</th>
                                         </tr>
                                       </thead>
                                       <tbody className="divide-y divide-stone-150 text-stone-700">
@@ -3235,11 +3478,15 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
                               
                               <div className="pt-2.5 border-t border-stone-200/80 grid grid-cols-2 gap-2 text-[10px] text-stone-500">
                                 <div>
-                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">Name in dieser Version:</span>
+                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">
+                                    {lang === 'DE' ? 'Name in dieser Version:' : 'Vardas šioje versijoje:'}
+                                  </span>
                                   <span className="text-stone-700 font-medium">{data.name || '-'}</span>
                                 </div>
                                 <div>
-                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">Raum / Box:</span>
+                                  <span className="font-semibold block text-stone-400 uppercase text-[8px] tracking-wider">
+                                    {lang === 'DE' ? 'Raum / Box:' : 'Kambarys / Narvas:'}
+                                  </span>
                                   <span className="text-stone-700 font-medium">
                                     {data.room_name || data.cage_name 
                                       ? `${data.room_name || '-'} / ${data.cage_name || '-'}`
