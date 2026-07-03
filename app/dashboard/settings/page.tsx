@@ -71,6 +71,7 @@ export default function SettingsPage() {
   const [featNewsletter, setFeatNewsletter] = useState(true);
   const [featInquiries, setFeatInquiries] = useState(true);
   const [featSponsorship, setFeatSponsorship] = useState(true);
+  const [featLiveStats, setFeatLiveStats] = useState(true);
   
   // Form State
   const [settings, setSettings] = useState<EmailSettings>(DEFAULT_SETTINGS);
@@ -119,7 +120,7 @@ export default function SettingsPage() {
           setShelterEmailLt(s.emailLt || '');
           setShelterPhone(s.phone || '');
           setShelterAddress(s.address || '');
-          setShelterRegCode(s.regCode || '');
+          setShelterRegCode(s.code || '');
           setBankName(s.bankName || '');
           setBankIban(s.iban || '');
           setBankBic(s.bic || '');
@@ -140,6 +141,7 @@ export default function SettingsPage() {
       setFeatNewsletter(loadFeat('enableNewsletter', APP_CONFIG.features.enableNewsletter));
       setFeatInquiries(loadFeat('enableInteractiveInquiryForm', APP_CONFIG.features.enableInteractiveInquiryForm));
       setFeatSponsorship(loadFeat('enableSponsorship', APP_CONFIG.features.enableSponsorship));
+      setFeatLiveStats(loadFeat('enableLiveStatsWidget', APP_CONFIG.features.enableLiveStatsWidget));
     }
   }, [router]);
 
@@ -230,7 +232,9 @@ export default function SettingsPage() {
 
   const handleSaveShelter = async () => {
     try {
+      const existing = await db.shelters.get(1);
       await db.shelters.put({
+        ...existing,
         id: 1,
         name: shelterName.trim(),
         websiteUrl: shelterWebsite.trim(),
@@ -238,14 +242,15 @@ export default function SettingsPage() {
         emailLt: shelterEmailLt.trim(),
         phone: shelterPhone.trim(),
         address: shelterAddress.trim(),
-        regCode: shelterRegCode.trim(),
+        code: shelterRegCode.trim(),
         bankName: bankName.trim(),
         iban: bankIban.trim(),
         bic: bankBic.trim(),
         donationPurposeDe: donationPurpose.trim(),
         paypalEmail: paypalEmail.trim(),
-        sync_pending: 1
-      });
+        sync_pending: 1,
+        updated_at: new Date().toISOString()
+      } as any);
       setSaveSuccess(true);
       await logger.info('Settings', 'Vereins- und Bankdaten im Dashboard aktualisiert.');
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -265,6 +270,7 @@ export default function SettingsPage() {
     saveFeat('enableNewsletter', featNewsletter);
     saveFeat('enableInteractiveInquiryForm', featInquiries);
     saveFeat('enableSponsorship', featSponsorship);
+    saveFeat('enableLiveStatsWidget', featLiveStats);
 
     setSaveSuccess(true);
     await logger.info('Settings', 'Feature-Aktivierungsflags im Dashboard aktualisiert.');
@@ -941,6 +947,7 @@ export default function SettingsPage() {
                 { state: featNewsletter, setState: setFeatNewsletter, labelDe: 'Newsletter-Kampagnen', labelLt: 'Naujienlaiškių siuntimas' },
                 { state: featInquiries, setState: setFeatInquiries, labelDe: 'Interaktive Adoptionsformulare (Selbstauskunft)', labelLt: 'Interaktyvios įvaikinimo anketos' },
                 { state: featSponsorship, setState: setFeatSponsorship, labelDe: 'Patenschaften (Bankverbindung bei Tieren)', labelLt: 'Rėmimas (banko rekvizitai)' },
+                { state: featLiveStats, setState: setFeatLiveStats, labelDe: 'Bestandsstatistik (Zähler auf Startseite)', labelLt: 'Prieglaudos statistikos skydelis' },
               ].map(({ state, setState, labelDe, labelLt }, idx) => (
                 <label key={idx} className="flex items-center justify-between p-2.5 bg-stone-50 rounded-xl border border-stone-200 hover:border-brandpink-300 transition-colors cursor-pointer select-none">
                   <span className="text-xs font-semibold text-stone-700">{lang === 'DE' ? labelDe : labelLt}</span>

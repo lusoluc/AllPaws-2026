@@ -17,6 +17,7 @@ export interface Shelter {
   donationPurposeDe: string;
   paypalEmail: string;
   wishlistUrl: string;
+  websiteUrl?: string;
   sync_pending?: number; // 0 = synced, 1 = pending upload
   updated_at?: string; // ISO timestamp
 }
@@ -151,7 +152,7 @@ export interface Inquiry {
   phone: string;
   message: string;
   language: 'DE' | 'LT';
-  status: 'neu' | 'in_bearbeitung' | 'erledigt';
+  status: 'neu' | 'gelesen' | 'kontaktiert' | 'archiviert';
   created_at: string;
   sync_pending?: number;
   updated_at?: string;
@@ -363,6 +364,7 @@ export async function seedDatabase() {
       donationPurposeDe: APP_CONFIG.shelter.donationPurposeDe,
       paypalEmail: APP_CONFIG.shelter.paypalEmail,
       wishlistUrl: APP_CONFIG.shelter.wishlistUrl,
+      websiteUrl: APP_CONFIG.shelter.websiteUrl,
       sync_pending: 0,
       updated_at: new Date().toISOString()
     });

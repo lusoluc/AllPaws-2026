@@ -71,7 +71,7 @@ export default function DashboardPage() {
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
   const inquiries = useLiveQuery(() => db.inquiries.toArray());
 
-  const handleUpdateInquiryStatus = async (id: number, newStatus: string) => {
+  const handleUpdateInquiryStatus = async (id: number, newStatus: 'neu' | 'gelesen' | 'kontaktiert' | 'archiviert') => {
     try {
       await db.inquiries.update(id, {
         status: newStatus,
@@ -602,7 +602,7 @@ export default function DashboardPage() {
                           <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">{lang === 'DE' ? 'Status:' : 'Būsena:'}</label>
                           <select
                             value={inq.status || 'neu'}
-                            onChange={(e) => handleUpdateInquiryStatus(inq.id!, e.target.value)}
+                            onChange={(e) => handleUpdateInquiryStatus(inq.id!, e.target.value as any)}
                             className={`px-2 py-0.5 rounded border text-[10px] font-semibold cursor-pointer ${statusColors}`}
                           >
                             <option value="neu">{lang === 'DE' ? 'Neu' : 'Nauja'}</option>
