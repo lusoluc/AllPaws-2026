@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import PublicHeader from '@/components/PublicHeader';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 type Category = 'all' | 'behavior' | 'bodyLanguage' | 'nutrition' | 'safety' | 'problems';
 
@@ -38,6 +39,31 @@ export default function KatzenRatgeberPage() {
   useEffect(() => {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
+
+  if (!APP_CONFIG.features.enableGuide) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
+        <PublicHeader lang={lang} setLang={setLang} />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-stone-200/60 flex items-center justify-center text-stone-500 mx-auto">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold">
+            {lang === 'DE' ? 'Bereich nicht aktiv' : 'Ši skiltis neaktyvi'}
+          </h1>
+          <p className="text-xs text-stone-500 max-w-sm">
+            {lang === 'DE' 
+              ? 'Diese Seite wurde vom Administrator deaktiviert.' 
+              : 'Šį puslapį administratorius išjungė.'}
+          </p>
+          <NextLink href="/" className="inline-block px-4 py-2 bg-brandpink-600 hover:bg-brandpink-500 text-white font-semibold text-xs rounded-xl shadow-sm cursor-pointer">
+            {lang === 'DE' ? 'Zur Startseite' : 'Į pagrindinį'}
+          </NextLink>
+        </main>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<Category>('all');
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
@@ -52,10 +78,10 @@ export default function KatzenRatgeberPage() {
 
   const defaultUi = {
     DE: {
-      title: 'Katzen-Ratgeber & FAQ 📖',
-      subtitle: 'Alles, was neue Katzenbesitzer und Stadtmenschen über Haltung, Verhalten und Pflege wissen sollten.',
+      title: 'Tier-Ratgeber & FAQ 📖',
+      subtitle: 'Alles, was Tierbesitzer über Haltung, Verhalten und Pflege wissen sollten.',
       homeLink: 'Startseite',
-      galleryLink: 'Zur Katzen-Galerie',
+      galleryLink: 'Zur Tier-Galerie',
       tabs: {
         all: 'Alle Themen',
         behavior: 'Verhalten & Eingewöhnung',
@@ -64,27 +90,27 @@ export default function KatzenRatgeberPage() {
         safety: 'Wohnung & Sicherheit',
         problems: 'Problematisches Verhalten'
       },
-      warningTitle: 'Wichtiger Hinweis für Stadtwohnungen',
-      warningDesc: 'Katzen benötigen in Wohnungen ausreichend Beschäftigung, Kratzmöglichkeiten und vor allem gesicherte Fenster (Kippschutz!), um ein glückliches und sicheres Leben zu führen.',
+      warningTitle: 'Wichtiger Hinweis zur Tierhaltung',
+      warningDesc: 'Haustiere benötigen ausreichend Beschäftigung, Aufmerksamkeit und artgerechte Haltung, um ein glückliches und sicheres Leben zu führen.',
       noItems: 'Keine Einträge in dieser Kategorie gefunden.',
       footerText: '© 2026 VšĮ "Būk mano draugas". Kaukėnų g. 9, Glaudėnai, Litauen.',
       regCode: 'Registrierungscode'
     },
     LT: {
-      title: 'Kačių gidas ir DUK 📖',
-      subtitle: 'Viskas, ką nauji kačių šeimininkai ir miesto žmonės turėtų žinoti apie kačių elgseną, priežiūrą bei saugumą.',
+      title: 'Gyvūnų gidas ir DUK 📖',
+      subtitle: 'Viskas, ką šeimininkai turėtų žinoti apie gyvūnų elgseną, priežiūrą bei saugumą.',
       homeLink: 'Pradžia',
-      galleryLink: 'Kačių galerija',
+      galleryLink: 'Gyvūnų galerija',
       tabs: {
         all: 'Visos temos',
         behavior: 'Elgsena ir pripratinimas',
         bodyLanguage: 'Kūno kalba',
         nutrition: 'Mityba ir sveikata',
-        safety: 'Saugumas ir butas',
+        safety: 'Saugumas ir aplinka',
         problems: 'Probleminis elgesys'
       },
-      warningTitle: 'Svarbi pastaba gyvenantiems butuose',
-      warningDesc: 'Katėms butuose reikia pakankamai veiklos, vietų draskymui ir ypač apsaugotų langų (apsaugos nuo atvertimo!), kad jos gyventų laimingą ir saugų gyvenimą.',
+      warningTitle: 'Svarbi pastaba gyvūnų šeimininkams',
+      warningDesc: 'Gyvūnams reikia pakankamai veiklos, priežiūros ir saugios aplinkos, kad jie gyventų laimingą ir saugų gyvenimą.',
       noItems: 'Šioje kategorijoje įrašų nerasta.',
       footerText: '© 2026 VšĮ „Būk mano draugas“. Kaukėnų g. 9, Glaudėnai, Lietuva.',
       regCode: 'Įmonės kodas'

@@ -8,7 +8,6 @@ import { db, Animal, formatAge } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { syncWithCloud } from '@/lib/syncManager';
 import SharePanel from '@/components/SharePanel';
-// ... existing lucide-react imports ...
 import { 
   Plus, 
   MapPin, 
@@ -26,9 +25,11 @@ import {
   CloudOff,
   Video,
   Mail,
-  Settings
+  Settings,
+  Inbox
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
   const [selectedShareAnimal, setSelectedShareAnimal] = useState<Animal | null>(null);
+  const [activeTab, setActiveTab] = useState<'animals' | 'inquiries'>('animals');
 
   // Simple Auth Check
   useEffect(() => {
@@ -67,6 +69,23 @@ export default function DashboardPage() {
   // Read items from Dexie db with live queries!
   const animals = useLiveQuery(() => db.animals.toArray());
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
+  const inquiries = useLiveQuery(() => db.inquiries.toArray());
+
+  const handleUpdateInquiryStatus = async (id: number, newStatus: string) => {
+    try {
+      await db.inquiries.update(id, {
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        sync_pending: 1
+      });
+      await logger.info('Inquiry', `Inquiry-Status von ID ${id} auf "${newStatus}" aktualisiert.`);
+      syncWithCloud().catch((err) => {
+        console.error('Inquiry sync failed:', err);
+      });
+    } catch (err) {
+      console.error('Failed to update inquiry status:', err);
+    }
+  };
 
   const handleLogout = async () => {
     await logger.info('Authentication', 'Mitarbeiter hat sich abgemeldet.');
@@ -109,12 +128,29 @@ export default function DashboardPage() {
     return matchesSearch && matchesType && matchesStatus;
   }).sort((a, b) => (b.id || 0) - (a.id || 0));
 
+  const animalMap = new Map<number, Animal>();
+  if (animals) {
+    animals.forEach((a) => {
+      if (a.id) animalMap.set(a.id, a);
+    });
+  }
+
+  const filteredInquiries = inquiries?.filter((inq) => {
+    const animalName = animalMap.get(inq.animal_id)?.name || '';
+    const query = searchQuery.toLowerCase();
+    return inq.name.toLowerCase().includes(query) ||
+           inq.email.toLowerCase().includes(query) ||
+           inq.phone.toLowerCase().includes(query) ||
+           animalName.toLowerCase().includes(query) ||
+           inq.message.toLowerCase().includes(query);
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
   // UI dictionary
   const ui = {
     DE: {
       title: 'Intern',
       subtitle: 'Tiererfassung Klaipėda',
-      addCat: 'Katze erfassen',
+      addCat: 'Tier erfassen',
       routeBtn: 'Route zum Heim anzeigen',
       searchPlaceholder: 'Nach Name suchen...',
       all: 'Alle',
@@ -138,7 +174,7 @@ export default function DashboardPage() {
     LT: {
       title: 'Internas',
       subtitle: 'Gyvūnų registracija Klaipėdoje',
-      addCat: 'Registruoti katę',
+      addCat: 'Registruoti gyvūną',
       routeBtn: 'Rodyti maršrutą į prieglaudą',
       searchPlaceholder: 'Ieškoti pagal vardą...',
       all: 'Visi',
@@ -239,233 +275,372 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Tab Switcher */}
+      {APP_CONFIG.features.enableInteractiveInquiryForm && (
+        <div className="bg-white border-b border-stone-200 px-4 flex justify-center space-x-6">
+          <button
+            onClick={() => setActiveTab('animals')}
+            className={`py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+              activeTab === 'animals'
+                ? 'border-brandpink-600 text-brandpink-600'
+                : 'border-transparent text-stone-500 hover:text-stone-850'
+            }`}
+          >
+            {lang === 'DE' ? 'Tiere 🐾' : 'Gyvūnai 🐾'}
+          </button>
+          <button
+            onClick={() => setActiveTab('inquiries')}
+            className={`py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center space-x-1.5 cursor-pointer ${
+              activeTab === 'inquiries'
+                ? 'border-brandpink-600 text-brandpink-600'
+                : 'border-transparent text-stone-500 hover:text-stone-850'
+            }`}
+          >
+            <span>{lang === 'DE' ? 'Anfragen 📥' : 'Užklausos 📥'}</span>
+            {inquiries && inquiries.filter(i => i.status === 'neu').length > 0 && (
+              <span className="bg-brandpink-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold">
+                {inquiries.filter(i => i.status === 'neu').length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       <main className="flex-1 p-4 max-w-lg mx-auto w-full space-y-4">
-        {/* Navigation CTAs */}
-        <div className="flex flex-col gap-2">
-          <Link 
-            href="/dashboard/create"
-            className="flex items-center justify-center space-x-2 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-98 transition-all w-full text-sm"
-          >
-            <Plus className="w-5 h-5" />
-            <span>{ui.addCat}</span>
-          </Link>
+        {(!APP_CONFIG.features.enableInteractiveInquiryForm || activeTab === 'animals') ? (
+          <>
+            {/* Navigation CTAs */}
+            <div className="flex flex-col gap-2">
+              <Link 
+                href="/dashboard/create"
+                className="flex items-center justify-center space-x-2 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-98 transition-all w-full text-sm"
+              >
+                <Plus className="w-5 h-5" />
+                <span>{ui.addCat}</span>
+              </Link>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleShowRoute}
-              className="flex items-center justify-center space-x-1.5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-sm transition-colors"
-            >
-              <MapPin className="w-4 h-4 text-brandpink-700" />
-              <span>Route zeigen</span>
-            </button>
-            
-            <Link
-              href="/katzen"
-              className="flex items-center justify-center space-x-1.5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-sm transition-colors text-center"
-            >
-              <Eye className="w-4 h-4 text-brandpink-600" />
-              <span>{ui.viewPublic}</span>
-            </Link>
-          </div>
-
-          <Link
-            href="/dashboard/newsletter"
-            className="flex items-center justify-center space-x-2 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 shadow-sm transition-colors w-full"
-          >
-            <Mail className="w-4 h-4 text-amber-600" />
-            <span>{lang === 'DE' ? 'Newsletter-Zentrale' : 'Naujienlaiškių centras'}</span>
-          </Link>
-        </div>
-
-        {/* Filters */}
-        <div className="space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
-            <input
-              type="text"
-              placeholder={ui.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 transition-colors text-sm"
-            />
-          </div>
-
-          <div className="flex space-x-2 overflow-x-auto pb-1">
-            {/* Filter Type */}
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
-            >
-              <option value="all">{ui.all}</option>
-              <option value="Katze">{ui.cats}</option>
-              <option value="Hund">{ui.dogs}</option>
-              <option value="Andere">{ui.others}</option>
-            </select>
-
-            {/* Filter Status */}
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
-            >
-              <option value="all">{ui.statusAll}</option>
-              <option value="zu vermitteln">{ui.statusAvailable}</option>
-              <option value="reserviert">{ui.statusReserved}</option>
-              <option value="vermittelt">{ui.statusAdopted}</option>
-            </select>
-          </div>
-        </div>
-
-        {/* List of Animals */}
-        <div className="space-y-3">
-          {filteredAnimals && filteredAnimals.length > 0 ? (
-            filteredAnimals.map((animal) => {
-              const statusColors = {
-                'zu vermitteln': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                'reserviert': 'bg-amber-50 text-amber-700 border-amber-200',
-                'vermittelt': 'bg-stone-100 text-stone-500 border-stone-200'
-              }[animal.status_aktuell];
-
-              const statusText = {
-                'zu vermitteln': ui.statusAvailable,
-                'reserviert': ui.statusReserved,
-                'vermittelt': ui.statusAdopted
-              }[animal.status_aktuell];
-
-              return (
-                <div 
-                  key={animal.id}
-                  onClick={() => router.push(`/dashboard/edit/${animal.id}`)}
-                  className="bg-white border border-stone-200/80 rounded-xl p-4 flex items-center space-x-4 hover:border-stone-300 hover:shadow-md transition-all active:scale-[0.99] cursor-pointer shadow-sm select-none"
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleShowRoute}
+                  className="flex items-center justify-center space-x-1.5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-sm transition-colors"
                 >
-                  {/* Photo/Video Thumbnail */}
-                  <div className="w-16 h-16 rounded-lg bg-stone-100 border border-stone-200 overflow-hidden shrink-0 flex items-center justify-center relative">
-                    {(() => {
-                      const firstPhoto = animal.media_urls?.[0];
-                      let firstVideo: string | null = null;
-                      if (animal.video_urls?.[0]) {
-                        firstVideo = animal.video_urls[0];
-                      } else if (animal.local_videos?.[0] && animal.local_videos[0].blob) {
-                        try {
-                          firstVideo = URL.createObjectURL(animal.local_videos[0].blob);
-                        } catch (e) {
-                          // Safe fallback in case URL.createObjectURL is not available in Node environment
-                        }
-                      }
-                      const firstMediaUrl = firstPhoto || firstVideo;
-                      const hasVideo = (animal.video_urls && animal.video_urls.length > 0) || (animal.local_videos && animal.local_videos.length > 0);
+                  <MapPin className="w-4 h-4 text-brandpink-700" />
+                  <span>Route zeigen</span>
+                </button>
+                
+                <Link
+                  href="/tiere"
+                  className="flex items-center justify-center space-x-1.5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-sm transition-colors text-center"
+                >
+                  <Eye className="w-4 h-4 text-brandpink-600" />
+                  <span>{ui.viewPublic}</span>
+                </Link>
+              </div>
 
-                      return (
-                        <>
-                          {firstPhoto ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img 
-                              src={firstPhoto} 
-                              alt={animal.name}
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : firstVideo ? (
-                            <video 
-                              src={firstVideo} 
-                              className="w-full h-full object-cover"
-                              muted
-                              playsInline
-                              preload="metadata"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center text-stone-400">
-                              <HelpCircle className="w-5 h-5 mb-0.5" />
-                              <span className="text-[8px] uppercase font-bold tracking-wider text-center leading-none">Keine Medien</span>
-                            </div>
-                          )}
+              {APP_CONFIG.features.enableNewsletter && (
+                <Link
+                  href="/dashboard/newsletter"
+                  className="flex items-center justify-center space-x-2 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 shadow-sm transition-colors w-full"
+                >
+                  <Mail className="w-4 h-4 text-amber-600" />
+                  <span>{lang === 'DE' ? 'Newsletter-Zentrale' : 'Naujienlaiškių centras'}</span>
+                </Link>
+              )}
+            </div>
 
-                          {/* Video Indicator Badge */}
-                          {hasVideo && (
-                            <span className="absolute bottom-0.5 left-0.5 p-0.5 rounded bg-stone-900/60 text-white shadow-sm flex items-center justify-center shadow-sm" title="Video vorhanden">
-                              <Video className="w-2.5 h-2.5" />
-                            </span>
-                          )}
+            {/* Filters */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder={ui.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 transition-colors text-sm"
+                />
+              </div>
 
-                          {/* Sync Status Badge */}
-                          {firstMediaUrl && (
-                            <div className="absolute bottom-0.5 right-0.5 select-none">
-                              {firstMediaUrl.startsWith('data:') || firstMediaUrl.startsWith('blob:') ? (
-                                <span className="p-0.5 rounded bg-amber-50/95 border border-amber-200 text-amber-700 shadow-sm flex items-center justify-center" title="Nur lokal gespeichert">
-                                  <CloudOff className="w-2.5 h-2.5" />
-                                </span>
+              <div className="flex space-x-2 overflow-x-auto pb-1">
+                {/* Filter Type */}
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
+                >
+                  <option value="all">{ui.all}</option>
+                  <option value="Katze">{ui.cats}</option>
+                  <option value="Hund">{ui.dogs}</option>
+                  <option value="Andere">{ui.others}</option>
+                </select>
+
+                {/* Filter Status */}
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
+                >
+                  <option value="all">{ui.statusAll}</option>
+                  <option value="zu vermitteln">{ui.statusAvailable}</option>
+                  <option value="reserviert">{ui.statusReserved}</option>
+                  <option value="vermittelt">{ui.statusAdopted}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* List of Animals */}
+            <div className="space-y-3">
+              {filteredAnimals && filteredAnimals.length > 0 ? (
+                filteredAnimals.map((animal) => {
+                  const statusColors = {
+                    'zu vermitteln': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    'reserviert': 'bg-amber-50 text-amber-700 border-amber-200',
+                    'vermittelt': 'bg-stone-100 text-stone-500 border-stone-200'
+                  }[animal.status_aktuell];
+
+                  const statusText = {
+                    'zu vermitteln': ui.statusAvailable,
+                    'reserviert': ui.statusReserved,
+                    'vermittelt': ui.statusAdopted
+                  }[animal.status_aktuell];
+
+                  return (
+                    <div 
+                      key={animal.id}
+                      onClick={() => router.push(`/dashboard/edit/${animal.id}`)}
+                      className="bg-white border border-stone-200/80 rounded-xl p-4 flex items-center space-x-4 hover:border-stone-300 hover:shadow-md transition-all active:scale-[0.99] cursor-pointer shadow-sm select-none"
+                    >
+                      {/* Photo/Video Thumbnail */}
+                      <div className="w-16 h-16 rounded-lg bg-stone-100 border border-stone-200 overflow-hidden shrink-0 flex items-center justify-center relative">
+                        {(() => {
+                          const firstPhoto = animal.media_urls?.[0];
+                          let firstVideo: string | null = null;
+                          if (animal.video_urls?.[0]) {
+                            firstVideo = animal.video_urls[0];
+                          } else if (animal.local_videos?.[0] && animal.local_videos[0].blob) {
+                            try {
+                              firstVideo = URL.createObjectURL(animal.local_videos[0].blob);
+                            } catch (e) {}
+                          }
+                          const firstMediaUrl = firstPhoto || firstVideo;
+                          const hasVideo = (animal.video_urls && animal.video_urls.length > 0) || (animal.local_videos && animal.local_videos.length > 0);
+
+                          return (
+                            <>
+                              {firstPhoto ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img 
+                                  src={firstPhoto} 
+                                  alt={animal.name}
+                                  className="w-full h-full object-cover" 
+                                />
+                              ) : firstVideo ? (
+                                <video 
+                                  src={firstVideo} 
+                                  className="w-full h-full object-cover"
+                                  muted
+                                  playsInline
+                                  preload="metadata"
+                                />
                               ) : (
-                                <span className="p-0.5 rounded bg-emerald-50/95 border border-emerald-250 text-emerald-700 shadow-sm flex items-center justify-center" title="Online synchronisiert">
-                                  <Cloud className="w-2.5 h-2.5" />
+                                <div className="flex flex-col items-center justify-center text-stone-400">
+                                  <HelpCircle className="w-5 h-5 mb-0.5" />
+                                  <span className="text-[8px] uppercase font-bold tracking-wider text-center leading-none">Keine Medien</span>
+                                </div>
+                              )}
+
+                              {/* Video Indicator Badge */}
+                              {hasVideo && (
+                                <span className="absolute bottom-0.5 left-0.5 p-0.5 rounded bg-stone-900/60 text-white shadow-sm flex items-center justify-center" title="Video vorhanden">
+                                  <Video className="w-2.5 h-2.5" />
                                 </span>
                               )}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
 
-                  {/* Info details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-1.5">
-                      <h3 className="font-bold text-sm text-stone-850 truncate">{animal.name}</h3>
-                      {animal.is_emergency && (
-                        <span className="px-1.5 py-0.5 rounded bg-red-50 border border-red-200 text-red-700 text-[8px] font-bold tracking-wider uppercase">
-                          SOS
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      {animal.gender === 'Weiblich' ? ui.female : ui.male} • {formatAge(animal, lang)}
-                    </p>
-                    {animal.room_name && (
-                      <p className="text-[10px] text-stone-400 mt-0.5">
-                        📍 {animal.room_name}{animal.cage_name ? ` • Box ${animal.cage_name}` : ''}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${statusColors}`}>
-                          {statusText}
-                        </span>
-                        
-                        {animal.is_published ? (
-                          <span className="flex items-center text-[10px] text-brandpink-600 font-medium">
-                            <CheckCircle className="w-3.5 h-3.5 mr-0.5" />
-                            {ui.published}
-                          </span>
-                        ) : (
-                          <span className="flex items-center text-[10px] text-stone-400 font-medium">
-                            <Activity className="w-3.5 h-3.5 mr-0.5" />
-                            Entwurf
-                          </span>
-                        )}
+                              {/* Sync Status Badge */}
+                              {firstMediaUrl && (
+                                <div className="absolute bottom-0.5 right-0.5 select-none">
+                                  {firstMediaUrl.startsWith('data:') || firstMediaUrl.startsWith('blob:') ? (
+                                    <span className="p-0.5 rounded bg-amber-50/95 border border-amber-200 text-amber-700 shadow-sm flex items-center justify-center" title="Nur lokal gespeichert">
+                                      <CloudOff className="w-2.5 h-2.5" />
+                                    </span>
+                                  ) : (
+                                    <span className="p-0.5 rounded bg-emerald-50/95 border border-emerald-250 text-emerald-700 shadow-sm flex items-center justify-center" title="Online synchronisiert">
+                                      <Cloud className="w-2.5 h-2.5" />
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedShareAnimal(animal);
-                        }}
-                        className="p-1.5 rounded-lg bg-white hover:bg-stone-50 text-stone-500 hover:text-stone-800 transition-colors border border-stone-200 shadow-sm"
-                        title="Teilen"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                      </button>
+                      {/* Info details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-1.5">
+                          <h3 className="font-bold text-sm text-stone-850 truncate">{animal.name}</h3>
+                          {animal.is_emergency && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-50 border border-red-200 text-red-700 text-[8px] font-bold tracking-wider uppercase">
+                              SOS
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-500 mt-0.5">
+                          {animal.gender === 'Weiblich' ? ui.female : ui.male} • {formatAge(animal, lang)}
+                        </p>
+                        {animal.room_name && (
+                          <p className="text-[10px] text-stone-400 mt-0.5">
+                            📍 {animal.room_name}{animal.cage_name ? ` • Box ${animal.cage_name}` : ''}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${statusColors}`}>
+                              {statusText}
+                            </span>
+                            
+                            {animal.is_published ? (
+                              <span className="flex items-center text-[10px] text-brandpink-600 font-medium">
+                                <CheckCircle className="w-3.5 h-3.5 mr-0.5" />
+                                {ui.published}
+                              </span>
+                            ) : (
+                              <span className="flex items-center text-[10px] text-stone-400 font-medium">
+                                <Activity className="w-3.5 h-3.5 mr-0.5" />
+                                Entwurf
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedShareAnimal(animal);
+                            }}
+                            className="p-1.5 rounded-lg bg-white hover:bg-stone-50 text-stone-500 hover:text-stone-800 transition-colors border border-stone-200 shadow-sm"
+                            title="Teilen"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="py-12 text-center bg-stone-50/50 border border-dashed border-stone-250 rounded-2xl">
+                  <HelpCircle className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+                  <p className="text-sm text-stone-500">{ui.noAnimals}</p>
                 </div>
-              );
-            })
-          ) : (
-            <div className="py-12 text-center bg-stone-50/50 border border-dashed border-stone-250 rounded-2xl">
-              <HelpCircle className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-              <p className="text-sm text-stone-500">{ui.noAnimals}</p>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            {/* Inquiries tab view */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder={lang === 'DE' ? 'Nach Anfragen suchen...' : 'Ieškoti užklausų...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 transition-colors text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {filteredInquiries && filteredInquiries.length > 0 ? (
+                filteredInquiries.map((inq) => {
+                  const targetAnimal = animalMap.get(inq.animal_id);
+                  const inqDate = inq.created_at ? new Date(inq.created_at).toLocaleDateString() : '';
+                  const statusColors = {
+                    'neu': 'bg-rose-50 text-rose-700 border-rose-200',
+                    'gelesen': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'kontaktiert': 'bg-amber-50 text-amber-700 border-amber-200',
+                    'archiviert': 'bg-stone-100 text-stone-500 border-stone-200'
+                  }[inq.status || 'neu'];
+
+                  return (
+                    <div 
+                      key={inq.id}
+                      className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[10px] text-stone-500 font-bold uppercase block tracking-wider">
+                            {lang === 'DE' ? 'Interesse an' : 'Domisi gyvūnu'}
+                          </span>
+                          <span className="text-sm font-extrabold text-brandpink-600 block">
+                            {targetAnimal ? `${targetAnimal.name} (ID: ${inq.animal_id})` : `ID: ${inq.animal_id}`}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-stone-400 font-medium">{inqDate}</span>
+                      </div>
+
+                      <div className="border-t border-stone-100 pt-2.5 space-y-1.5 text-xs text-stone-700">
+                        <p><strong>{lang === 'DE' ? 'Name:' : 'Vardas:'}</strong> {inq.name}</p>
+                        <p>
+                          <strong>{lang === 'DE' ? 'E-Mail:' : 'El. paštas:'}</strong>{' '}
+                          <a href={`mailto:${inq.email}`} className="text-brandpink-600 hover:underline">{inq.email}</a>
+                        </p>
+                        <p>
+                          <strong>{lang === 'DE' ? 'Telefon:' : 'Telefonas:'}</strong>{' '}
+                          <a href={`tel:${inq.phone}`} className="text-brandpink-600 hover:underline">{inq.phone}</a>
+                        </p>
+                        <div className="bg-stone-50 p-2.5 rounded-lg border border-stone-150 text-[11px] leading-relaxed whitespace-pre-wrap mt-2 font-mono">
+                          {inq.message}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-1">
+                        {/* Status Select Box */}
+                        <div className="flex items-center space-x-1.5">
+                          <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">{lang === 'DE' ? 'Status:' : 'Būsena:'}</label>
+                          <select
+                            value={inq.status || 'neu'}
+                            onChange={(e) => handleUpdateInquiryStatus(inq.id!, e.target.value)}
+                            className={`px-2 py-0.5 rounded border text-[10px] font-semibold cursor-pointer ${statusColors}`}
+                          >
+                            <option value="neu">{lang === 'DE' ? 'Neu' : 'Nauja'}</option>
+                            <option value="gelesen">{lang === 'DE' ? 'Gelesen' : 'Perskaityta'}</option>
+                            <option value="kontaktiert">{lang === 'DE' ? 'Kontaktiert' : 'Susisiekta'}</option>
+                            <option value="archiviert">{lang === 'DE' ? 'Archiviert' : 'Archyvuota'}</option>
+                          </select>
+                        </div>
+
+                        {/* Sync Indicator */}
+                        <div>
+                          {inq.sync_pending === 1 ? (
+                            <span className="text-[10px] text-amber-600 font-semibold flex items-center">
+                              <CloudOff className="w-3 h-3 mr-0.5" />
+                              {lang === 'DE' ? 'Lokal' : 'Lokalus'}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-emerald-600 font-semibold flex items-center">
+                              <Cloud className="w-3 h-3 mr-0.5" />
+                              {lang === 'DE' ? 'Synchronisiert' : 'Sinchronizuota'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-12 text-center bg-stone-50/50 border border-dashed border-stone-250 rounded-2xl">
+                  <Inbox className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+                  <p className="text-sm text-stone-500">
+                    {lang === 'DE' ? 'Keine Anfragen gefunden.' : 'Užklausų nerasta.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       {selectedShareAnimal && (

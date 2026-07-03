@@ -15,7 +15,7 @@ The app helps shelters manage animal profiles, handle adoption inquiries, send n
 - **Created by**: [Carlos Lucas](https://www.linkedin.com/in/director-it-development/) and a crew of volunteer contributors who pour their free time (and often their own money) into this.
 - **Partner shelter**: VšĮ "Būk mano draugas" in Klaipėda, Lithuania — a real shelter doing real rescue work on the ground.
 - **License**: [MIT](./LICENSE) — fully open source. Fork it, adapt it, make it yours. Contributions are always welcome.
-- **Repository**: [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
+- **Repository**: [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
 
 Every single line of code, every design decision, every late-night debugging session — it's all privately contributed. 100% goes to helping the animals.
 
@@ -44,8 +44,8 @@ Ready? Let's get this running. It takes about two minutes:
 
 ```bash
 # Clone the repo
-git clone https://github.com/lusoluc/katzen-app.git
-cd katzen-app
+git clone https://github.com/lusoluc/AllPaws-2026.git
+cd AllPaws-2026
 
 # Install dependencies
 pnpm install
@@ -194,10 +194,33 @@ NEXT_PUBLIC_DEV_PASSWORD_HASH=6a02c4469c9b7c5975f09fb41584283959644f604ed7278c19
 # Server-only API authentication passwords (used for SMTP / send-email rate-limiting verification)
 DASHBOARD_PASSWORD=BMD2026
 DEV_PASSWORD=DEVBMD2026
+
+# Feature Toggles (Set to 'false' to disable, defaults are 'true')
+NEXT_PUBLIC_FEATURE_GALLERY=true
+NEXT_PUBLIC_FEATURE_GUIDE=true
+NEXT_PUBLIC_FEATURE_EMERGENCY_PAGE=true
+NEXT_PUBLIC_FEATURE_ABOUT_US=true
+NEXT_PUBLIC_FEATURE_NEWSLETTER=true
+NEXT_PUBLIC_FEATURE_INTERACTIVE_INQUIRIES=true
+NEXT_PUBLIC_FEATURE_SPONSORSHIP=true
 ```
 
+### Feature Customization Toggles
+
+Downstream organizations can selectively disable parts of the app via environment variables:
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_FEATURE_GALLERY` | Toggles the public animal gallery page (`/tiere`) and links. |
+| `NEXT_PUBLIC_FEATURE_GUIDE` | Toggles the public guide/FAQ page (`/ratgeber`) and links. |
+| `NEXT_PUBLIC_FEATURE_EMERGENCY_PAGE` | Toggles the public emergency page (`/notfall`) and header warnings. |
+| `NEXT_PUBLIC_FEATURE_ABOUT_US` | Toggles the public association/About Us page (`/ueber-uns`) and link. |
+| `NEXT_PUBLIC_FEATURE_NEWSLETTER` | Toggles the newsletter signup block on the home page and newsletter dashboard. |
+| `NEXT_PUBLIC_FEATURE_INTERACTIVE_INQUIRIES` | Toggles the interactive self-disclosure form (if false, falls back to direct email client) and hidden inquiries manager tab. |
+| `NEXT_PUBLIC_FEATURE_SPONSORSHIP` | Toggles display of bank account information and wiring instructions for sponsoring animals. |
+
 > [!NOTE]
-> Supabase variables are optional for local development. Without them, the app runs in pure offline mode — which is perfectly fine for most development work. Defaults for hashes and server-side passwords are pre-baked into the app for local developer convenience.
+> Supabase variables are optional for local development. Without them, the app runs in pure offline mode — which is perfectly fine for most development work. Defaults for hashes and server-side passwords are pre-baked into the app for local developer convenience. All feature toggles default to `true` if not defined.
 
 ---
 

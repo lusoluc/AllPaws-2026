@@ -65,7 +65,7 @@ export default function SharePanel({ animal, onClose }: SharePanelProps) {
     if (animal.indoor_only) activeReqs.push(lang === 'DE' ? 'nur Wohnungshaltung' : 'tik bute');
     if (animal.secured_balcony) activeReqs.push(lang === 'DE' ? 'gesicherter Balkon' : 'apsaugotas balkonas');
     if (animal.for_beginners) activeReqs.push(lang === 'DE' ? 'für Anfänger geeignet' : 'tinka pradedantiesiems');
-    if (animal.for_experienced) activeReqs.push(lang === 'DE' ? 'für katzenerfahrene Menschen' : 'tinka turintiems patirties');
+    if (animal.for_experienced) activeReqs.push(lang === 'DE' ? (animal.type === 'Katze' ? 'für katzenerfahrene Menschen' : (animal.type === 'Hund' ? 'für hundeerfahrene Menschen' : 'für erfahrene Menschen')) : 'tinka turintiems patirties');
     if (animal.no_small_children) activeReqs.push(lang === 'DE' ? 'keine kleinen Kinder' : 'be mažų vaikų');
     if (animal.suitable_families) activeReqs.push(lang === 'DE' ? 'familiengeeignet' : 'tinka šeimai');
 
@@ -75,11 +75,12 @@ export default function SharePanel({ animal, onClose }: SharePanelProps) {
 
     const medicalDe = `Gechipt: ${animal.is_chipped ? 'Ja' : 'Nein'} | Kastriert: ${animal.is_castrated ? 'Ja' : 'Nein'} | EU-Ausweis: ${animal.has_eu_passport ? 'Ja' : 'Nein'}`;
     const medicalLt = `Paženklintas: ${animal.is_chipped ? 'Taip' : 'Ne'} | Kastruotas: ${animal.is_castrated ? 'Taip' : 'Ne'} | ES pasas: ${animal.has_eu_passport ? 'Taip' : 'Ne'}`;
+    const animalEmoji = animal.type === 'Katze' ? '🐈' : (animal.type === 'Hund' ? '🐕' : '🐾');
 
     if (lang === 'DE') {
-      return `🐈 ICH SUCHE DICH! MEIN NAME IST ${animal.name} 🐾
+      return `${animalEmoji} ICH SUCHE DICH! MEIN NAME IST ${animal.name} 🐾
 
-Hallo... hörst du mich? Ich sitze im Tierheim in Litauen und hoffe so sehr, dass mich jemand sieht. Ich bin ${formatAge(animal, 'DE')} alt und bereit, mein ganzes Katzenherz zu verschenken.
+Hallo... hörst du mich? Ich sitze im Tierheim in Litauen und hoffe so sehr, dass mich jemand sieht. Ich bin ${formatAge(animal, 'DE')} alt und bereit, mein ganzes Herz zu verschenken.
 
 📍 Mein aktueller Aufenthaltsort: VšĮ "Būk mano draugas" (Klaipėda, Litauen)
 ${traitsLineDe ? `\n✨ ${traitsLineDe}` : ''}${requirementsText ? `\n${requirementsText}` : ''}
@@ -92,9 +93,9 @@ ${medicalDe}
 Wer schenkt mir ein warmes Plätzchen und ganz viel Liebe? 🏡 Bitte teilt meinen Beitrag, damit mich mein Herzensmensch findet!
 📧 Anfragen an: Tierheimbmg@gmail.com
 
-#AdoptDontShop #Katzenhilfe #TierheimKatze #BukManoDraugas`;
+#AdoptDontShop #Tierhilfe #Tierheim${animal.type === 'Katze' ? 'Katze' : (animal.type === 'Hund' ? 'Hund' : 'Tier')} #BukManoDraugas`;
     } else {
-      return `🐈 AŠ LABAI TAVĘS LAUKIU! MANO VARDAS ${animal.name} 🐾
+      return `${animalEmoji} AŠ LABAI TAVĘS LAUKIU! MANO VARDAS ${animal.name} 🐾
 
 Labas... Ar matai mane? Aš esu prieglaudoje ir labai tikiuosi rasti savo tikruosius namus. Man yra ${formatAge(animal, 'LT')} ir aš labai noriu tapti tavo geriausiu draugu.
 
@@ -114,7 +115,7 @@ Kas nori pasidalinti savo namų šiluma ir meile su manimi? 🏡 Prašau pasidal
   };
 
   const postText = generatePostText();
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/katzen/${animal.id}` : '';
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/tiere/${animal.id}` : '';
 
   // Helpers for text wrapping inside canvas
   const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {

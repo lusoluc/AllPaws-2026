@@ -58,5 +58,26 @@ export const APP_CONFIG = {
     logoType: (process.env.NEXT_PUBLIC_THEME_LOGO_TYPE || 'icon') as 'icon' | 'image',
     logoImage: process.env.NEXT_PUBLIC_THEME_LOGO_IMAGE || '/logo.png', // path relative to public/
     logoText: process.env.NEXT_PUBLIC_THEME_LOGO_TEXT || 'AllPaws',
+  },
+
+  // Feature & Page Activation Flags
+  features: {
+    get enableGallery() { return getFeatureState('enableGallery', process.env.NEXT_PUBLIC_FEATURE_GALLERY !== 'false'); },
+    get enableGuide() { return getFeatureState('enableGuide', process.env.NEXT_PUBLIC_FEATURE_GUIDE !== 'false'); },
+    get enableEmergencyPage() { return getFeatureState('enableEmergencyPage', process.env.NEXT_PUBLIC_FEATURE_EMERGENCY_PAGE !== 'false'); },
+    get enableAboutUs() { return getFeatureState('enableAboutUs', process.env.NEXT_PUBLIC_FEATURE_ABOUT_US !== 'false'); },
+    get enableNewsletter() { return getFeatureState('enableNewsletter', process.env.NEXT_PUBLIC_FEATURE_NEWSLETTER !== 'false'); },
+    get enableInteractiveInquiryForm() { return getFeatureState('enableInteractiveInquiryForm', process.env.NEXT_PUBLIC_FEATURE_INTERACTIVE_INQUIRIES !== 'false'); },
+    get enableSponsorship() { return getFeatureState('enableSponsorship', process.env.NEXT_PUBLIC_FEATURE_SPONSORSHIP !== 'false'); },
   }
+};
+
+const getFeatureState = (key: string, envVal: boolean): boolean => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(`allpaws_feature_${key}`);
+    if (saved !== null) {
+      return saved === 'true';
+    }
+  }
+  return envVal;
 };

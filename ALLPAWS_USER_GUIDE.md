@@ -2,7 +2,7 @@
 
 > **Version:** 1.0 · **Stand / Data / Date:** 2026-06-22
 > **Autor / Autorius / Author:** [Carlos Lucas](https://www.linkedin.com/in/director-it-development/)
-> **GitHub:** [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
+> **GitHub:** [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
 > **Partner:** VšĮ "Būk mano draugas" · Kaukėnų g. 9, LT-92336 Glaudėnai (Klaipėda raj.), Lietuva / Litauen / Lithuania
 
 ---
@@ -600,7 +600,7 @@ AllPaws 2026 is just the beginning. Here are some ideas we'd love to work on in 
 AllPaws 2026 ist ein **Open-Source-Projekt** unter der **MIT-Lizenz**. Das bedeutet: Jeder darf den Code verwenden, verändern und weiterverbreiten. Wir glauben daran, dass gute Ideen für den Tierschutz nicht hinter verschlossenen Türen bleiben sollten.
 
 **Mitmachen?**
-- 🐙 Repository: [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
+- 🐙 Repository: [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
 - Schau dir den `DEVELOPER_GUIDE.md` an für die technische Einrichtung
 - Jeder Beitrag zählt — ob Code, Übersetzungen, Design oder einfach Feedback
 
@@ -614,7 +614,7 @@ AllPaws 2026 ist ein **Open-Source-Projekt** unter der **MIT-Lizenz**. Das bedeu
 AllPaws 2026 yra **atviro kodo projektas** pagal **MIT licenciją**. Tai reiškia: bet kas gali naudoti, keisti ir platinti kodą. Mes tikime, kad geros idėjos gyvūnų apsaugai neturėtų likti užrakintos.
 
 **Norite prisidėti?**
-- 🐙 Repozitorija: [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
+- 🐙 Repozitorija: [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
 - Peržiūrėkite `DEVELOPER_GUIDE.md` techniniam nustatymui
 - Kiekvienas indėlis svarbus — ar tai kodas, vertimai, dizainas ar tiesiog atsiliepimai
 
@@ -628,7 +628,7 @@ AllPaws 2026 yra **atviro kodo projektas** pagal **MIT licenciją**. Tai reiški
 AllPaws 2026 is an **open-source project** under the **MIT license**. That means: anyone can use, modify, and distribute the code. We believe that good ideas for animal welfare shouldn't stay behind locked doors.
 
 **Want to contribute?**
-- 🐙 Repository: [github.com/lusoluc/katzen-app](https://github.com/lusoluc/katzen-app)
+- 🐙 Repository: [github.com/lusoluc/AllPaws-2026](https://github.com/lusoluc/AllPaws-2026)
 - Check out `DEVELOPER_GUIDE.md` for technical setup
 - Every contribution counts — whether it's code, translations, design, or simply feedback
 
@@ -645,7 +645,7 @@ Erstellt mit ❤️ von / Sukurta su ❤️ / Created with ❤️ by
 
 **Carlos Lucas**
 🔗 [LinkedIn](https://www.linkedin.com/in/director-it-development/)
-🐙 [GitHub](https://github.com/lusoluc/katzen-app)
+🐙 [GitHub](https://github.com/lusoluc/AllPaws-2026)
 
 Für das Tierheim / Prieglaudai / For the shelter:
 **VšĮ "Būk mano draugas"**

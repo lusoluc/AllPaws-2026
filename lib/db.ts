@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { APP_CONFIG } from './appConfig';
 
 export interface Shelter {
   id?: number;
@@ -348,27 +349,27 @@ export async function seedDatabase() {
   const shelterCount = await db.shelters.count();
   if (shelterCount === 0) {
     await db.shelters.add({
-      name: 'VšĮ "Būk mano draugas"',
-      code: '302639996',
-      address: 'Kaukėnų g. 9, LT-92336 Glaudėnai (Klaipėda raj., Sendvario sen.), Litauen',
-      gpsLatitude: 55.787364,
-      gpsLongitude: 21.152453,
-      phone: '+370 614 36617',
-      emailLt: 'bukmanodraugas@inbox.lt',
-      emailDe: 'Tierheimbmg@gmail.com',
-      bankName: 'Swedbank',
-      bic: 'HABALT22',
-      iban: 'LT97 7300 0101 2750 0736',
-      donationPurposeDe: 'Donate Germany',
-      paypalEmail: 'bukmanodraugas@inbox.lt',
-      wishlistUrl: 'https://bukmanodraugas.lt/en/wishlist',
+      name: APP_CONFIG.shelter.name,
+      code: APP_CONFIG.shelter.code,
+      address: APP_CONFIG.shelter.address,
+      gpsLatitude: APP_CONFIG.shelter.gpsLatitude,
+      gpsLongitude: APP_CONFIG.shelter.gpsLongitude,
+      phone: APP_CONFIG.shelter.phone,
+      emailLt: APP_CONFIG.shelter.emailLt,
+      emailDe: APP_CONFIG.shelter.emailDe,
+      bankName: APP_CONFIG.shelter.bankName,
+      bic: APP_CONFIG.shelter.bic,
+      iban: APP_CONFIG.shelter.iban,
+      donationPurposeDe: APP_CONFIG.shelter.donationPurposeDe,
+      paypalEmail: APP_CONFIG.shelter.paypalEmail,
+      wishlistUrl: APP_CONFIG.shelter.wishlistUrl,
       sync_pending: 0,
       updated_at: new Date().toISOString()
     });
     console.log('Seeded database with default shelter info.');
   }
 
-  // Optional: Seed a few default cats if animals table is empty for quick demonstration
+  // Optional: Seed default animals if table is empty
   const animalCount = await db.animals.count();
   if (animalCount === 0) {
     await db.animals.add({
@@ -399,45 +400,78 @@ export async function seedDatabase() {
       trait_aggressive: 'NEIN',
       trait_fearful: 'NEIN',
       trait_cuddly: 'JA',
-      media_urls: [], // will hold images
+      media_urls: [],
       passport_urls: [],
       video_urls: [],
       sync_pending: 0
     });
     await db.animals.add({
-      name: 'Felix',
+      name: 'Rex',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      type: 'Katze',
+      type: 'Hund',
       status_aktuell: 'zu vermitteln',
       gender: 'Männlich',
-      age_years: 4,
-      shelter_admission_date: '2024-11',
-      reason_for_shelter: 'Abgabe wegen Allergie des Vorbesitzers.',
-      restrictions: 'Braucht Spezialfutter für Nieren.',
-      notes_miscellaneous: 'Schläft viel, mag ruhige Umgebungen.',
+      age_years: 3,
+      shelter_admission_date: '2025-02',
+      reason_for_shelter: 'Gefunden im Wald bei Klaipėda.',
+      restrictions: 'Braucht viel Auslauf.',
+      notes_miscellaneous: 'Sehr verspielt, versteht Grundkommandos.',
       is_published: true,
-      is_emergency: true,
+      is_emergency: false,
       is_castrated: true,
       is_chipped: true,
       has_rabies_vaccine: true,
-      has_cat_flu_vaccine: true,
+      has_cat_flu_vaccine: false,
       is_dewormed: true,
       has_eu_passport: true,
-      compat_cats: 'unbekannt',
-      compat_dogs: 'NEIN',
-      compat_children: 'unbekannt',
-      trait_curious: 'NEIN',
-      trait_playful: 'NEIN',
+      compat_cats: 'NEIN',
+      compat_dogs: 'JA',
+      compat_children: 'JA',
+      trait_curious: 'JA',
+      trait_playful: 'JA',
       trait_aggressive: 'NEIN',
-      trait_fearful: 'JA',
+      trait_fearful: 'NEIN',
       trait_cuddly: 'JA',
       media_urls: [],
       passport_urls: [],
       video_urls: [],
       sync_pending: 0
     });
-    console.log('Seeded database with sample cats.');
+    await db.animals.add({
+      name: 'Barny',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      type: 'Andere',
+      status_aktuell: 'zu vermitteln',
+      gender: 'Männlich',
+      age_years: 1,
+      shelter_admission_date: '2025-05',
+      reason_for_shelter: 'Abgegeben wegen Umzugs des Vorbesitzers.',
+      restrictions: 'Braucht Frischfutter und genügend Platz zum Hoppeln.',
+      notes_miscellaneous: 'Ein neugieriges Zwergkaninchen, das gerne Karotten knabbert.',
+      is_published: true,
+      is_emergency: true,
+      is_castrated: false,
+      is_chipped: false,
+      has_rabies_vaccine: false,
+      has_cat_flu_vaccine: false,
+      is_dewormed: true,
+      has_eu_passport: false,
+      compat_cats: 'unbekannt',
+      compat_dogs: 'unbekannt',
+      compat_children: 'JA',
+      trait_curious: 'JA',
+      trait_playful: 'JA',
+      trait_aggressive: 'NEIN',
+      trait_fearful: 'NEIN',
+      trait_cuddly: 'NEIN',
+      media_urls: [],
+      passport_urls: [],
+      video_urls: [],
+      sync_pending: 0
+    });
+    console.log('Seeded database with diverse sample animals.');
   }
 
   // Seed default UI texts if empty

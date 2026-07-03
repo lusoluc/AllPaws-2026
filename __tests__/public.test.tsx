@@ -11,7 +11,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import HomePage from '@/app/page';
 import UeberUnsPage from '@/app/ueber-uns/page';
-import CatGuidePage from '@/app/katzen-ratgeber/page';
+import CatGuidePage from '@/app/ratgeber/page';
 
 // Mock shelter data
 const mockShelter = {
@@ -36,6 +36,9 @@ jest.mock('@/lib/db', () => ({
       toArray: () => [],
     },
     guideItems: {
+      toArray: () => [],
+    },
+    animals: {
       toArray: () => [],
     },
     customBlocks: {
@@ -64,7 +67,7 @@ describe('HomePage Rendering & Translation', () => {
 
     // Default language is German (DE)
     expect(screen.getByText('Unsere Schützlinge')).toBeInTheDocument();
-    expect(screen.getByText('Katzen-Ratgeber & FAQ')).toBeInTheDocument();
+    expect(screen.getAllByText('Ratgeber & FAQ')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Über uns & Spenden')[0]).toBeInTheDocument();
     expect(screen.getByText(/Unsere Vision: Ein liebevolles Zuhause/)).toBeInTheDocument();
     expect(screen.getByText(/Die Realität vor Ort: Leben im Käfig/)).toBeInTheDocument();
@@ -79,7 +82,7 @@ describe('HomePage Rendering & Translation', () => {
 
     // Verify Lithuanian translation
     expect(screen.getByText('Mūsų globotiniai')).toBeInTheDocument();
-    expect(screen.getByText('Kačių gidas ir DUK')).toBeInTheDocument();
+    expect(screen.getByText('Gyvūnų gidas ir DUK')).toBeInTheDocument();
     expect(screen.getByText('Apie mus ir parama')).toBeInTheDocument();
     expect(screen.getByText(/Mūsų vizija: Mylintys namai/)).toBeInTheDocument();
     expect(screen.getByText(/Realybė prieglaudoje: Gyvenimas narvuose/)).toBeInTheDocument();
@@ -101,7 +104,7 @@ describe('UeberUnsPage Billing info & Donations', () => {
 
     // Verify donation impact table in German
     expect(screen.getByText(/10 €/)).toBeInTheDocument();
-    expect(screen.getByText('1 Woche gesundes Futter für eine Katze')).toBeInTheDocument();
+    expect(screen.getByText('1 Woche gesundes Futter für ein Tier')).toBeInTheDocument();
 
     // Verify CMS block in DE
     expect(screen.getByText('Über Uns CMS')).toBeInTheDocument();
@@ -112,7 +115,7 @@ describe('UeberUnsPage Billing info & Donations', () => {
 
     // Verify translation updates
     expect(screen.getByText('Kaip jūsų parama padeda')).toBeInTheDocument();
-    expect(screen.getByText('1 savaitė pilnaverčio maisto vienai katei')).toBeInTheDocument();
+    expect(screen.getByText('1 savaitė pilnaverčio maisto vienam gyvūnui')).toBeInTheDocument();
 
     // Verify CMS block in LT
     expect(screen.getByText('Apie Mus CMS')).toBeInTheDocument();

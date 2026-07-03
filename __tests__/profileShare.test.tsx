@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CatDetailPage from '@/app/katzen/[id]/page';
+import CatDetailPage from '@/app/tiere/[id]/page';
 
 // Variables prefixed with "mock" are hoisted by Jest and can be safely referenced in jest.mock
 const mockFelixCat = {

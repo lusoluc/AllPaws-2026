@@ -21,11 +21,9 @@ import {
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import PublicHeader from '@/components/PublicHeader';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 export default function PublicGalleryPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterGender, setFilterGender] = useState<string>('all');
-  const [filterAge, setFilterAge] = useState<string>('all');
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
 
   // Load language from localStorage on mount
@@ -40,7 +38,36 @@ export default function PublicGalleryPage() {
   useEffect(() => {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
-  const [selectedShareCat, setSelectedShareCat] = useState<Animal | null>(null);
+
+  if (!APP_CONFIG.features.enableGallery) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
+        <PublicHeader lang={lang} setLang={setLang} />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-stone-200/60 flex items-center justify-center text-stone-500 mx-auto">
+            <HelpCircle className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold">
+            {lang === 'DE' ? 'Bereich nicht aktiv' : 'Ši skiltis neaktyvi'}
+          </h1>
+          <p className="text-xs text-stone-500 max-w-sm">
+            {lang === 'DE' 
+              ? 'Diese Seite wurde vom Administrator deaktiviert.' 
+              : 'Šį puslapį administratorius išjungė.'}
+          </p>
+          <NextLink href="/" className="inline-block px-4 py-2 bg-brandpink-600 hover:bg-brandpink-500 text-white font-semibold text-xs rounded-xl shadow-sm cursor-pointer">
+            {lang === 'DE' ? 'Zur Startseite' : 'Į pagrindinį'}
+          </NextLink>
+        </main>
+      </div>
+    );
+  }
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterGender, setFilterGender] = useState<string>('all');
+  const [filterAge, setFilterAge] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [selectedShareAnimal, setSelectedShareAnimal] = useState<Animal | null>(null);
 
   // Sync with cloud on page mount
   useEffect(() => {
@@ -49,40 +76,41 @@ export default function PublicGalleryPage() {
     });
   }, []);
 
-  // Query only published cats up for adoption
-  const cats = useLiveQuery(() => 
+  // Query only published animals up for adoption
+  const animals = useLiveQuery(() => 
     db.animals
-      .filter(a => a.type === 'Katze' && a.is_published && a.status_aktuell === 'zu vermitteln')
+      .filter(a => a.is_published && a.status_aktuell === 'zu vermitteln')
       .toArray()
   );
 
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
 
   // Filter Logic
-  const filteredCats = cats?.filter((cat) => {
-    const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (cat.reason_for_shelter || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGender = filterGender === 'all' || cat.gender === filterGender;
+  const filteredAnimals = animals?.filter((animal) => {
+    const matchesSearch = animal.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (animal.reason_for_shelter || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGender = filterGender === 'all' || animal.gender === filterGender;
+    const matchesType = filterType === 'all' || animal.type === filterType;
     
     let matchesAge = true;
     if (filterAge === 'young') {
-      matchesAge = cat.age_years <= 1;
+      matchesAge = animal.age_years <= 1;
     } else if (filterAge === 'adult') {
-      matchesAge = cat.age_years > 1 && cat.age_years <= 7;
+      matchesAge = animal.age_years > 1 && animal.age_years <= 7;
     } else if (filterAge === 'senior') {
-      matchesAge = cat.age_years > 7;
+      matchesAge = animal.age_years > 7;
     }
 
-    return matchesSearch && matchesGender && matchesAge;
+    return matchesSearch && matchesGender && matchesAge && matchesType;
   });
 
   const ui = {
     DE: {
       title: 'Unsere Schützlinge suchen ein Zuhause 🏡',
-      subtitle: 'Triff unsere liebevollen Katzen und finde deinen neuen Lebensgefährten',
-      statsTiere: '148 glückliche Samtpfoten vermittelt 🏡',
+      subtitle: 'Triff unsere liebevollen Tiere und finde deinen neuen Lebensgefährten',
+      statsTiere: '148 glückliche Fellnasen vermittelt 🏡',
       statsGeld: '12.450 € für Tierarztkosten finanziert 🩺',
-      searchPlaceholder: 'Katze suchen...',
+      searchPlaceholder: 'Tier suchen...',
       all: 'Alle',
       female: 'Weiblich',
       male: 'Männlich',
@@ -90,14 +118,18 @@ export default function PublicGalleryPage() {
       young: 'Kitten/Jung (0-1 J.)',
       adult: 'Erwachsen (2-7 J.)',
       senior: 'Senior (8+ J.)',
-      noCats: 'Aktuell suchen keine Katzen ein Zuhause, die den Filtern entsprechen.',
+      noCats: 'Aktuell suchen keine Tiere ein Zuhause, die den Filtern entsprechen.',
       detailsBtn: 'Profil ansehen',
       emergency: 'Sorgenfell / Dringend 🆘',
       shelterBadge: 'Būk mano draugas',
       years: 'Jahre',
       year: 'Jahr',
+      typeLabel: 'Tierart',
       genderLabel: 'Geschlecht',
       ageLabel: 'Alter',
+      cats: 'Katzen',
+      dogs: 'Hunde',
+      others: 'Andere',
       noMedia: 'Keine Medien',
       noDesc: 'Zurzeit liegt keine detaillierte Beschreibung vor. Klicke auf Details für Kontaktdaten.',
       regCode: 'Registrierungs-Code',
@@ -105,10 +137,10 @@ export default function PublicGalleryPage() {
     },
     LT: {
       title: 'Mūsų globotiniai ieško namų 🏡',
-      subtitle: 'Susipažinkite su katėmis ir raskite ištikimą gyvenimo draugą',
-      statsTiere: '148 katės sėkmingai rado namus 🏡',
+      subtitle: 'Susipažinkite su gyvūnais ir raskite ištikimą gyvenimo draugą',
+      statsTiere: '148 sėkmingai rado namus 🏡',
       statsGeld: '12.450 € surinkta skubiam gydymui 🩺',
-      searchPlaceholder: 'Ieškoti katės...',
+      searchPlaceholder: 'Ieškoti gyvūno...',
       all: 'Visi',
       female: 'Patelė',
       male: 'Patinas',
@@ -116,14 +148,18 @@ export default function PublicGalleryPage() {
       young: 'Jaunikliai (0-1 m.)',
       adult: 'Suaugę (2-7 m.)',
       senior: 'Senjorai (8+ m.)',
-      noCats: 'Šiuo metu nėra kačių, atitinkančių jūsų filtrus.',
+      noCats: 'Šiuo metu nėra gyvūnų, atitinkančių jūsų filtrus.',
       detailsBtn: 'Peržiūrėti profilį',
       emergency: 'Skubi pagalba 🆘',
       shelterBadge: 'Būk mano draugas',
       years: 'metai',
       year: 'metai',
+      typeLabel: 'Rūšis',
       genderLabel: 'Lytis',
       ageLabel: 'Amžius',
+      cats: 'Katės',
+      dogs: 'Šunys',
+      others: 'Kiti',
       noMedia: 'Nėra medijos',
       noDesc: 'Šiuo metu detalaus aprašymo nėra. Spustelėkite peržiūrėti profilį norėdami pamatyti kontaktus.',
       regCode: 'Registracijos kodas',
@@ -170,13 +206,27 @@ export default function PublicGalleryPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
+            <div>
+              <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">{ui.typeLabel}</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-2 py-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
+              >
+                <option value="all">{ui.all}</option>
+                <option value="Katze">{ui.cats}</option>
+                <option value="Hund">{ui.dogs}</option>
+                <option value="Andere">{ui.others}</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 ml-1">{ui.genderLabel}</label>
               <select
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
+                className="w-full px-2 py-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
               >
                 <option value="all">{ui.all}</option>
                 <option value="Weiblich">{ui.female}</option>
@@ -189,7 +239,7 @@ export default function PublicGalleryPage() {
               <select
                 value={filterAge}
                 onChange={(e) => setFilterAge(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
+                className="w-full px-2 py-2 bg-white border border-stone-200 rounded-lg text-xs text-stone-700 focus:outline-none focus:border-brandpink-500 shadow-sm"
               >
                 <option value="all">{ui.allAges}</option>
                 <option value="young">{ui.young}</option>
@@ -202,19 +252,19 @@ export default function PublicGalleryPage() {
 
         {/* Animals Grid */}
         <div className="space-y-4 pt-2">
-          {filteredCats && filteredCats.length > 0 ? (
-            filteredCats.map((cat) => (
+          {filteredAnimals && filteredAnimals.length > 0 ? (
+            filteredAnimals.map((animal) => (
               <div 
-                key={cat.id}
+                key={animal.id}
                 className="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:border-stone-300 transition-all shadow-sm hover:shadow-md group flex flex-col"
               >
                 {/* Photo Header */}
                 <div className="aspect-[4/3] bg-stone-100 relative w-full overflow-hidden flex items-center justify-center border-b border-stone-100">
                   {(() => {
-                    const firstPhoto = cat.media_urls?.[0];
-                    const firstVideo = cat.video_urls?.[0] || (cat.local_videos?.[0] && cat.local_videos[0].blob ? URL.createObjectURL(cat.local_videos[0].blob) : null);
+                    const firstPhoto = animal.media_urls?.[0];
+                    const firstVideo = animal.video_urls?.[0] || (animal.local_videos?.[0] && animal.local_videos[0].blob ? URL.createObjectURL(animal.local_videos[0].blob) : null);
                     const firstMediaUrl = firstPhoto || firstVideo;
-                    const hasVideo = (cat.video_urls && cat.video_urls.length > 0) || (cat.local_videos && cat.local_videos.length > 0);
+                    const hasVideo = (animal.video_urls && animal.video_urls.length > 0) || (animal.local_videos && animal.local_videos.length > 0);
 
                     return (
                       <>
@@ -222,7 +272,7 @@ export default function PublicGalleryPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img 
                             src={firstPhoto} 
-                            alt={cat.name}
+                            alt={animal.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                           />
                         ) : firstVideo ? (
@@ -269,7 +319,7 @@ export default function PublicGalleryPage() {
 
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col space-y-1">
-                    {cat.is_emergency && (
+                    {animal.is_emergency && (
                       <span className="px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-[9px] font-extrabold tracking-wider uppercase shadow-sm">
                         {ui.emergency}
                       </span>
@@ -288,26 +338,26 @@ export default function PublicGalleryPage() {
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex justify-between items-baseline mb-2">
                     <h2 className="text-xl font-bold text-stone-900 group-hover:text-brandpink-600 transition-colors">
-                      {cat.name}
+                      {animal.name}
                     </h2>
                     <span className="text-xs text-stone-500">
-                      {cat.gender === 'Weiblich' ? ui.female : ui.male} • {formatAge(cat, lang)}
+                      {animal.gender === 'Weiblich' ? ui.female : ui.male} • {formatAge(animal, lang)}
                     </span>
                   </div>
 
                   <p className="text-xs text-stone-600 line-clamp-3 mb-5 leading-relaxed flex-1">
-                    {cat.reason_for_shelter || ui.noDesc}
+                    {animal.reason_for_shelter || ui.noDesc}
                   </p>
 
                   <div className="flex space-x-2">
                     <NextLink
-                      href={`/katzen/${cat.id}`}
+                      href={`/tiere/${animal.id}`}
                       className="flex-1 py-3 bg-brandpink-500 hover:bg-brandpink-600 text-white text-xs font-extrabold rounded-xl shadow-sm active:scale-98 transition-all flex items-center justify-center text-center"
                     >
                       <span>{ui.detailsBtn}</span>
                     </NextLink>
                     <button
-                      onClick={() => setSelectedShareCat(cat)}
+                      onClick={() => setSelectedShareAnimal(animal)}
                       className="px-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 border border-stone-200 rounded-xl shadow-sm active:scale-98 transition-all flex items-center justify-center"
                       title={ui.shareTitle}
                     >
@@ -332,10 +382,10 @@ export default function PublicGalleryPage() {
         <p className="mt-1">{ui.regCode}: 302639996</p>
       </footer>
 
-      {selectedShareCat && (
+      {selectedShareAnimal && (
         <SharePanel 
-          animal={selectedShareCat} 
-          onClose={() => setSelectedShareCat(null)} 
+          animal={selectedShareAnimal} 
+          onClose={() => setSelectedShareAnimal(null)} 
         />
       )}
     </div>

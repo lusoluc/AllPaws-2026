@@ -26,7 +26,8 @@ describe('PublicHeader Component', () => {
 
     // Desktop nav items are present (rendered in main navigation bar)
     expect(screen.getByText('Unsere Schützlinge 🐾')).toBeInTheDocument();
-    expect(screen.getByText('Katzen-Ratgeber')).toBeInTheDocument();
+    expect(screen.getByText('Ratgeber & FAQ')).toBeInTheDocument();
+    expect(screen.getByText('Notfall-Hilfe 🚨')).toBeInTheDocument();
     expect(screen.getByText('Über uns & Spenden')).toBeInTheDocument();
 
     // Action button & language toggle should be present
@@ -39,7 +40,8 @@ describe('PublicHeader Component', () => {
 
     expect(screen.getByText('Gyvūnų prieglauda')).toBeInTheDocument();
     expect(screen.getByText('Mūsų globotiniai 🐾')).toBeInTheDocument();
-    expect(screen.getByText('Kačių gidas')).toBeInTheDocument();
+    expect(screen.getByText('Gidas ir DUK')).toBeInTheDocument();
+    expect(screen.getByText('Skubi pagalba 🚨')).toBeInTheDocument();
     expect(screen.getByText('Apie mus & Parama')).toBeInTheDocument();
     expect(screen.getByText('Internas')).toBeInTheDocument();
   });
@@ -68,7 +70,7 @@ describe('PublicHeader Component', () => {
     
     // Large touch links are present inside the drawer wrapper
     const links = container.querySelectorAll('a');
-    expect(links.length).toBeGreaterThan(3); // Logo, Katzen, Ratgeber, Über uns, Login
+    expect(links.length).toBeGreaterThan(3); // Logo, Tiere, Ratgeber, Notfall, Über uns, Login
 
     // Click language switcher inside drawer
     const ltMobileBtn = screen.getByRole('button', { name: 'LT' });
@@ -81,13 +83,13 @@ describe('PublicHeader Component', () => {
   });
 
   test('Happy Path: Highlights active menu item based on current route pathname', () => {
-    // Mock page location as /katzen-ratgeber
-    (usePathname as jest.Mock).mockReturnValue('/katzen-ratgeber');
+    // Mock page location as /ratgeber
+    (usePathname as jest.Mock).mockReturnValue('/ratgeber');
     
     const { container } = render(<PublicHeader lang="DE" setLang={mockSetLang} />);
 
-    // The link for /katzen-ratgeber should be styled with text-brandpink-600
-    const activeLink = screen.getByText('Katzen-Ratgeber');
+    // The link for /ratgeber should be styled with text-brandpink-600
+    const activeLink = screen.getByText('Ratgeber & FAQ');
     expect(activeLink).toHaveClass('text-brandpink-600');
 
     // The other links should be styled with text-stone-500
@@ -100,14 +102,14 @@ describe('PublicHeader Component', () => {
   });
 
   test('Negative Path: None of the main navigation tabs are highlighted on non-navigated subpages', () => {
-    // Mock route as /impressum which is not one of the 3 primary navigation tabs
+    // Mock route as /impressum which is not one of the primary navigation tabs
     (usePathname as jest.Mock).mockReturnValue('/impressum');
 
     render(<PublicHeader lang="DE" setLang={mockSetLang} />);
 
     // None of the main items should have the active text color
     const link1 = screen.getByText('Unsere Schützlinge 🐾');
-    const link2 = screen.getByText('Katzen-Ratgeber');
+    const link2 = screen.getByText('Ratgeber & FAQ');
     const link3 = screen.getByText('Über uns & Spenden');
 
     expect(link1).toHaveClass('text-stone-500');
@@ -132,12 +134,12 @@ describe('PublicHeader Component', () => {
     // 2. Dispatch "success" event without updates
     fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'success', updated: false } }));
     expect(screen.getByText('Daten aktuell')).toBeInTheDocument();
-    expect(screen.queryByText('Aktuelle Katzen-Infos wurden geladen!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Aktuelle Tierheim-Infos wurden geladen!')).not.toBeInTheDocument();
 
     // 3. Dispatch "success" event with updates
     fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'success', updated: true } }));
     expect(screen.getByText('Daten aktuell')).toBeInTheDocument();
-    expect(screen.getByText('Aktuelle Katzen-Infos wurden geladen!')).toBeInTheDocument();
+    expect(screen.getByText('Aktuelle Tierheim-Infos wurden geladen!')).toBeInTheDocument();
 
     // 4. Dispatch "error" event
     fireEvent(window, new CustomEvent('bmd-sync-status', { detail: { state: 'error', updated: false } }));

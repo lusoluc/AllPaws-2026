@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw, AlertTriangle } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 interface PublicHeaderProps {
   lang: 'DE' | 'LT';
@@ -45,24 +46,34 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
 
   const navItems = [
     {
-      path: '/katzen',
+      path: '/tiere',
       labelDe: 'Unsere Schützlinge 🐾',
       labelLt: 'Mūsų globotiniai 🐾',
-      icon: Eye
+      icon: Eye,
+      enabled: APP_CONFIG.features.enableGallery
     },
     {
-      path: '/katzen-ratgeber',
-      labelDe: 'Katzen-Ratgeber',
-      labelLt: 'Kačių gidas',
-      icon: BookOpen
+      path: '/ratgeber',
+      labelDe: 'Ratgeber & FAQ',
+      labelLt: 'Gidas ir DUK',
+      icon: BookOpen,
+      enabled: APP_CONFIG.features.enableGuide
+    },
+    {
+      path: '/notfall',
+      labelDe: 'Notfall-Hilfe 🚨',
+      labelLt: 'Skubi pagalba 🚨',
+      icon: AlertTriangle,
+      enabled: APP_CONFIG.features.enableEmergencyPage
     },
     {
       path: '/ueber-uns',
       labelDe: 'Über uns & Spenden',
       labelLt: 'Apie mus & Parama',
-      icon: HeartHandshake
+      icon: HeartHandshake,
+      enabled: APP_CONFIG.features.enableAboutUs
     }
-  ];
+  ].filter(item => item.enabled);
 
   const desktopLinkClass = (path: string) => `
     relative py-2 px-1 text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer
@@ -249,8 +260,8 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
           <span className="text-base">🐾</span>
           <span>
             {lang === 'DE' 
-              ? 'Aktuelle Katzen-Infos wurden geladen!' 
-              : 'Įkelti naujausi kačių duomenys!'}
+              ? 'Aktuelle Tierheim-Infos wurden geladen!' 
+              : 'Įkelti naujausi gyvūnų duomenys!'}
           </span>
         </div>
       )}

@@ -139,7 +139,7 @@ describe('SharePanel Social Exporter Component', () => {
     const href = whatsappLink.getAttribute('href') || '';
     expect(href).toContain('https://api.whatsapp.com/send?text=');
     expect(href).toContain(encodeURIComponent('ICH SUCHE DICH! MEIN NAME IST Mimi'));
-    expect(href).toContain(encodeURIComponent('http://localhost/katzen/123'));
+    expect(href).toContain(encodeURIComponent('http://localhost/tiere/123'));
   });
 
   test('Facebook Share: opens Facebook sharer with URL only', () => {
@@ -149,7 +149,7 @@ describe('SharePanel Social Exporter Component', () => {
     expect(facebookLink).toHaveAttribute('href');
     const href = facebookLink.getAttribute('href') || '';
     expect(href).toContain('https://www.facebook.com/sharer/sharer.php?u=');
-    expect(href).toContain(encodeURIComponent('http://localhost/katzen/123'));
+    expect(href).toContain(encodeURIComponent('http://localhost/tiere/123'));
   });
 
   test('Instagram Share: copies first-person post text and triggers success notification toast', async () => {
@@ -171,7 +171,7 @@ describe('SharePanel Social Exporter Component', () => {
     const tiktokBtn = screen.getByRole('button', { name: /TikTok/i });
     fireEvent.click(tiktokBtn);
 
-    expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('http://localhost/katzen/123'));
+    expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('http://localhost/tiere/123'));
     
     await waitFor(() => {
       expect(screen.getByText(/Link kopiert! Leite zu TikTok weiter/)).toBeInTheDocument();
@@ -209,7 +209,7 @@ describe('SharePanel Social Exporter Component', () => {
     expect(mockShare).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Adoptionsaufruf: Mimi',
-        url: 'http://localhost/katzen/123',
+        url: 'http://localhost/tiere/123',
       })
     );
   });

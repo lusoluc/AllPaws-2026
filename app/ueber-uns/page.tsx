@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import PublicHeader from '@/components/PublicHeader';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 export default function UeberUnsPage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
@@ -32,6 +33,31 @@ export default function UeberUnsPage() {
   useEffect(() => {
     localStorage.setItem('bmd_lang', lang);
   }, [lang]);
+
+  if (!APP_CONFIG.features.enableAboutUs) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 text-stone-900">
+        <PublicHeader lang={lang} setLang={setLang} />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-stone-200/60 flex items-center justify-center text-stone-500 mx-auto">
+            <Info className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold">
+            {lang === 'DE' ? 'Bereich nicht aktiv' : 'Ši skiltis neaktyvi'}
+          </h1>
+          <p className="text-xs text-stone-500 max-w-sm">
+            {lang === 'DE' 
+              ? 'Diese Seite wurde vom Administrator deaktiviert.' 
+              : 'Šį puslapį administratorius išjungė.'}
+          </p>
+          <NextLink href="/" className="inline-block px-4 py-2 bg-brandpink-600 hover:bg-brandpink-500 text-white font-semibold text-xs rounded-xl shadow-sm cursor-pointer">
+            {lang === 'DE' ? 'Zur Startseite' : 'Į pagrindinį'}
+          </NextLink>
+        </main>
+      </div>
+    );
+  }
+
   const shelter = useLiveQuery(() => db.shelters.limit(1).first());
 
   const defaultUi = {
@@ -39,18 +65,18 @@ export default function UeberUnsPage() {
       title: 'Über Uns & Das Team',
       subtitle: 'Wie aus Liebe zu hilflosen Seelen eine Lebensaufgabe wurde – und warum wir jede helfende Hand brauchen.',
       homeLink: 'Startseite',
-      galleryLink: 'Zur Katzen-Galerie',
+      galleryLink: 'Zur Tier-Galerie',
       historyTitle: 'Unsere Geschichte: Ein Weg aus Liebe und Schweiß',
       historyText1: 'Hinter unserem Tierheim steht kein reicher Großsponsor und kein staatliches Budget. Alles begann im Jahr 2011, als Galina Kučinskienė die Not der Straßenkatzen in Klaipėda nicht mehr mitansehen konnte und die ersten verletzten Seelen bei sich aufnahm. Was als private Rettungsaktion im kleinen Kreis begann, ist über 13 Jahre hinweg zu einer permanenten Zuflucht für über 600 Hunde, Katzen und Wildtiere angewachsen. Wir gehen täglich an unsere körperlichen und finanziellen Grenzen, um diesen wunderbaren Geschöpfen Schutz zu bieten.',
-      historyText2: 'Unser oberstes Ziel ist einfach, aber lebenswichtig: Jedes gerettete Tier soll spüren, dass es geliebt wird, während wir medizinische Notversorgung leisten und nach einem endgültigen Zuhause suchen. Um den Katzen in Deutschland eine Stimme zu geben, arbeitet Žana Baskytė unermüdlich ehrenamtlich als Brücke ins neue Leben, vermittelt Adoptionen und organisiert lebensrettende Fahrten.',
-      containerTitle: 'Das Container-Projekt 🐈',
+      historyText2: 'Unser oberstes Ziel ist einfach, aber lebenswichtig: Jedes gerettete Tier soll spüren, dass es geliebt wird, während wir medizinische Notversorgung leisten und nach einem endgültigen Zuhause suchen. Um den Tieren in Deutschland eine Stimme zu geben, arbeitet Žana Baskytė unermüdlich ehrenamtlich als Brücke ins neue Leben, vermittelt Adoptionen und organisiert lebensrettende Fahrten.',
+      containerTitle: 'Das Container-Projekt 🐾',
       containerSubtitle: 'Gebaut mit unseren eigenen Händen',
-      containerText: 'Als der Platz im Tierheim nicht mehr reichte und wir Tiere hätten abweisen müssen, haben wir beschlossen zu kämpfen. Die Idee: Ausgediente Überseecontainer zu Katzenparadiesen umzubauen. Mit privatem Schweiß, Spenden und der Hilfe von freiwilligen Handwerkern haben wir Container isoliert, klimatisiert und mit Kletterwänden, Kuschelecken und Spielzonen ausgestattet. Heute finden hier über 360 Katzen Schutz vor Frost und Hunger in gemütlichen Gruppen.',
+      containerText: 'Als der Platz im Tierheim nicht mehr reichte und wir Tiere hätten abweisen müssen, haben wir beschlossen zu kämpfen. Die Idee: Ausgediente Überseecontainer zu Katzenparadiesen umzubauen. Mit privatem Schweiß, Spenden und der Hilfe von freiwilligen Handwerkern haben wir Container isoliert, klimatisiert und mit Kletterwänden, Kuschelecken und Spielzonen ausgestattet. Heute finden hier über 360 Tiere Schutz vor Frost und Hunger in gemütlichen Gruppen.',
       teamTitle: 'Das Team vor Ort & International',
       galinaTitle: 'Galina Kučinskienė',
       galinaDesc: 'Gründerin & Seele des Tierheims. Koordiniert die tägliche Rettungsarbeit, Tierarztbesuche und das Pfleger-Team in Litauen unermüdlich vor Ort.',
       zanaTitle: 'Zana Baskyte',
-      zanaDesc: 'Internationale Vermittlung & Herzensbrücke. Ansprechpartnerin für alle Adoptionsanfragen aus Deutschland, Österreich und der Schweiz.',
+      zanaDesc: 'Internationale Vermittlung & Herzensbrücke. Ansprechpartnerin für all diejenigen, die einem Tier ein neues Zuhause schenken möchten.',
       contactDe: 'Deutscher Support E-Mail',
       contactLt: 'Litauen E-Mail',
       regCode: 'Registrierungscode',
@@ -67,20 +93,21 @@ export default function UeberUnsPage() {
       title: 'Apie mus ir komandą',
       subtitle: 'Kaip meilė bejėgiams gyvūnams tapo gyvenimo tikslu ir kodėl mums reikia kiekvienos pagalbos rankos.',
       homeLink: 'Pradžia',
-      galleryLink: 'Kačių galerija',
+      galleryLink: 'Gyvūnų galerija',
       historyTitle: 'Mūsų istorija: kelias, grįstas meile ir rūpesčiu',
       historyText1: 'Už mūsų prieglaudos stovi ne turtingi rėmėjai ar valstybės biudžetas. Viskas prasidėjo 2011 metais, kai Galina Kučinskienė nebegalėjo žiūrėti į Klaipėdos gatvės kačių kančias ir priglaudė pirmuosiuos sužeistus gyvūnus savo namuose. Tai, kas prasidėjo kaip nedidelė gelbėjimo akcija, per 13 metų išaugo į nuolatinį prieglobstį daugiau nei 600 šunų, kačių ir laukinių gyvūnų. Kiekvieną dieną mes atiduodame paskutines savo jėgas ir asmenines lėšas, kad apsaugotume šias nuostabias sielas.',
-      historyText2: 'Mūsų pagrindinis tikslas paprastas, bet gyvybiškai svarbus: kiekviena išgelbėta siela turi pajusti, kad yra mylima, kol mes suteikiame skubią pagalbą ir ieškome jai tikrųjų namų. Kad suteiktų katėms balsą užsienyje, Žana Baskytė nenuilstamai savanoriauja kaip tiltas į naują gyvenimą, padėdama rasti namus Vokietijoje ir organizuodama keliones.',
-      containerTitle: 'Konteinerių projektas 🐈',
+      historyText2: 'Mūsų pagrindinis tikslas paprastas, bet gyvybiškai svarbus: kiekviena išgelbėta siela turi pajusti, kad yra mylima, kol mes suteikiame skubią pagalbą ir ieškome jai tikrųjų namų. Kad suteiktų gyvūnams balsą užsienyje, Žana Baskytė nenuilstamai savanoriauja kaip tiltas į naują gyvenimą, padėdama rasti namus Vokietijoje ir organizuodama keliones.',
+      containerTitle: 'Konteinerių projektas 🐾',
       containerSubtitle: 'Pastatyta mūsų pačių rankomis',
       containerText: 'Kai prieglaudoje pritrūko vietos ir būtume turėję atsisakyti priimti gyvūnus, nusprendėme kovoti. Kilusi idėja: paversti senus jūrinius konteinerius kačių rojumi. Savo rankomis, savanorių pagalba ir asmeninėmis lėšomis apšiltinome konteinerius, įrengėme oro kondicionavimą, laipiojimo sieneles ir jaukius guolius. Šiandien čia saugų prieglobstį randa per 360 kačių.',
       teamTitle: 'Vietinė ir tarptautinė komanda',
       galinaTitle: 'Galina Kučinskienė',
       galinaDesc: 'Prieglaudos įkūrėja ir vadovė. Koordinuoja kasdienį gelbėjimo darbą, vizitus pas veterinarijos gydytojus bei prieglaudos darbuotojus Lietuvoje.',
       zanaTitle: 'Zana Baskyte',
-      zanaDesc: 'Tarptautinis bendradarbiavimas ir parama Vokietijoje. Atsakinga už gyvūnų globos užklausas iš Vokietijos, Austrijos ir Šveicarijos.',
+      zanaDesc: 'Tarptautinis bendradarbiavimas ir parama Vokietijoje. Atsakinga už užklausas dėl gyvūnų iš Vokietijos, Austrijos ir Šveicarijos.',
       contactDe: 'Vokietijos paramos el. paštas',
       contactLt: 'Lietuvos el. paštas',
+      authorCredit: 'Programėlę su ❤️ sukūrė', // wait, let's make sure we have this here as in package/db
       regCode: 'Įmonės kodas',
       donationTitle: 'Paremk mūsų širdies darbą',
       donationText: 'Kiekvienas centas, kiekviena valanda ir kiekviena kodo eilutė yra aukojami privačiai. Mes negauname valstybės paramos. Jūsų parama 100 % skiriama maistui, vaistams ir šiltų konteinerių erdvių išlaikymui.',
@@ -89,7 +116,6 @@ export default function UeberUnsPage() {
       bic: 'BIC / SWIFT',
       purpose: 'Mokėjimo paskirtis',
       paypal: 'PayPal sąskaita',
-      bankDetailsSub: 'Banko sąskaita (Swedbank)'
     }
   };
 
@@ -239,14 +265,14 @@ export default function UeberUnsPage() {
             <div className="space-y-2.5 text-xs text-stone-700">
               <div className="flex justify-between border-b border-stone-200 pb-1.5">
                 <span className="text-stone-800 font-bold">💰 10 €</span>
-                <span className="text-stone-600 font-light">{lang === 'DE' ? '1 Woche gesundes Futter für eine Katze' : '1 savaitė pilnaverčio maisto vienai katei'}</span>
+                <span className="text-stone-600 font-light">{lang === 'DE' ? '1 Woche gesundes Futter für ein Tier' : '1 savaitė pilnaverčio maisto vienam gyvūnui'}</span>
               </div>
               <div className="flex justify-between border-b border-stone-200 pb-1.5">
                 <span className="text-stone-800 font-bold">🩺 25 €</span>
                 <span className="text-stone-600 font-light">{lang === 'DE' ? 'Impfliste, Entwurmung & Flohschutz' : 'Skiepai, nukirminimas ir apsauga nuo parazitų'}</span>
               </div>
               <div className="flex justify-between border-b border-stone-200 pb-1.5">
-                <span className="text-stone-800 font-bold">🐈 50 €</span>
+                <span className="text-stone-800 font-bold">🐾 50 €</span>
                 <span className="text-stone-600 font-light">{lang === 'DE' ? 'Kastration, Microchip & EU-Heimtierausweis' : 'Kastracija, čipavimas ir ES gyvūno pasas'}</span>
               </div>
               <div className="flex justify-between">

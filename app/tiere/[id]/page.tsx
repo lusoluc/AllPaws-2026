@@ -33,6 +33,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
+import { syncWithCloud } from '@/lib/syncManager';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 export default function CatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -70,17 +72,31 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
   const [shareNotification, setShareNotification] = useState<string | null>(null);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
 
+  // Form states for self-disclosure (Selbstauskunft)
+  const [formName, setFormName] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formLiving, setFormLiving] = useState('Apartment');
+  const [formBalcony, setFormBalcony] = useState('Nein');
+  const [formLandlord, setFormLandlord] = useState('Ja');
+  const [formOtherPets, setFormOtherPets] = useState('');
+  const [formExperience, setFormExperience] = useState('Mittel');
+  const [formMessage, setFormMessage] = useState('');
+  const [formStatus, setFormStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [formErrorMsg, setFormErrorMsg] = useState('');
+
   const getShareText = () => {
-    const url = typeof window !== 'undefined' ? `${window.location.origin}/katzen/${cat?.id}` : '';
+    const url = typeof window !== 'undefined' ? `${window.location.origin}/tiere/${cat?.id}` : '';
+    const animalNounLt = cat?.type === 'Katze' ? (cat?.gender === 'Weiblich' ? 'katė' : 'katinas') : (cat?.type === 'Hund' ? 'šuo' : 'gyvūnas');
     if (lang === 'DE') {
       return `Ich suche ein liebevolles Zuhause! Mein Name ist ${cat?.name}. Ich bin ${formatAge(cat, 'DE')} alt, ${cat?.gender === 'Weiblich' ? 'weiblich' : 'männlich'} und lebe im Tierheim "Būk mano draugas" in Litauen. Bitte teile mein Profil, damit mein Herzensmensch mich findet! 🐾 Link: ${url}`;
     } else {
-      return `Ieškau mylinčių namų! Mano vardas ${cat?.name}. Man yra ${formatAge(cat, 'LT')}, esu ${cat?.gender === 'Weiblich' ? 'katė' : 'katinas'} ir šiuo metu gyvenu prieglaudoje „Būk mano draugas“. Prašau pasidalinti mano profiliu! 🐾 Nuoroda: ${url}`;
+      return `Ieškau mylinčių namų! Mano vardas ${cat?.name}. Man yra ${formatAge(cat, 'LT')}, esu ${animalNounLt} ir šiuo metu gyvenu prieglaudoje „Būk mano draugas“. Prašau pasidalinti mano profiliu! 🐾 Nuoroda: ${url}`;
     }
   };
 
   const getShareUrl = () => {
-    return typeof window !== 'undefined' ? `${window.location.origin}/katzen/${cat?.id}` : '';
+    return typeof window !== 'undefined' ? `${window.location.origin}/tiere/${cat?.id}` : '';
   };
 
   const handleShareWhatsApp = () => {
@@ -105,7 +121,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
 
   const handleShareEmail = () => {
     const url = getShareUrl();
-    const subject = lang === 'DE' ? `Adoptionsaufruf für Katze ${cat?.name}` : `Pagalba katei ${cat?.name}`;
+    const subject = lang === 'DE' ? `Adoptionsaufruf für ${cat?.name}` : `Pagalba gyvūnui ${cat?.name}`;
     const body = getShareText();
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     if (typeof window !== 'undefined' && (window as any).mockLocationAssign) {
@@ -243,7 +259,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
       <div className="flex h-screen bg-stone-50 items-center justify-center flex-col space-y-4 p-4 text-center">
         <AlertTriangle className="w-12 h-12 text-brandpink-500" />
         <h2 className="text-xl font-bold text-stone-800">
-          {lang === 'DE' ? 'Katze nicht gefunden' : 'Katė nerasta'}
+          {lang === 'DE' ? 'Tier nicht gefunden' : 'Gyvūnas nerastas'}
         </h2>
         <p className="text-sm text-stone-600 max-w-xs">
           {lang === 'DE' 
@@ -251,7 +267,7 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
             : 'Ieškomas gyvūnas neegzistuoja arba jam jau buvo surasti namai.'}
         </p>
         <button
-          onClick={() => router.push('/katzen')}
+          onClick={() => router.push('/tiere')}
           className="mt-4 px-4 py-2 bg-brandpink-500 hover:bg-brandpink-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-md"
         >
           {lang === 'DE' ? 'Zurück zur Galerie' : 'Atgal į galeriją'}
@@ -292,8 +308,59 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
     // Increment local state to show reactivity in PWA
     setExtraDonation(prev => prev + amount);
     // Open real Swedbank / Paypal info
-    const paypalUrl = `https://www.paypal.com/donate/?business=bukmanodraugas@inbox.lt&currency_code=EUR&no_recurring=0&item_name=Spende%20fuer%20Katze%20${encodeURIComponent(cat.name)}%20(Betrag%20${amount}EUR)`;
+    const paypalUrl = `https://www.paypal.com/donate/?business=bukmanodraugas@inbox.lt&currency_code=EUR&no_recurring=0&item_name=Spende%20fuer%20${encodeURIComponent(cat?.name || 'Tier')}%20(Betrag%20${amount}EUR)`;
     window.open(paypalUrl, '_blank');
+  };
+
+  const scrollToForm = () => {
+    const el = document.getElementById('inquiry-form');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSubmitInquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName || !formEmail || !formPhone) {
+      setFormStatus('error');
+      setFormErrorMsg(lang === 'DE' ? 'Bitte fülle Name, E-Mail-Adresse und Telefonnummer aus.' : 'Prašome užpildyti vardą, el. paštą ir telefono numerį.');
+      return;
+    }
+
+    try {
+      const detailedMessage = `Wohnsituation: ${formLiving} | Balkon/Garten: ${formBalcony} | Vermieter-Erlaubnis: ${formLandlord} | Andere Tiere: ${formOtherPets || 'Keine'} | Erfahrung: ${formExperience} | Nachricht: ${formMessage}`;
+      await db.inquiries.add({
+        animal_id: catId,
+        name: formName,
+        email: formEmail,
+        phone: formPhone,
+        message: detailedMessage,
+        language: lang,
+        status: 'neu',
+        created_at: new Date().toISOString(),
+        sync_pending: 1,
+        updated_at: new Date().toISOString()
+      });
+
+      setFormStatus('success');
+      // Clear form
+      setFormName('');
+      setFormEmail('');
+      setFormPhone('');
+      setFormOtherPets('');
+      setFormMessage('');
+
+      await logger.info('Inquiry', `Neue Adoptionsanfrage für ${cat?.name} (ID: ${cat?.id}) von ${formName} gespeichert.`);
+      
+      // Trigger background sync
+      syncWithCloud().catch((err) => {
+        console.error('Inquiry sync failed:', err);
+      });
+    } catch (err) {
+      console.error('Failed to save inquiry:', err);
+      setFormStatus('error');
+      setFormErrorMsg(lang === 'DE' ? 'Datenbankfehler. Bitte versuche es erneut.' : 'Duomenų bazės klaida. Bandykite dar kartą.');
+    }
   };
 
   const ui = {
@@ -345,7 +412,37 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
       playVideo: 'Video abspielen',
       showPhoto: 'Foto anzeigen',
       noDesc: 'Keine Geschichte hinterlegt.',
-      percentFilled: '{percent}% gefüllt'
+      percentFilled: '{percent}% gefüllt',
+      // Form translation fields
+      inquiryFormTitle: 'Selbstauskunft für eine Adoption 📝',
+      inquiryFormSub: 'Bitte fülle diese Auskunft wahrheitsgemäß aus. Sie hilft unseren Pflegern, das passende Zuhause zu finden.',
+      formFullName: 'Dein Vor- und Nachname',
+      formEmail: 'Deine E-Mail-Adresse',
+      formPhone: 'Deine Telefonnummer (für Rückfragen)',
+      formLivingLabel: 'Wohnsituation',
+      formLivingApt: 'Wohnung (zur Miete)',
+      formLivingHouse: 'Haus (Miete/Eigentum)',
+      formLivingOwnApt: 'Wohnung (Eigentum)',
+      formBalconyLabel: 'Balkon / Garten',
+      formBalconyNo: 'Kein Balkon / Kein Garten',
+      formBalconyUnsecured: 'Balkon vorhanden (ungesichert)',
+      formBalconySecured: 'Balkon vorhanden (gesichert)',
+      formBalconyGarden: 'Garten vorhanden (Freigang möglich)',
+      formLandlordLabel: 'Erlaubnis des Vermieters vorhanden?',
+      formLandlordYes: 'Ja, schriftliche Erlaubnis liegt vor',
+      formLandlordNo: 'Nein / Noch ungeklärt',
+      formLandlordOwn: 'Nicht erforderlich (Eigenheim)',
+      formOtherPetsLabel: 'Gibt es andere Tiere im Haushalt?',
+      formOtherPetsPlaceholder: 'z.B. Hund, 2 Katzen, keine...',
+      formExperienceLabel: 'Deine Tierschutzerfahrung',
+      formExperienceBeginner: 'Ersttierhalter / Keine Vorerfahrung',
+      formExperienceMedium: 'Etwas Vorerfahrung',
+      formExperienceExpert: 'Sehr erfahren im Umgang mit Tieren',
+      formMessageLabel: 'Persönliche Nachricht / Anmerkungen',
+      formMessagePlaceholder: 'Erzähl uns kurz, warum du dich für dieses Tier interessierst...',
+      formSubmitBtn: 'Adoptionsanfrage absenden 💌',
+      formSuccess: 'Vielen Dank! Deine Selbstauskunft wurde lokal gespeichert und wird mit dem Tierheim synchronisiert. Wir melden uns bei dir. 🎉',
+      formError: 'Fehler:'
     },
     LT: {
       backBtn: 'Atgal į galeriją',
@@ -395,7 +492,37 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
       playVideo: 'Leisti vaizdo įrašą',
       showPhoto: 'Rodyti nuotrauką',
       noDesc: 'Istorija nepateikta.',
-      percentFilled: 'užpildyta {percent}%'
+      percentFilled: 'užpildyta {percent}%',
+      // Form translation fields
+      inquiryFormTitle: 'Klausimynas dėl įvaikinimo (Savanorių anketa) 📝',
+      inquiryFormSub: 'Prašome užpildyti šią anketą nuoširdžiai. Tai padeda mūsų savanoriams parinkti tinkamiausius namus.',
+      formFullName: 'Tavo vardas ir pavardė',
+      formEmail: 'Tavo el. paštas',
+      formPhone: 'Telefono numeris (susisiekimui)',
+      formLivingLabel: 'Gyvenamoji vieta',
+      formLivingApt: 'Butas (nuomojamas)',
+      formLivingHouse: 'Namas (nuoma/nuosavas)',
+      formLivingOwnApt: 'Butas (nuosavas)',
+      formBalconyLabel: 'Balkonas / Kiemas',
+      formBalconyNo: 'Nėra balkono / Nėra kiemo',
+      formBalconyUnsecured: 'Yra balkonas (neįstiklintas/neapsaugotas)',
+      formBalconySecured: 'Yra balkonas (apsaugotas tinklu)',
+      formBalconyGarden: 'Yra kiemas (galimas išėjimas į lauką)',
+      formLandlordLabel: 'Ar turite nuomotojo leidimą gyvūnui?',
+      formLandlordYes: 'Taip, turiu raštišką leidimą',
+      formLandlordNo: 'Ne / Dar neaišku',
+      formLandlordOwn: 'Nereikia (nuosavas būstas)',
+      formOtherPetsLabel: 'Ar namuose auginate kitų gyvūnų?',
+      formOtherPetsPlaceholder: 'pvz., šuo, 2 katės, nėra...',
+      formExperienceLabel: 'Tavo patirtis su gyvūnais',
+      formExperienceBeginner: 'Pirmasis gyvūnas / Neturiu patirties',
+      formExperienceMedium: 'Turiu šiek tiek patirties',
+      formExperienceExpert: 'Labai patyręs/usi gyvūnų augintojas/a',
+      formMessageLabel: 'Asmeninė žinutė / Pastabos',
+      formMessagePlaceholder: 'Trumpai papasakokite, kodėl domitės būtent šiuo gyvūnu...',
+      formSubmitBtn: 'Siųsti įvaikinimo užklausą 💌',
+      formSuccess: 'Ačiū! Tavo anketa sėkmingai išsaugota ir bus perduota prieglaudai. Susisieksime su tavimi. 🎉',
+      formError: 'Klaida:'
     }
   }[lang];
 
@@ -1006,31 +1133,206 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
                 <span className="text-[9px] text-stone-500 mt-0.5">{lang === 'DE' ? 'Ausreise' : 'Kastracija'}</span>
               </button>
             </div>
-
-            {/* Direct Bank Info Details */}
-            <div className="border-t border-stone-150 pt-3 space-y-2 text-[10px]">
-              <span className="font-bold text-stone-500 block uppercase tracking-wider">{ui.bankDetailsTitle}</span>
-              
-              <div className="grid grid-cols-2 gap-1.5 font-mono text-stone-600 bg-stone-50 p-2.5 rounded-lg border border-stone-200">
-                <div>
-                  <span className="text-[9px] text-stone-500 block uppercase">{ui.bankName}</span>
-                  <span className="text-stone-700">{shelter?.bankName || 'Swedbank'}</span>
-                </div>
-                <div>
-                  <span className="text-[9px] text-stone-500 block uppercase">{ui.bic}</span>
-                  <span className="text-stone-700">{shelter?.bic || 'HABALT22'}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-[9px] text-stone-500 block uppercase">{ui.iban}</span>
-                  <span className="text-stone-900 select-all text-xs">{shelter?.iban || 'LT97 7300 0101 2750 0736'}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-[9px] text-stone-500 block uppercase">{ui.purpose}</span>
-                  <span className="text-stone-700">{shelter?.donationPurposeDe || 'Donate Germany'} / Katze {cat.name}</span>
+            {APP_CONFIG.features.enableSponsorship && (
+              <div className="border-t border-stone-150 pt-3 space-y-2 text-[10px]">
+                <span className="font-bold text-stone-500 block uppercase tracking-wider">{ui.bankDetailsTitle}</span>
+                
+                <div className="grid grid-cols-2 gap-1.5 font-mono text-stone-600 bg-stone-50 p-2.5 rounded-lg border border-stone-200">
+                  <div>
+                    <span className="text-[9px] text-stone-500 block uppercase">{ui.bankName}</span>
+                    <span className="text-stone-700">{shelter?.bankName || 'Swedbank'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-stone-500 block uppercase">{ui.bic}</span>
+                    <span className="text-stone-700">{shelter?.bic || 'HABALT22'}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[9px] text-stone-500 block uppercase">{ui.iban}</span>
+                    <span className="text-stone-900 select-all text-xs">{shelter?.iban || 'LT97 7300 0101 2750 0736'}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[9px] text-stone-500 block uppercase">{ui.purpose}</span>
+                    <span className="text-stone-700">{shelter?.donationPurposeDe || 'Donate Germany'} / {cat.type || 'Tier'} {cat.name}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
+
+          {/* Selbstauskunft Form */}
+          {!APP_CONFIG.features.enableInteractiveInquiryForm ? (
+            <div className="bg-white border border-stone-200 p-5 rounded-2xl space-y-4 shadow-sm">
+              <div>
+                <h3 className="text-sm font-bold text-stone-900">
+                  {lang === 'DE' ? 'Direkte Adoptionsanfrage ✉️' : 'Tiesioginė užklausa ✉️'}
+                </h3>
+                <p className="text-[10px] text-stone-500 mt-0.5">
+                  {lang === 'DE' 
+                    ? 'Kontaktiere uns direkt per E-Mail, um dich für dieses Tier zu bewerben.' 
+                    : 'Susisiekite su mumis el. paštu ir pateikite užklausą dėl šio gyvūno.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleInquiryEmail}
+                className="w-full py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <Mail className="w-4 h-4" />
+                <span>{lang === 'DE' ? 'E-Mail Anfrage senden 💌' : 'Siųsti užklausą el. paštu 💌'}</span>
+              </button>
+            </div>
+          ) : (
+            <div id="inquiry-form" className="bg-white border border-stone-200 p-5 rounded-2xl space-y-4 shadow-sm scroll-mt-20">
+              <div>
+                <h3 className="text-sm font-bold text-stone-900">{ui.inquiryFormTitle}</h3>
+                <p className="text-[10px] text-stone-500 mt-0.5">{ui.inquiryFormSub}</p>
+              </div>
+
+              {formStatus === 'success' && (
+                <div className="p-3 bg-emerald-50 border border-emerald-250 rounded-xl text-emerald-800 text-xs font-medium flex items-center space-x-2">
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                  <span>{ui.formSuccess}</span>
+                </div>
+              )}
+
+              {formStatus === 'error' && (
+                <div className="p-3 bg-rose-50 border border-rose-250 rounded-xl text-rose-800 text-xs font-medium flex items-center space-x-2">
+                  <X className="w-4 h-4 flex-shrink-0" />
+                  <span>{ui.formError} {formErrorMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmitInquiry} className="space-y-3">
+                <div>
+                  <label htmlFor="form-fullname" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formFullName}</label>
+                  <input
+                    id="form-fullname"
+                    type="text"
+                    required
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label htmlFor="form-email" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formEmail}</label>
+                    <input
+                      id="form-email"
+                      type="email"
+                      required
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="form-phone" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formPhone}</label>
+                    <input
+                      id="form-phone"
+                      type="tel"
+                      required
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label htmlFor="form-living" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formLivingLabel}</label>
+                    <select
+                      id="form-living"
+                      value={formLiving}
+                      onChange={(e) => setFormLiving(e.target.value)}
+                      className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    >
+                      <option value="Apartment">{ui.formLivingApt}</option>
+                      <option value="Haus">{ui.formLivingHouse}</option>
+                      <option value="Eigentumswohnung">{ui.formLivingOwnApt}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="form-balcony" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formBalconyLabel}</label>
+                    <select
+                      id="form-balcony"
+                      value={formBalcony}
+                      onChange={(e) => setFormBalcony(e.target.value)}
+                      className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    >
+                      <option value="Nein">{ui.formBalconyNo}</option>
+                      <option value="Balkon (ungesichert)">{ui.formBalconyUnsecured}</option>
+                      <option value="Balkon (gesichert)">{ui.formBalconySecured}</option>
+                      <option value="Garten (Freigang)">{ui.formBalconyGarden}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label htmlFor="form-landlord" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formLandlordLabel}</label>
+                    <select
+                      id="form-landlord"
+                      value={formLandlord}
+                      onChange={(e) => setFormLandlord(e.target.value)}
+                      className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    >
+                      <option value="Ja">{ui.formLandlordYes}</option>
+                      <option value="Nein / Ungeklärt">{ui.formLandlordNo}</option>
+                      <option value="Nicht erforderlich">{ui.formLandlordOwn}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="form-experience" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formExperienceLabel}</label>
+                    <select
+                      id="form-experience"
+                      value={formExperience}
+                      onChange={(e) => setFormExperience(e.target.value)}
+                      className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                    >
+                      <option value="Einsteiger">{ui.formExperienceBeginner}</option>
+                      <option value="Mittel">{ui.formExperienceMedium}</option>
+                      <option value="Erfahren">{ui.formExperienceExpert}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="form-otherpets" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formOtherPetsLabel}</label>
+                  <input
+                    id="form-otherpets"
+                    type="text"
+                    placeholder={ui.formOtherPetsPlaceholder}
+                    value={formOtherPets}
+                    onChange={(e) => setFormOtherPets(e.target.value)}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="form-message" className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1 ml-1">{ui.formMessageLabel}</label>
+                  <textarea
+                    id="form-message"
+                    placeholder={ui.formMessagePlaceholder}
+                    value={formMessage}
+                    rows={3}
+                    onChange={(e) => setFormMessage(e.target.value)}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-850 focus:outline-none focus:border-brandpink-500 resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-brandpink-500 hover:bg-brandpink-600 text-white font-extrabold rounded-xl shadow-md active:scale-98 transition-all text-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{ui.formSubmitBtn}</span>
+                </button>
+              </form>
+            </div>
+          )}
 
         </div>
 
@@ -1045,8 +1347,8 @@ export default function CatDetailPage({ params }: { params: Promise<{ id: string
           </button>
 
           <button
-            onClick={handleInquiryEmail}
-            className="flex-1 flex items-center justify-center space-x-2 py-4 bg-brandpink-500 hover:bg-brandpink-600 text-white font-extrabold rounded-xl shadow-md active:scale-98 transition-all text-xs"
+            onClick={APP_CONFIG.features.enableInteractiveInquiryForm ? scrollToForm : handleInquiryEmail}
+            className="flex-1 flex items-center justify-center space-x-2 py-4 bg-brandpink-500 hover:bg-brandpink-600 text-white font-extrabold rounded-xl shadow-md active:scale-98 transition-all text-xs cursor-pointer"
           >
             <Send className="w-4.5 h-4.5" />
             <span>{ui.inquiryCTA}</span>

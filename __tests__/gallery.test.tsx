@@ -4,12 +4,12 @@ jest.mock('next/navigation', () => ({
     push: jest.fn(),
     prefetch: () => null,
   }),
-  usePathname: () => '/katzen',
+  usePathname: () => '/tiere',
 }));
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import PublicGalleryPage from '@/app/katzen/page';
-import CatDetailPage from '@/app/katzen/[id]/page';
+import PublicGalleryPage from '@/app/tiere/page';
+import CatDetailPage from '@/app/tiere/[id]/page';
 
 const createResolvedPromise = (value: any) => {
   const p = Promise.resolve(value);
@@ -106,6 +106,9 @@ jest.mock('@/lib/db', () => ({
     customBlocks: {
       toArray: () => Promise.resolve([]),
     },
+    inquiries: {
+      add: () => Promise.resolve(1),
+    },
   },
   formatAge: (cat: any, lang: string) => {
     if (cat.age_mode === 'birthyear') return `Geb. ${cat.birth_year}`;
@@ -192,7 +195,7 @@ describe('CatDetailPage Invalid IDs and Email Triggering', () => {
     jest.clearAllMocks();
   });
 
-  test('Happy Path: zeigt die Details einer existierenden Katze und öffnet Mailto-Formular', async () => {
+  test('Happy Path: zeigt die Details einer existierenden Katze und ermöglicht Selbstauskunft-Absendung', async () => {
     const paramsPromise = createResolvedPromise({ id: '1' });
     render(<CatDetailPage params={paramsPromise} />);
 
@@ -202,23 +205,32 @@ describe('CatDetailPage Invalid IDs and Email Triggering', () => {
       expect(screen.getByText('Weiblich')).toBeInTheDocument();
     });
 
-    // Click Adopt inquiry button
-    const inquireBtn = screen.getByRole('button', { name: /Adoption/i });
-    fireEvent.click(inquireBtn);
+    // Fill the self-disclosure form using test-ids or labels
+    const nameInput = screen.getByLabelText(/Name/i);
+    const emailInput = screen.getByLabelText(/E-Mail/i);
+    const phoneInput = screen.getByLabelText(/Telefon/i);
 
-    // Verify it opened mailto link with correct pre-filled screening questionnaire
-    expect((window as any).mockLocationAssign).toHaveBeenCalledWith(expect.stringContaining('mailto:Tierheimbmg@gmail.com'));
-    expect((window as any).mockLocationAssign).toHaveBeenCalledWith(expect.stringContaining('Adoptionsanfrage'));
-    expect((window as any).mockLocationAssign).toHaveBeenCalledWith(expect.stringContaining('Wohnungsgr'));
+    fireEvent.change(nameInput, { target: { value: 'Max Mustermann' } });
+    fireEvent.change(emailInput, { target: { value: 'max@mustermann.de' } });
+    fireEvent.change(phoneInput, { target: { value: '012345678' } });
+
+    // Click submit button
+    const submitBtn = screen.getByRole('button', { name: /absenden/i });
+    fireEvent.click(submitBtn);
+
+    // Verify it shows success message
+    await waitFor(() => {
+      expect(screen.getByText(/Vielen Dank! Deine Selbstauskunft wurde lokal gespeichert/i)).toBeInTheDocument();
+    });
   });
 
   test('Security/Robustness Path: Ungültige IDs (NaN, SQLi) führen zu einer sauberen Fehlermeldung statt Absturz', async () => {
     const paramsPromiseNaN = createResolvedPromise({ id: 'unsafe-string-id' });
     render(<CatDetailPage params={paramsPromiseNaN} />);
 
-    // App should not crash. It should resolve loading and render the friendly "Katze nicht gefunden" screen
+    // App should not crash. It should resolve loading and render the friendly "Tier nicht gefunden" screen
     await waitFor(() => {
-      expect(screen.getByText('Katze nicht gefunden')).toBeInTheDocument();
+      expect(screen.getByText('Tier nicht gefunden')).toBeInTheDocument();
       expect(screen.getByText(/Das gesuchte Tier existiert leider nicht/)).toBeInTheDocument();
     });
   });
@@ -228,7 +240,7 @@ describe('CatDetailPage Invalid IDs and Email Triggering', () => {
     render(<CatDetailPage params={paramsPromise404} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Katze nicht gefunden')).toBeInTheDocument();
+      expect(screen.getByText('Tier nicht gefunden')).toBeInTheDocument();
     });
   });
 

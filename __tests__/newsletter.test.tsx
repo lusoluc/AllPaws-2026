@@ -40,6 +40,9 @@ jest.mock('@/lib/db', () => ({
     customBlocks: {
       toArray: () => [],
     },
+    animals: {
+      toArray: () => [],
+    },
     subscribers: {
       where: (field: string) => ({
         equalsIgnoreCase: (email: string) => ({

@@ -8,6 +8,7 @@ import PublicHeader from '@/components/PublicHeader';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { syncWithCloud } from '@/lib/syncManager';
+import { APP_CONFIG } from '@/lib/appConfig';
 
 export default function HomePage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
@@ -34,27 +35,27 @@ export default function HomePage() {
     DE: {
       heroTag: '🐾 Ein privates Herzensprojekt von Tierfreunden',
       title: 'Weil jede Pfote ein weiches Körbchen verdient',
-      subtitle: 'Hinter dieser App steckt kein großes Unternehmen. Wir sind ein kleines Team aus ehrenamtlichen Helfern und Katzenliebhabern, die jede freie Minute und eigenes Geld spenden. Wir wollen der Tierrettung in Litauen helfen, Zeit zu sparen – Zeit, die zu 100 % den Tieren zugutekommt. Finde heute deinen neuen treuen Begleiter oder unterstütze unsere Rettungsarbeit!',
+      subtitle: 'Hinter dieser App steckt kein großes Unternehmen. Wir sind ein kleines Team aus ehrenamtlichen Helfern und Tierliebhabern, die jede freie Minute und eigenes Geld spenden. Wir wollen der Tierrettung in Litauen helfen, Zeit zu sparen – Zeit, die zu 100 % den Tieren zugutekommt. Finde heute deinen neuen treuen Begleiter oder unterstütze unsere Rettungsarbeit!',
       ctaGalleryTitle: 'Unsere Schützlinge',
-      ctaGalleryDesc: 'Triff unsere liebenswerten Samtpfoten, die sehnsüchtig auf eine zweite Chance und ein liebevolles Zuhause warten.',
+      ctaGalleryDesc: 'Triff unsere liebenswerten Fellnasen, die sehnsüchtig auf eine zweite Chance und ein liebevolles Zuhause warten.',
       ctaGalleryBtn: 'Werd Teil der Rettungscrew',
       ctaAboutTitle: 'Über uns & Spenden',
       ctaAboutDesc: 'Wir stoßen oft an unsere körperlichen und finanziellen Grenzen. Erfahre mehr über uns und wie jeder Cent direkt den Tieren hilft.',
       ctaAboutBtn: 'Unterstütze unsere Herzensarbeit',
-      ctaGuideTitle: 'Katzen-Ratgeber & FAQ',
-      ctaGuideDesc: 'Ehrliche, praktische Ratschläge für ein harmonisches Zusammenleben, von der Eingewöhnung bis zum Spielverhalten.',
+      ctaGuideTitle: 'Ratgeber & FAQ',
+      ctaGuideDesc: 'Ehrliche, praktische Ratschläge für ein harmonisches Zusammenleben, von der Eingewöhnung bis zur Pflege.',
       ctaGuideBtn: 'Ratgeber lesen',
       memberLogin: 'Intern',
       footerText: '© 2026 VšĮ "Būk mano draugas". Kaukėnų g. 9, Glaudėnai, Litauen.',
       regCode: 'Registrierungscode',
       visionTitle: 'Unsere Vision: Ein liebevolles Zuhause',
       realityTitle: 'Die Realität vor Ort: Leben im Käfig',
-      realityNote: 'Aufgrund extremer räumlicher Notlagen müssen viele unserer 600 geretteten Katzen vorübergehend in Käfigen leben. Unterstütze uns durch eine Adoption oder Spende, um ihnen den Weg in eine bessere Zukunft zu ermöglichen.',
-      guideLink: 'Katzen-Ratgeber',
+      realityNote: 'Aufgrund extremer räumlicher Notlagen müssen viele unserer 600 geretteten Tiere vorübergehend in Käfigen leben. Unterstütze uns durch eine Adoption oder Spende, um ihnen den Weg in eine bessere Zukunft zu ermöglichen.',
+      guideLink: 'Tier-Ratgeber',
       storyTitle: 'Aus dem Tagebuch unserer Helfer: Mimis große Reise 🐾',
       storyText: 'Mimi wurde klitschnass und zitternd vor Kälte in einem Graben bei Klaipėda gefunden. Sie wog kaum ein Kilo und hatte die Hoffnung schon aufgegeben. In unserem beheizten Rettungs-Container fand sie Schutz, Futter und die nötige Liebe, um wieder zu vertrauen. Heute ist Mimi gesund, verspielt und sucht Menschen, die ihr ein echtes Zuhause schenken wollen. Es sind Geschichten wie diese, für die wir alles geben.',
       newsletterTitle: 'Bleib auf dem Laufenden 🐾',
-      newsletterDesc: 'Du willst wissen, wenn neue Fellnasen ankommen, wann die nächste Hilfsaktion startet oder einfach mal ehrliche Tipps aus dem Katzen-Alltag bekommen? Dann trag dich ein – wir melden uns nur, wenn es wirklich was zu erzählen gibt.',
+      newsletterDesc: 'Du willst wissen, wenn neue Fellnasen ankommen, wann die nächste Hilfsaktion startet oder einfach mal ehrliche Tipps aus dem Tierschutz-Alltag bekommen? Dann trag dich ein – wir melden uns nur, wenn es wirklich was zu erzählen gibt.',
       newsletterEmail: 'Deine E-Mail-Adresse',
       newsletterName: 'Dein Vorname (optional)',
       newsletterPrefAdoptions: 'Neues aus dem Heim & Tier-Adoptionen',
@@ -69,14 +70,14 @@ export default function HomePage() {
     LT: {
       heroTag: '🐾 Asmeninis gyvūnų mylėtojų širdies projektas',
       title: 'Nes kiekviena pėdutė nusipelno mylinčių namų',
-      subtitle: 'Šią programėlę sukūrė ne įmonė, o nedidelė savanorių ir kačių mylėtojų komanda, aukojanti savo laisvą laiką ir asmenines lėšas. Mūsų tikslas – palengvinti prieglaudos darbą Lietuvoje, kad daugiau laiko liktų kačių priežiūrai ir gelbėjimui. Raskite savo naują šeimos narį arba prisidėkite prie mūsų veiklos!',
+      subtitle: 'Šią programėlę sukūrė ne įmonė, o nedidelė savanorių ir gyvūnų mylėtojų komanda, aukojanti savo laisvą laiką ir asmenines lėšas. Mūsų tikslas – palengvinti prieglaudos darbą Lietuvoje, kad daugiau laiko liktų gyvūnų priežiūrai ir gelbėjimui. Raskite savo naują šeimos narį arba prisidėkite prie mūsų veiklos!',
       ctaGalleryTitle: 'Mūsų globotiniai',
-      ctaGalleryDesc: 'Susipažinkite su mūsų katėmis, kurios nekantriai ieško antrojo šanso ir šiltų bei mylinčių namų.',
+      ctaGalleryDesc: 'Susipažinkite su mūsų gyvūnais, kurie nekantriai ieško antrojo šanso ir šiltų bei mylinčių namų.',
       ctaGalleryBtn: 'Prisijunk prie gelbėtojų',
       ctaAboutTitle: 'Apie mus ir parama',
-      ctaAboutDesc: 'Mes dažnai pasiekiame savo fizinių ir finansinių galimybių ribas. Sužinokite, kaip kiekvienas centas tiesiogiai padeda katėms.',
+      ctaAboutDesc: 'Mes dažnai pasiekiame savo fizinių ir finansinių galimybių ribas. Sužinokite, kaip kiekvienas centas tiesiogiai padeda gyvūnams.',
       ctaAboutBtn: 'Paremk mūsų širdies darbą',
-      ctaGuideTitle: 'Kačių gidas ir DUK',
+      ctaGuideTitle: 'Gyvūnų gidas ir DUK',
       ctaGuideDesc: 'Nuoširdūs, praktiški patarimai darniam gyvenimui kartu – nuo pripratinimo iki elgsenos sprendimų.',
       ctaGuideBtn: 'Skaityti gidą',
       memberLogin: 'Internas',
@@ -84,12 +85,12 @@ export default function HomePage() {
       regCode: 'Įmonės kodas',
       visionTitle: 'Mūsų vizija: Mylintys namai',
       realityTitle: 'Realybė prieglaudoje: Gyvenimas narvuose',
-      realityNote: 'Dėl didelio vietos trūkumo daugelis iš 600 išgelbėtų kačių laikinai gyvena narvuose. Paremkite mus arba priglauskite katę, kad suteiktumėte joms geresnį rytojų.',
-      guideLink: 'Kačių gidas',
+      realityNote: 'Dėl didelio vietos trūkumo daugelis iš 600 išgelbėtų gyvūnų laikinai gyvena narvuose. Paremkite mus arba priglauskite gyvūną, kad suteiktumėte joms geresnį rytojų.',
+      guideLink: 'Gyvūnų gidas',
       storyTitle: 'Iš mūsų savanorių dienoraščio: Didžioji Mimi kelionė 🐾',
-      storyText: 'Mimi buvo rasta visiškai šlapia ir drebanti nuo šalčio griovyje netoli Klaipėdos. Ji svėrė vos kilogramą ir jau buvo praradusi viltį. Mūsų šildomame konteineryje ji rado prieglobstį, maistą ir meilę, kad vėl pradėtų pasitikėti. Šiandien Mimi yra sveika, žaisminga ir ieško žmonių, kurie suteiktų jai tikrus namus. Būtent dėl tokių istorijų mes aukojame kiekvieną savo laisvą minutę.',
+      storyText: 'Mimi buvo rasta visiškai šlapia ir drebanti nuo šalčio griovyje netoli Klaipėdos. Ji svėrė visai nedaug ir jau buvo praradusi viltį. Mūsų šildomame konteineryje ji rado prieglobstį, maistą ir meilę, kad vėl pradėtų pasitikėti. Šiandien Mimi yra sveika, žaisminga ir ieško žmonių, kurie suteiktų jai tikrus namus. Būtent dėl tokių istorijų mes aukojame kiekvieną savo laisvą minutę.',
       newsletterTitle: 'Būk su mumis 🐾',
-      newsletterDesc: 'Nori sužinoti, kai į prieglaudą atvyksta nauji gyventojai, kada vyks kita akcija ar tiesiog gauti patarimų apie kačių priežiūrą? Užsiregistruok – rašysime tik tada, kai tikrai bus ką papasakoti.',
+      newsletterDesc: 'Nori sužinoti, kai į prieglaudą atvyksta nauji gyventojai, kada vyks kita akcija ar tiesiog gauti patarimų apie gyvūnų priežiūrą? Užsiregistruok – rašysime tik tada, kai tikrai bus ką papasakoti.',
       newsletterEmail: 'Tavo el. paštas',
       newsletterName: 'Tavo vardas (neprivaloma)',
       newsletterPrefAdoptions: 'Naujienos iš prieglaudos ir įvaikinimas',
@@ -105,6 +106,19 @@ export default function HomePage() {
 
   const uiTexts = useLiveQuery(() => db.uiTexts.toArray());
   const customBlocks = useLiveQuery(() => db.customBlocks.toArray());
+
+  // Live Stats Queries
+  const animalsList = useLiveQuery(() => db.animals.toArray());
+  const catCount = animalsList?.filter((a) => a.type === 'Katze' && a.status_aktuell === 'zu vermitteln').length || 0;
+  const dogCount = animalsList?.filter((a) => a.type === 'Hund' && a.status_aktuell === 'zu vermitteln').length || 0;
+  const otherCount = animalsList?.filter((a) => (a.type !== 'Katze' && a.type !== 'Hund') && a.status_aktuell === 'zu vermitteln').length || 0;
+  const totalCount = animalsList?.filter(a => a.status_aktuell === 'zu vermitteln').length || 0;
+
+  const visibleCardsCount = [
+    APP_CONFIG.features.enableGallery,
+    APP_CONFIG.features.enableGuide,
+    APP_CONFIG.features.enableAboutUs
+  ].filter(Boolean).length;
   
   const ui = { ...defaultUi[lang] };
   if (uiTexts) {
@@ -143,6 +157,35 @@ export default function HomePage() {
             {ui.subtitle}
           </p>
         </div>
+
+        {/* Live Population Stats Widget */}
+        {APP_CONFIG.features.enableLiveStatsWidget && (
+          <div className="w-full max-w-2xl mx-auto px-4">
+            <div className="bg-stone-100 border border-stone-200 p-5 rounded-2xl space-y-4 shadow-sm text-center">
+              <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                {lang === 'DE' ? '📊 Aktueller Tierheimbestand (Live)' : '📊 Prieglaudos gyventojų statistika (Live)'}
+              </h3>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-inner">
+                  <span className="block text-xl font-black text-brandpink-600">{totalCount}</span>
+                  <span className="block text-[9px] font-bold text-stone-500 uppercase mt-1">{lang === 'DE' ? 'Gesamt' : 'Iš viso'}</span>
+                </div>
+                <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-inner">
+                  <span className="block text-xl font-black text-brandpink-600">{catCount}</span>
+                  <span className="block text-[9px] font-bold text-stone-500 uppercase mt-1">{lang === 'DE' ? 'Katzen' : 'Katės'}</span>
+                </div>
+                <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-inner">
+                  <span className="block text-xl font-black text-brandpink-600">{dogCount}</span>
+                  <span className="block text-[9px] font-bold text-stone-500 uppercase mt-1">{lang === 'DE' ? 'Hunde' : 'Šunys'}</span>
+                </div>
+                <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-inner">
+                  <span className="block text-xl font-black text-brandpink-600">{otherCount}</span>
+                  <span className="block text-[9px] font-bold text-stone-500 uppercase mt-1">{lang === 'DE' ? 'Andere' : 'Kiti'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Comparison Section: Vision vs Reality */}
         <div className="w-full max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6 px-4">
@@ -206,61 +249,71 @@ export default function HomePage() {
         </div>
 
         {/* CTA Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl px-4">
-          <Link 
-            href="/katzen"
-            className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-brandpink-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
-          >
-            <div className="w-12 h-12 rounded-xl bg-brandpink-50 text-brandpink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Eye className="w-6 h-6" />
-            </div>
-            <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-brandpink-600 transition-colors">
-              {ui.ctaGalleryTitle}
-            </h2>
-            <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
-              {ui.ctaGalleryDesc}
-            </p>
-            <span className="text-xs font-semibold text-brandpink-600 group-hover:underline mt-auto">
-              {ui.ctaGalleryBtn} →
-            </span>
-          </Link>
+        {visibleCardsCount > 0 && (
+          <div className={`grid grid-cols-1 ${
+            visibleCardsCount === 3 ? 'sm:grid-cols-3' : visibleCardsCount === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
+          } gap-6 w-full max-w-4xl px-4`}>
+            {APP_CONFIG.features.enableGallery && (
+              <Link 
+                href="/tiere"
+                className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-brandpink-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                <div className="w-12 h-12 rounded-xl bg-brandpink-50 text-brandpink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Eye className="w-6 h-6" />
+                </div>
+                <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-brandpink-600 transition-colors">
+                  {ui.ctaGalleryTitle}
+                </h2>
+                <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
+                  {ui.ctaGalleryDesc}
+                </p>
+                <span className="text-xs font-semibold text-brandpink-600 group-hover:underline mt-auto">
+                  {ui.ctaGalleryBtn} →
+                </span>
+              </Link>
+            )}
 
-          <Link 
-            href="/katzen-ratgeber"
-            className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-brandpink-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
-          >
-            <div className="w-12 h-12 rounded-xl bg-brandpink-50 text-brandpink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-brandpink-600 transition-colors">
-              {ui.ctaGuideTitle}
-            </h2>
-            <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
-              {ui.ctaGuideDesc}
-            </p>
-            <span className="text-xs font-semibold text-brandpink-600 group-hover:underline mt-auto">
-              {ui.ctaGuideBtn} →
-            </span>
-          </Link>
+            {APP_CONFIG.features.enableGuide && (
+              <Link 
+                href="/ratgeber"
+                className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-brandpink-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                <div className="w-12 h-12 rounded-xl bg-brandpink-50 text-brandpink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-brandpink-600 transition-colors">
+                  {ui.ctaGuideTitle}
+                </h2>
+                <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
+                  {ui.ctaGuideDesc}
+                </p>
+                <span className="text-xs font-semibold text-brandpink-600 group-hover:underline mt-auto">
+                  {ui.ctaGuideBtn} →
+                </span>
+              </Link>
+            )}
 
-          <Link 
-            href="/ueber-uns"
-            className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-emerald-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
-          >
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <HeartHandshake className="w-6 h-6" />
-            </div>
-            <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-emerald-600 transition-colors">
-              {ui.ctaAboutTitle}
-            </h2>
-            <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
-              {ui.ctaAboutDesc}
-            </p>
-            <span className="text-xs font-semibold text-emerald-600 group-hover:underline mt-auto">
-              {ui.ctaAboutBtn} →
-            </span>
-          </Link>
-        </div>
+            {APP_CONFIG.features.enableAboutUs && (
+              <Link 
+                href="/ueber-uns"
+                className="group flex flex-col items-center text-center p-6 bg-white hover:bg-stone-50 border border-stone-200 hover:border-emerald-500/60 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <HeartHandshake className="w-6 h-6" />
+                </div>
+                <h2 className="text-sm font-bold mb-2 text-stone-900 group-hover:text-emerald-600 transition-colors">
+                  {ui.ctaAboutTitle}
+                </h2>
+                <p className="text-[11px] text-stone-500 mb-4 leading-relaxed flex-1 font-light">
+                  {ui.ctaAboutDesc}
+                </p>
+                <span className="text-xs font-semibold text-emerald-600 group-hover:underline mt-auto">
+                  {ui.ctaAboutBtn} →
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Dynamic CMS Blocks */}
         {pageBlocks.length > 0 && (
@@ -302,144 +355,146 @@ export default function HomePage() {
       </main>
 
       {/* Newsletter Signup Section */}
-      <section className="bg-gradient-to-b from-stone-50 to-amber-50/30 border-t border-stone-200 px-6 py-12">
-        <div className="max-w-xl mx-auto text-center space-y-6">
-          {nlStatus === 'success' ? (
-            <div className="bg-white border border-emerald-200 rounded-2xl p-8 shadow-sm space-y-3 animate-fade-in">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-              <p className="text-sm font-semibold text-stone-800">{ui.newsletterSuccess}</p>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100/60 border border-amber-200/60 text-amber-800 text-xs font-semibold">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Newsletter</span>
+      {APP_CONFIG.features.enableNewsletter && (
+        <section className="bg-gradient-to-b from-stone-50 to-amber-50/30 border-t border-stone-200 px-6 py-12">
+          <div className="max-w-xl mx-auto text-center space-y-6">
+            {nlStatus === 'success' ? (
+              <div className="bg-white border border-emerald-200 rounded-2xl p-8 shadow-sm space-y-3 animate-fade-in">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-7 h-7" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">{ui.newsletterTitle}</h2>
-                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-light">{ui.newsletterDesc}</p>
+                <p className="text-sm font-semibold text-stone-800">{ui.newsletterSuccess}</p>
               </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100/60 border border-amber-200/60 text-amber-800 text-xs font-semibold">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Newsletter</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">{ui.newsletterTitle}</h2>
+                  <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-light">{ui.newsletterDesc}</p>
+                </div>
 
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                setNlSubmitting(true);
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(nlEmail)) {
-                  setNlStatus('invalid');
-                  setNlSubmitting(false);
-                  return;
-                }
-                try {
-                  const existing = await db.subscribers.where('email').equalsIgnoreCase(nlEmail.trim()).first();
-                  if (existing) {
-                    setNlStatus('duplicate');
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setNlSubmitting(true);
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!emailRegex.test(nlEmail)) {
+                    setNlStatus('invalid');
                     setNlSubmitting(false);
                     return;
                   }
-
-                  // Fetch user's public IP address with timeout
-                  let ipAddress = 'Unbekannt';
                   try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 1500);
-                    const ipRes = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    if (ipRes.ok) {
-                      const ipData = await ipRes.json();
-                      if (ipData && ipData.ip) {
-                        ipAddress = ipData.ip;
-                      }
+                    const existing = await db.subscribers.where('email').equalsIgnoreCase(nlEmail.trim()).first();
+                    if (existing) {
+                      setNlStatus('duplicate');
+                      setNlSubmitting(false);
+                      return;
                     }
-                  } catch (e) {
-                    console.warn('IP fetch failed or timed out:', e);
+
+                    // Fetch user's public IP address with timeout
+                    let ipAddress = 'Unbekannt';
+                    try {
+                      const controller = new AbortController();
+                      const timeoutId = setTimeout(() => controller.abort(), 1500);
+                      const ipRes = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+                      clearTimeout(timeoutId);
+                      if (ipRes.ok) {
+                        const ipData = await ipRes.json();
+                        if (ipData && ipData.ip) {
+                          ipAddress = ipData.ip;
+                        }
+                      }
+                    } catch (e) {
+                      console.warn('IP fetch failed or timed out:', e);
+                    }
+
+                     await db.subscribers.add({
+                      email: nlEmail.trim().toLowerCase(),
+                      name: nlName.trim(),
+                      created_at: new Date().toISOString(),
+                      preferences: nlPrefs.length > 0 ? nlPrefs : ['adoptions'],
+                      ip_address: ipAddress,
+                      sync_pending: 1,
+                      updated_at: new Date().toISOString(),
+                    });
+                    
+                    // Trigger background sync
+                    syncWithCloud().catch((err) => {
+                      console.error('Background sync failed after newsletter signup:', err);
+                    });
+
+                    setNlStatus('success');
+                  } catch {
+                    setNlStatus('invalid');
+                  } finally {
+                    setNlSubmitting(false);
                   }
+                }} className="max-w-md mx-auto space-y-4 text-left">
+                  <div>
+                    <input
+                      type="email"
+                      value={nlEmail}
+                      onChange={(e) => { setNlEmail(e.target.value); setNlStatus('idle'); }}
+                      placeholder={ui.newsletterEmail}
+                      required
+                      className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 focus:ring-1 focus:ring-brandpink-500 transition-all text-sm"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={nlName}
+                      onChange={(e) => setNlName(e.target.value)}
+                      placeholder={ui.newsletterName}
+                      className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 focus:ring-1 focus:ring-brandpink-500 transition-all text-sm"
+                    />
+                  </div>
 
-                   await db.subscribers.add({
-                    email: nlEmail.trim().toLowerCase(),
-                    name: nlName.trim(),
-                    created_at: new Date().toISOString(),
-                    preferences: nlPrefs.length > 0 ? nlPrefs : ['adoptions'],
-                    ip_address: ipAddress,
-                    sync_pending: 1,
-                    updated_at: new Date().toISOString(),
-                  });
-                  
-                  // Trigger background sync
-                  syncWithCloud().catch((err) => {
-                    console.error('Background sync failed after newsletter signup:', err);
-                  });
+                  {/* Topic preferences */}
+                  <div className="space-y-2">
+                    {[
+                      { key: 'adoptions', label: `🐾 ${ui.newsletterPrefAdoptions}` },
+                      { key: 'events', label: `🗓️ ${ui.newsletterPrefEvents}` },
+                      { key: 'guides', label: `🩺 ${ui.newsletterPrefGuides}` },
+                    ].map(({ key, label }) => (
+                      <label key={key} className="flex items-center space-x-3 bg-white p-2.5 rounded-lg border border-stone-200 cursor-pointer hover:border-brandpink-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={nlPrefs.includes(key)}
+                          onChange={(e) => {
+                            setNlPrefs(prev =>
+                              e.target.checked ? [...prev, key] : prev.filter(p => p !== key)
+                            );
+                          }}
+                          className="w-4 h-4 rounded border-stone-300 text-brandpink-600 focus:ring-brandpink-500"
+                        />
+                        <span className="text-xs text-stone-700 font-medium">{label}</span>
+                      </label>
+                    ))}
+                  </div>
 
-                  setNlStatus('success');
-                } catch {
-                  setNlStatus('invalid');
-                } finally {
-                  setNlSubmitting(false);
-                }
-              }} className="max-w-md mx-auto space-y-4 text-left">
-                <div>
-                  <input
-                    type="email"
-                    value={nlEmail}
-                    onChange={(e) => { setNlEmail(e.target.value); setNlStatus('idle'); }}
-                    placeholder={ui.newsletterEmail}
-                    required
-                    className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 focus:ring-1 focus:ring-brandpink-500 transition-all text-sm"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    value={nlName}
-                    onChange={(e) => setNlName(e.target.value)}
-                    placeholder={ui.newsletterName}
-                    className="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brandpink-500 focus:ring-1 focus:ring-brandpink-500 transition-all text-sm"
-                  />
-                </div>
+                  {nlStatus === 'duplicate' && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{ui.newsletterDuplicate}</p>
+                  )}
+                  {nlStatus === 'invalid' && (
+                    <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{ui.newsletterInvalid}</p>
+                  )}
 
-                {/* Topic preferences */}
-                <div className="space-y-2">
-                  {[
-                    { key: 'adoptions', label: `🐾 ${ui.newsletterPrefAdoptions}` },
-                    { key: 'events', label: `🗓️ ${ui.newsletterPrefEvents}` },
-                    { key: 'guides', label: `🩺 ${ui.newsletterPrefGuides}` },
-                  ].map(({ key, label }) => (
-                    <label key={key} className="flex items-center space-x-3 bg-white p-2.5 rounded-lg border border-stone-200 cursor-pointer hover:border-brandpink-300 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={nlPrefs.includes(key)}
-                        onChange={(e) => {
-                          setNlPrefs(prev =>
-                            e.target.checked ? [...prev, key] : prev.filter(p => p !== key)
-                          );
-                        }}
-                        className="w-4 h-4 rounded border-stone-300 text-brandpink-600 focus:ring-brandpink-500"
-                      />
-                      <span className="text-xs text-stone-700 font-medium">{label}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {nlStatus === 'duplicate' && (
-                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{ui.newsletterDuplicate}</p>
-                )}
-                {nlStatus === 'invalid' && (
-                  <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{ui.newsletterInvalid}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={nlSubmitting}
-                  className="w-full py-3.5 bg-brandpink-600 hover:bg-brandpink-500 disabled:bg-brandpink-300 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-sm"
-                >
-                  {nlSubmitting ? '...' : ui.newsletterBtn}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
-      </section>
+                  <button
+                    type="submit"
+                    disabled={nlSubmitting}
+                    className="w-full py-3.5 bg-brandpink-600 hover:bg-brandpink-500 disabled:bg-brandpink-300 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-sm"
+                  >
+                    {nlSubmitting ? '...' : ui.newsletterBtn}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="py-6 border-t border-stone-200/80 text-center text-xs text-stone-500 bg-stone-100/40">
