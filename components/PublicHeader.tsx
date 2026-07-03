@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw, AlertTriangle } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import { APP_CONFIG } from '@/lib/appConfig';
+import { syncWithCloud } from '@/lib/syncManager';
 
 interface PublicHeaderProps {
   lang: 'DE' | 'LT';
@@ -17,6 +18,13 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
   const pathname = usePathname();
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [showToast, setShowToast] = useState(false);
+
+  const handleManualSync = () => {
+    if (syncStatus === 'syncing') return;
+    syncWithCloud().catch((err) => {
+      console.error('Manual sync failed:', err);
+    });
+  };
 
   useEffect(() => {
     const handleSyncStatus = (e: Event) => {
@@ -127,16 +135,26 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
                 </span>
               )}
               {syncStatus === 'success' && (
-                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-[10px] text-emerald-700 font-semibold border border-emerald-250/65 shadow-sm">
+                <button
+                  type="button"
+                  onClick={handleManualSync}
+                  className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/70 text-[10px] text-emerald-700 font-semibold border border-emerald-250/65 shadow-sm hover:scale-105 active:scale-98 transition-all cursor-pointer"
+                  title={lang === 'DE' ? 'Synchronisierung erzwingen' : 'Sinchonizuoti dabar'}
+                >
                   <Cloud className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   <span className="hidden sm:inline-block ml-0.5">{lang === 'DE' ? 'Daten aktuell' : 'Duomenys atnaujinti'}</span>
-                </span>
+                </button>
               )}
               {syncStatus === 'error' && (
-                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 text-[10px] text-rose-700 font-semibold border border-rose-250/65 shadow-sm">
+                <button
+                  type="button"
+                  onClick={handleManualSync}
+                  className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100/70 text-[10px] text-rose-700 font-semibold border border-rose-250/65 shadow-sm hover:scale-105 active:scale-98 transition-all cursor-pointer"
+                  title={lang === 'DE' ? 'Erneut verbinden & synchronisieren' : 'Bandyti vėl prisijungti'}
+                >
                   <CloudOff className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                   <span className="hidden sm:inline-block ml-0.5">{lang === 'DE' ? 'Offline-Modus' : 'Neprisijungęs'}</span>
-                </span>
+                </button>
               )}
             </div>
           )}

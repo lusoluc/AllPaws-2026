@@ -1499,6 +1499,60 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
       const syncedVideos = videos.filter(v => v.isSynced && v.url).map(v => v.url as string);
       const localVideos = videos.filter(v => !v.isSynced).map(v => ({ name: v.name, blob: v.blob, opfsKey: v.opfsKey }));
 
+      const resolvedLocalPhotos = await Promise.all(
+        photos
+          .filter(p => p.startsWith('data:') || p.startsWith('blob:'))
+          .map(async (p, index) => {
+            let blob: Blob;
+            if (p.startsWith('blob:')) {
+              const res = await fetch(p);
+              blob = await res.blob();
+            } else {
+              blob = base64ToBlob(p);
+            }
+            return {
+              name: `photo_new_${Date.now()}_${index}.jpg`,
+              blob
+            };
+          })
+      );
+
+      const resolvedLocalPassports = await Promise.all(
+        passportPhotos
+          .filter(p => p.startsWith('data:') || p.startsWith('blob:'))
+          .map(async (p, index) => {
+            let blob: Blob;
+            if (p.startsWith('blob:')) {
+              const res = await fetch(p);
+              blob = await res.blob();
+            } else {
+              blob = base64ToBlob(p);
+            }
+            return {
+              name: `passport_new_${Date.now()}_${index}.jpg`,
+              blob
+            };
+          })
+      );
+
+      const resolvedLocalAudios = await Promise.all(
+        audioItems
+          .filter(item => !item.isSynced)
+          .map(async (item, index) => {
+            let blob: Blob;
+            if (item.url.startsWith('blob:')) {
+              const res = await fetch(item.url);
+              blob = await res.blob();
+            } else {
+              blob = base64ToBlob(item.url);
+            }
+            return {
+              name: `audio_new_${Date.now()}_${index}.wav`,
+              blob
+            };
+          })
+      );
+
       const animalData = {
         ...existingAnimal,
         name,
@@ -1590,23 +1644,14 @@ export default function EditCatPage({ params }: { params: Promise<{ id: string }
         // Update local unsynced binary files
         local_photos: [
           ...(existingAnimal.local_photos || []).filter(p => photos.includes(p.name)),
-          ...photos.filter(p => p.startsWith('data:') || p.startsWith('blob:')).map((base64, index) => ({
-            name: `photo_new_${Date.now()}_${index}.jpg`,
-            blob: base64ToBlob(base64)
-          }))
+          ...resolvedLocalPhotos
         ],
         local_passports: [
           ...(existingAnimal.local_passports || []).filter(p => passportPhotos.includes(p.name)),
-          ...passportPhotos.filter(p => p.startsWith('data:') || p.startsWith('blob:')).map((base64, index) => ({
-            name: `passport_new_${Date.now()}_${index}.jpg`,
-            blob: base64ToBlob(base64)
-          }))
+          ...resolvedLocalPassports
         ],
         local_videos: localVideos,
-        local_audios: audioItems.filter(item => !item.isSynced).map((item, index) => ({
-          name: `audio_new_${Date.now()}_${index}.wav`,
-          blob: base64ToBlob(item.url)
-        })),
+        local_audios: resolvedLocalAudios,
 
         sync_pending: 1,
         media_pending: (photos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || passportPhotos.some(p => p.startsWith('data:') || p.startsWith('blob:')) || localVideos.length > 0 || audioItems.some(item => !item.isSynced)) ? 1 : 0,

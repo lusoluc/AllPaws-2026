@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bmd-cache-1783061611996';
+const CACHE_NAME = 'bmd-cache-1783071727470';
 const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/login',
