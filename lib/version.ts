@@ -1,2 +1,2 @@
 // Automatically generated version file
-export const APP_VERSION = '0.1.0-build-1783071727470';
+export const APP_VERSION = '0.1.0-build-1784739750734';

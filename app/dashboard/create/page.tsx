@@ -32,7 +32,9 @@ import {
   CloudOff,
   HelpCircle,
   Plus,
-  Globe
+  Globe,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { appendAudioBlobs } from '@/lib/audioStitcher';
 
@@ -286,6 +288,32 @@ export default function CreateCatPage() {
       }
     });
   }
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+    } catch (err) {
+      console.error('Download failed via fetch, fallback link:', err);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
 
   // Form State
   const [name, setName] = useState('');
@@ -1309,6 +1337,8 @@ export default function CreateCatPage() {
   // Submit Form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setAlertMessage(null);
 
     if (!name.trim()) {
@@ -1320,7 +1350,71 @@ export default function CreateCatPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
+      // Deduplication check: check if an animal with exact same name was created in the last 10 seconds
+      const tenSecAgo = new Date(Date.now() - 10000).toISOString();
+      const duplicateCheck = await db.animals
+        .where('name')
+        .equals(name.trim())
+        .filter(a => a.created_at >= tenSecAgo)
+        .first();
+
+      if (duplicateCheck) {
+        console.warn('Duplicate creation blocked for recent profile:', name.trim());
+        router.push('/dashboard');
+        return;
+      }
+
+      const resolvedLocalPhotos = await Promise.all(
+        photos.map(async (p, index) => {
+          let blob: Blob;
+          try {
+            const res = await fetch(p);
+            blob = await res.blob();
+          } catch (e) {
+            blob = base64ToBlob(p);
+          }
+          return {
+            name: `photo_${index}.jpg`,
+            blob
+          };
+        })
+      );
+
+      const resolvedLocalPassports = await Promise.all(
+        passportPhotos.map(async (p, index) => {
+          let blob: Blob;
+          try {
+            const res = await fetch(p);
+            blob = await res.blob();
+          } catch (e) {
+            blob = base64ToBlob(p);
+          }
+          return {
+            name: `passport_${index}.jpg`,
+            blob
+          };
+        })
+      );
+
+      const resolvedLocalAudios = await Promise.all(
+        audioItems.map(async (item, index) => {
+          let blob: Blob;
+          try {
+            const res = await fetch(item.url);
+            blob = await res.blob();
+          } catch (e) {
+            blob = base64ToBlob(item.url);
+          }
+          return {
+            name: `audio_note_${index}.wav`,
+            blob
+          };
+        })
+      );
+
       const animalData = {
         name,
         created_at: new Date().toISOString(),
@@ -1411,23 +1505,14 @@ export default function CreateCatPage() {
         audio_urls: [],
 
         // Store binary media files locally for background sync upload
-        local_photos: photos.map((base64, index) => ({
-          name: `photo_${index}.jpg`,
-          blob: base64ToBlob(base64)
-        })),
-        local_passports: passportPhotos.map((base64, index) => ({
-          name: `passport_${index}.jpg`,
-          blob: base64ToBlob(base64)
-        })),
+        local_photos: resolvedLocalPhotos,
+        local_passports: resolvedLocalPassports,
         local_videos: videos.filter(v => !v.isSynced).map((vid) => ({
           name: vid.name,
           blob: vid.blob,
           opfsKey: vid.opfsKey
         })),
-        local_audios: audioItems.map((item, index) => ({
-          name: `audio_note_${index}.wav`,
-          blob: base64ToBlob(item.url)
-        })),
+        local_audios: resolvedLocalAudios,
 
         sync_pending: 1,
         media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || audioItems.length > 0) ? 1 : 0,
@@ -1457,6 +1542,8 @@ export default function CreateCatPage() {
         type: 'error',
         text: lang === 'DE' ? 'Fehler beim Speichern in der lokalen Datenbank.' : 'Klaida išsaugant vietinėje duomenų bazėje.'
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -2762,13 +2849,24 @@ export default function CreateCatPage() {
                           <CloudOff className="w-2.5 h-2.5 text-amber-500" />
                           <span>{ui.localBadge}</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => deletePhoto(index)}
-                          className="absolute top-1 right-1 p-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <div className="absolute top-1 right-1 flex space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => downloadImage(base64, `foto_${name || 'tier'}_${index + 1}.jpg`)}
+                            className="p-1 bg-stone-900/80 hover:bg-stone-900 text-white rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center"
+                            title={lang === 'DE' ? 'Foto herunterladen' : 'Atsisiųsti nuotrauką'}
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deletePhoto(index)}
+                            className="p-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md transition-colors flex items-center justify-center"
+                            title={lang === 'DE' ? 'Löschen' : 'Ištrinti'}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -3046,15 +3144,24 @@ export default function CreateCatPage() {
             </button>
             <button
               type="submit"
-              disabled={!!compressingVideoName}
+              disabled={isSubmitting || !!compressingVideoName}
               className="flex-1 flex items-center justify-center space-x-1.5 py-3.5 bg-brandpink-600 hover:bg-brandpink-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brandpink-900/10 active:scale-98 transition-all disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              <span>
-                {isOnline 
-                  ? (lang === 'DE' ? 'Speichern' : 'Išsaugoti') 
-                  : (lang === 'DE' ? 'Lokal speichern' : 'Išsaugoti lokaliai')}
-              </span>
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>{ui.saving}</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>
+                    {isOnline 
+                      ? (lang === 'DE' ? 'Speichern' : 'Išsaugoti') 
+                      : (lang === 'DE' ? 'Lokal speichern' : 'Išsaugoti lokaliai')}
+                  </span>
+                </>
+              )}
             </button>
           </div>
 
