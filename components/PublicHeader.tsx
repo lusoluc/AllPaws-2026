@@ -24,6 +24,17 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
     syncWithCloud().catch((err) => {
       console.error('Manual sync failed:', err);
     });
+
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((reg) => {
+          reg.update().catch((e) => console.error('SW update failed:', e));
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }
   };
 
   useEffect(() => {

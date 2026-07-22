@@ -1504,22 +1504,35 @@ export default function CreateCatPage() {
         audio_draft_url: audioItems.length > 0 ? JSON.stringify(audioItems.map(item => item.url)) : undefined,
         audio_urls: [],
 
-        // Store binary media files locally for background sync upload
-        local_photos: resolvedLocalPhotos,
-        local_passports: resolvedLocalPassports,
+        // Store binary media files locally for background sync upload (filtered for valid Blobs)
+        local_photos: (resolvedLocalPhotos || []).filter(p => p && p.blob && p.blob instanceof Blob),
+        local_passports: (resolvedLocalPassports || []).filter(p => p && p.blob && p.blob instanceof Blob),
         local_videos: videos.filter(v => !v.isSynced).map((vid) => ({
           name: vid.name,
           blob: vid.blob,
           opfsKey: vid.opfsKey
         })),
-        local_audios: resolvedLocalAudios,
+        local_audios: (resolvedLocalAudios || []).filter(a => a && a.blob && a.blob instanceof Blob),
 
         sync_pending: 1,
         media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || audioItems.length > 0) ? 1 : 0,
         updated_at: new Date().toISOString()
       };
 
-      await db.animals.add(animalData);
+      try {
+        await db.animals.add(animalData);
+      } catch (dbErr) {
+        console.error('Primary Dexie add failed, attempting fallback without local blobs:', dbErr);
+        await logger.warn('AnimalCreation', `Primary IndexedDB save failed, falling back to clean data without blobs for: ${animalData.name}`);
+        const fallbackData = {
+          ...animalData,
+          local_photos: undefined,
+          local_passports: undefined,
+          local_audios: undefined
+        };
+        await db.animals.add(fallbackData);
+      }
+
       await logger.info('AnimalCreation', `Erfolgreich ein neues Tier registriert: ${animalData.name} (${animalData.type})`);
       
       // Trigger cloud synchronization in the background
