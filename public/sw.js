@@ -1,10 +1,10 @@
-const CACHE_NAME = 'bmd-cache-1784739750734';
+const CACHE_NAME = 'bmd-cache-1784757933104';
 const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/login',
   '/dashboard',
   '/dashboard/create',
-  '/katzen'
+  '/tiere'
 ];
 
 self.addEventListener('install', (event) => {
