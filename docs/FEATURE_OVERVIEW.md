@@ -29,6 +29,8 @@ AllPaws-2026 is equipped with features built specifically to make shelter work s
     Allows non-technical volunteers to create general pages, update the shelter history, change bank information, and maintain FAQ sections directly from the portal without touching code.
 11. **Integrated Donations & Cost Transparency**
     Provides simple, prominent donation options (customizable Bank IBAN/BIC transfers and PayPal) alongside an emotional cost breakdown table to show supporters exactly how their donations help.
+12. **Smart Animal Intake & European Registry Ecosystem**
+    Provides 3-second HID Bluetooth RFID microchip scanning (ISO 11784 15-digit), automatic lookup across 30+ European databases (TASSO, FINDFIX, GAR Lithuania, Europetnet), auto-indexing unfound microchips with TASSO/Europetnet, 1-click rescue GPS geo-tagging, non-blocking 4-second timeout resilience (`notChecked`), top-positioned registry contact card, and a privacy-compliant finder mode on `/notfall`.
 
 ---
 
@@ -58,6 +60,8 @@ AllPaws-2026 wurde speziell dafür entwickelt, die tägliche Arbeit im Tierheim 
     Ermöglicht es Helfern ohne IT-Kenntnisse, allgemeine Infoseiten zu erstellen, Texte zur Tierheim-Geschichte zu bearbeiten, Kontodaten zu verwalten und FAQs zu pflegen.
 11. **Integrierte Spendenmöglichkeiten & Kostentransparenz**
     Bietet direkte, prominente Spendenoptionen (anpassbare Bankdaten für IBAN/BIC-Überweisungen sowie PayPal) gepaart mit einer emotionalen Aufschlüsselungstabelle, die Unterstützern genau zeigt, was ihre Spende bewirkt.
+12. **Smarter Tier-Einlass & Europäisches Transponder-Register**
+    Bietet 3-Sekunden-Scannen von 15-stelligen ISO 11784/11785 RFID-Mikrochips via Bluetooth, automatischen Abgleich in über 30 europäischen Datenbanken (TASSO, FINDFIX, GAR Litauen, Europetnet), automatische Nachregistrierung unauffindbarer Chips, 1-Klick GPS-Geotagging des Fundorts, ausfallsicheren 4-Sekunden-Timeout (`notChecked`), Halterkontaktkarte direkt über dem Eingabefeld und datenschutzkonforme Fundtier-Suche auf `/notfall`.
 
 ---
 
