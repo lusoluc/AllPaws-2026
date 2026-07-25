@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Menu, X, Globe, Eye, BookOpen, HeartHandshake, User, Cloud, CloudOff, RefreshCw, AlertTriangle, Search } from 'lucide-react';
 import CatHeartLogo from '@/components/CatHeartLogo';
 import { APP_CONFIG } from '@/lib/appConfig';
 import { syncWithCloud } from '@/lib/syncManager';
@@ -80,9 +80,9 @@ export default function PublicHeader({ lang, setLang }: PublicHeaderProps) {
     },
     {
       path: '/notfall',
-      labelDe: 'Notfall-Hilfe 🚨',
-      labelLt: 'Skubi pagalba 🚨',
-      icon: AlertTriangle,
+      labelDe: 'Notfall & Chip-Suche 🔍',
+      labelLt: 'Pagalba ir Čipų paieška 🔍',
+      icon: Search,
       enabled: APP_CONFIG.features.enableEmergencyPage
     },
     {

@@ -319,6 +319,14 @@ export default function DashboardPage() {
                 <span>{ui.addCat}</span>
               </Link>
 
+              <Link
+                href="/notfall"
+                className="flex items-center justify-center space-x-2 py-2.5 bg-brandpink-50 hover:bg-brandpink-100 text-brandpink-700 font-bold rounded-xl border border-brandpink-200 shadow-xs active:scale-98 transition-all w-full text-xs"
+              >
+                <Search className="w-4 h-4" />
+                <span>{lang === 'DE' ? 'Chip-Suche (30+ EU-Register) 🔍' : 'Čipų paieška (30+ ES registrų) 🔍'}</span>
+              </Link>
+
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleShowRoute}
