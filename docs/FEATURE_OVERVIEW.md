@@ -29,8 +29,8 @@ AllPaws-2026 is equipped with features built specifically to make shelter work s
     Allows non-technical volunteers to create general pages, update the shelter history, change bank information, and maintain FAQ sections directly from the portal without touching code.
 11. **Integrated Donations & Cost Transparency**
     Provides simple, prominent donation options (customizable Bank IBAN/BIC transfers and PayPal) alongside an emotional cost breakdown table to show supporters exactly how their donations help.
-12. **Smart Animal Intake & European Registry Ecosystem**
-    Provides 3-second HID Bluetooth RFID microchip scanning (ISO 11784 15-digit), automatic lookup across 30+ European databases (TASSO, FINDFIX, GAR Lithuania, Europetnet), auto-indexing unfound microchips with TASSO/Europetnet, 1-click rescue GPS geo-tagging, non-blocking 4-second timeout resilience (`notChecked`), top-positioned registry contact card, and a privacy-compliant finder mode on `/notfall`.
+12. **Smart Animal Intake & European Transponder Registry**
+    Features 3-second Bluetooth RFID scanning of 15-digit ISO 11784/11785 microchips, automatic query across 30+ European registries (TASSO, FINDEFIX, GAR LT, Europetnet), automatic registration links for unlocated chips, 1-click GPS intake geotagging, fail-safe 4-second timeout (`notChecked`), floating owner contact card, and privacy-compliant found animal chip search on `/notfall`.
 
 ---
 
@@ -91,4 +91,6 @@ AllPaws-2026 wurde speziell dafür entwickelt, die tägliche Arbeit im Tierheim 
     Leidžia savanoriams be programavimo žinių kurti bendruosius puslapius, redaguoti prieglaudos istoriją, keisti banko sąskaitas bei pildyti dažniausiai užduodamų klausimų (DUK) skiltį.
 11. **Integruotos paramos galimybės ir skaidrumas**
     Pateikia aiškius paramos būdus (keičiamus banko sąskaitos rekvizitus, BIC kodą, PayPal nuorodas) kartu su emociniu išlaidų paaiškinimu, kad rėmėjai tiksliai matytų, kaip jų pinigai padeda gyvūnams.
+12. **Išmanus gyvūno priėmimas ir Europos mikroschemų registras**
+    Užtikrina 3 sekundžių Bluetooth RFID mikroschemų nuskaitymą, automatinį patikrinimą 30+ ES registrų (TASSO, GAR LT, Europetnet), 1-paspaudimo GPS lokaciją, saugų 4 sekundžių senaties limitą (`notChecked`), savininko kontaktų kortelę ir rasto gyvūno paiešką puslapyje `/notfall`.
 

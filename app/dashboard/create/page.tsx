@@ -36,11 +36,19 @@ import {
   Download,
   RefreshCw,
   MapPin,
-  Navigation
+  ExternalLink,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { appendAudioBlobs } from '@/lib/audioStitcher';
-import ChipIdInputField from '@/components/ChipIdInputField';
-import { autoRegisterUnfoundChip } from '@/lib/services/registrySyncService';
+import BluetoothChipScanner from '@/components/BluetoothChipScanner';
+import { 
+  lookupTransponder, 
+  isValidIsoChip, 
+  getChipCountryInfo, 
+  getRegistrationPortalUrl, 
+  TransponderLookupResult 
+} from '@/lib/transponderRegistry';
 
 export default function CreateCatPage() {
   const router = useRouter();
@@ -321,56 +329,6 @@ export default function CreateCatPage() {
 
   // Form State
   const [name, setName] = useState('');
-  const [chipId, setChipId] = useState('');
-  const [registryStatus, setRegistryStatus] = useState<'notChecked' | 'checking' | 'foundRegistered' | 'notFound' | 'error' | 'indexedInShelter'>('notChecked');
-  const [matchedRegistries, setMatchedRegistries] = useState<string[]>([]);
-  const [matchedOwnerName, setMatchedOwnerName] = useState('');
-  const [matchedOwnerPhone, setMatchedOwnerPhone] = useState('');
-  const [matchedOwnerEmail, setMatchedOwnerEmail] = useState('');
-  const [matchedPetName, setMatchedPetName] = useState('');
-
-  // Rescue Spot & Geo-Tagging State
-  const [findLat, setFindLat] = useState<number | undefined>(undefined);
-  const [findLng, setFindLng] = useState<number | undefined>(undefined);
-  const [findAddress, setFindAddress] = useState('');
-  const [findAccuracy, setFindAccuracy] = useState<number | undefined>(undefined);
-  const [isCapturingGps, setIsCapturingGps] = useState(false);
-
-  const handleCaptureGps = () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      alert('Geolokalisierung wird von deinem Gerät nicht unterstützt.');
-      return;
-    }
-
-    setIsCapturingGps(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        setIsCapturingGps(false);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setFindLat(lat);
-        setFindLng(lng);
-        setFindAccuracy(pos.coords.accuracy);
-
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-          if (res.ok) {
-            const data = await res.json();
-            setFindAddress(data.display_name || `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
-          } else {
-            setFindAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
-          }
-        } catch {
-          setFindAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
-        }
-      },
-      (err) => {
-        setIsCapturingGps(false);
-        alert('GPS-Standort konnte nicht ermittelt werden: ' + err.message);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
   const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
   const [statusAktuell, setStatusAktuell] = useState<'zu vermitteln' | 'reserviert' | 'vermittelt'>('zu vermitteln');
   const [ageYears, setAgeYears] = useState(0);
@@ -483,6 +441,70 @@ export default function CreateCatPage() {
   // Medical Toggles (Default Ja/True)
   const [isCastrated, setIsCastrated] = useState(true);
   const [isChipped, setIsChipped] = useState(true);
+
+  // Feature #12: Smarter Transponder & Geotagging
+  const [chipNumber, setChipNumber] = useState('');
+  const [chipStatus, setChipStatus] = useState<'registered' | 'unregistered' | 'notChecked' | 'checking'>('notChecked');
+  const [chipOwnerInfo, setChipOwnerInfo] = useState('');
+  const [foundGpsLat, setFoundGpsLat] = useState<number | undefined>(undefined);
+  const [foundGpsLng, setFoundGpsLng] = useState<number | undefined>(undefined);
+  const [foundLocationAddress, setFoundLocationAddress] = useState('');
+  const [showBluetoothScanner, setShowBluetoothScanner] = useState(false);
+  const [isCheckingTransponder, setIsCheckingTransponder] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  // Auto-lookup transponder in European registers when chipNumber changes (with 4s timeout)
+  useEffect(() => {
+    const cleanChip = chipNumber.replace(/\s+/g, '');
+    if (!cleanChip || !isValidIsoChip(cleanChip)) {
+      setChipStatus('notChecked');
+      setChipOwnerInfo('');
+      return;
+    }
+
+    let isCurrent = true;
+    setIsCheckingTransponder(true);
+    setChipStatus('checking');
+
+    lookupTransponder(cleanChip, lang).then((result) => {
+      if (!isCurrent) return;
+      setIsCheckingTransponder(false);
+      setChipStatus(result.status);
+      if (result.status === 'registered' && result.ownerName) {
+        const info = `${result.ownerName} • ${result.ownerPhone || ''} (${result.ownerCity || ''}) - ${result.registryName || ''}`;
+        setChipOwnerInfo(info);
+      } else {
+        setChipOwnerInfo('');
+      }
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [chipNumber, lang]);
+
+  const handleCaptureGpsLocation = () => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      alert(lang === 'DE' ? 'GPS-Ortung wird von diesem Browser nicht unterstützt.' : 'GPS lokacija nepalaikoma šioje naršyklėje.');
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLoading(false);
+        setFoundGpsLat(parseFloat(pos.coords.latitude.toFixed(6)));
+        setFoundGpsLng(parseFloat(pos.coords.longitude.toFixed(6)));
+        setFoundLocationAddress(`GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
+      },
+      (err) => {
+        setGpsLoading(false);
+        alert(lang === 'DE' ? 'GPS-Position konnte nicht ermittelt werden.' : 'Nepavyko nustatyti GPS koordinčių.');
+      },
+      { timeout: 8000, enableHighAccuracy: true }
+    );
+  };
+
   const [hasRabiesVaccine, setHasRabiesVaccine] = useState(true);
   const [hasCatFluVaccine, setHasCatFluVaccine] = useState(true);
   const [isDewormed, setIsDewormed] = useState(true);
@@ -1409,15 +1431,11 @@ export default function CreateCatPage() {
     try {
       // Deduplication check: check if an animal with exact same name was created in the last 10 seconds
       const tenSecAgo = new Date(Date.now() - 10000).toISOString();
-      let duplicateCheck = null;
-      if (db.animals && typeof db.animals.where === 'function') {
-        duplicateCheck = await db.animals
-          .where('name')
-          .equals(name.trim())
-          .filter(a => a.created_at >= tenSecAgo)
-          .first()
-          .catch(() => null);
-      }
+      const duplicateCheck = await db.animals
+        .where('name')
+        .equals(name.trim())
+        .filter(a => a.created_at >= tenSecAgo)
+        .first();
 
       if (duplicateCheck) {
         console.warn('Duplicate creation blocked for recent profile:', name.trim());
@@ -1540,6 +1558,12 @@ export default function CreateCatPage() {
 
         is_castrated: isCastrated,
         is_chipped: isChipped,
+        chip_number: chipNumber.trim() || undefined,
+        chip_status: chipStatus,
+        chip_owner_info: chipOwnerInfo || undefined,
+        found_gps_lat: foundGpsLat,
+        found_gps_lng: foundGpsLng,
+        found_location_address: foundLocationAddress || undefined,
         has_rabies_vaccine: hasRabiesVaccine,
         has_cat_flu_vaccine: hasCatFluVaccine,
         is_dewormed: isDewormed,
@@ -1572,30 +1596,13 @@ export default function CreateCatPage() {
         })),
         local_audios: (resolvedLocalAudios || []).filter(a => a && a.blob && a.blob instanceof Blob),
 
-        chip_id: (chipId || '').trim() || undefined,
-        chip_scanned_at: (chipId || '').trim() ? new Date().toISOString() : undefined,
-        registry_status: registryStatus,
-        matched_registries: matchedRegistries,
-        matched_owner_name: matchedOwnerName || undefined,
-        matched_owner_phone: matchedOwnerPhone || undefined,
-        matched_owner_email: matchedOwnerEmail || undefined,
-        matched_pet_name: matchedPetName || undefined,
-        find_latitude: findLat,
-        find_longitude: findLng,
-        find_address: findAddress || undefined,
-        find_accuracy_meters: findAccuracy,
-        find_timestamp: findLat ? new Date().toISOString() : undefined,
-
         sync_pending: 1,
         media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || audioItems.length > 0) ? 1 : 0,
         updated_at: new Date().toISOString()
       };
 
       try {
-        const newId = await db.animals.add(animalData);
-        if ((chipId || '').trim() && registryStatus === 'notFound') {
-          autoRegisterUnfoundChip({ ...animalData, id: newId as number });
-        }
+        await db.animals.add(animalData);
       } catch (dbErr) {
         console.error('Primary Dexie add failed, attempting fallback without local blobs:', dbErr);
         await logger.warn('AnimalCreation', `Primary IndexedDB save failed, falling back to clean data without blobs for: ${animalData.name}`);
@@ -1810,60 +1817,6 @@ export default function CreateCatPage() {
           {/* 1. BASIC INFORMATION */}
           {activeSection === 'basic' && (
             <div className="space-y-4">
-              {/* SMART INTAKE: MICROCHIP & EUROPEAN REGISTRY SEARCH */}
-              <div className="p-4 bg-stone-100/70 border border-stone-200 rounded-2xl space-y-3">
-                <ChipIdInputField
-                  value={chipId}
-                  onChange={setChipId}
-                  onLookupComplete={(res) => {
-                    setRegistryStatus(res.status);
-                    setMatchedRegistries(res.matchedRegistries);
-                    setMatchedOwnerName(res.ownerName || '');
-                    setMatchedOwnerPhone(res.ownerPhone || '');
-                    setMatchedOwnerEmail(res.ownerEmail || '');
-                    setMatchedPetName(res.petName || '');
-                  }}
-                  lang={lang}
-                />
-
-                {/* GPS Rescue Geo-Tagging Button & Address Field */}
-                <div className="pt-2 border-t border-stone-200/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center space-x-1">
-                      <MapPin className="w-3.5 h-3.5 text-brandpink-600" />
-                      <span>{lang === 'DE' ? 'Fundort / Rettungsort (GPS Geo-Tagging)' : 'Radimo vieta (GPS)'}</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleCaptureGps}
-                      disabled={isCapturingGps}
-                      className="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm flex items-center space-x-1.5 active:scale-95"
-                    >
-                      <Navigation className={`w-3.5 h-3.5 ${isCapturingGps ? 'animate-spin' : ''}`} />
-                      <span>{isCapturingGps ? (lang === 'DE' ? 'GPS wird geortet...' : 'Nustatoma...') : (lang === 'DE' ? '📍 GPS-Standort erfassen' : '📍 Gauti GPS')}</span>
-                    </button>
-                  </div>
-
-                  {findAddress && (
-                    <div className="p-2.5 bg-white border border-stone-200 rounded-xl text-xs space-y-1 text-stone-800">
-                      <div className="font-semibold text-stone-900 flex items-center justify-between">
-                        <span>📍 {findAddress}</span>
-                        {findAccuracy && (
-                          <span className="text-[10px] text-stone-500 font-mono">
-                            ±{Math.round(findAccuracy)}m
-                          </span>
-                        )}
-                      </div>
-                      {findLat && findLng && (
-                        <div className="text-[10px] text-stone-400 font-mono">
-                          {findLat.toFixed(5)}° N, {findLng.toFixed(5)}° E
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.name}<HelpButton section="name" /></label>
                 <input
@@ -2330,15 +2283,123 @@ export default function CreateCatPage() {
                   </label>
 
                   {/* gechipt */}
-                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={isChipped}
-                      onChange={(e) => setIsChipped(e.target.checked)}
-                      className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
-                    />
-                    <span className="text-stone-700 font-medium">{lang === 'DE' ? 'gechipt' : 'paženklintas mikroschema (čipu)'}</span>
-                  </label>
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isChipped}
+                        onChange={(e) => setIsChipped(e.target.checked)}
+                        className="w-4 h-4 rounded border-stone-300 bg-stone-50 accent-brandpink-500 focus:ring-0 cursor-pointer"
+                      />
+                      <span className="text-stone-700 font-medium">{lang === 'DE' ? 'gechipt' : 'paženklintas mikroschema (čipu)'}</span>
+                    </label>
+
+                    {isChipped && (
+                      <div className="mt-2 p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-3">
+                        {/* Halterkontaktkarte (Owner Contact Card) directly above input */}
+                        {chipStatus === 'registered' && chipOwnerInfo && (
+                          <div className="p-3 bg-emerald-50 border border-emerald-250 rounded-xl text-emerald-900 space-y-1 animate-in fade-in duration-200 shadow-xs">
+                            <div className="flex items-center space-x-1.5 font-bold text-xs">
+                              <UserCheck className="w-4 h-4 text-emerald-600" />
+                              <span>{lang === 'DE' ? 'Halterkontaktkarte (Zentralregister)' : 'Savininko kontaktai (Registre)'}</span>
+                            </div>
+                            <p className="text-[11px] leading-relaxed text-emerald-800 font-medium pl-5">
+                              {chipOwnerInfo}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              value={chipNumber}
+                              onChange={(e) => setChipNumber(e.target.value)}
+                              placeholder={lang === 'DE' ? '15-stellige ISO Chipnummer (z.B. 276...)' : '15-ženklis čipo numeris (pvz. 440...)'}
+                              maxLength={15}
+                              className="w-full pl-3 pr-10 py-2.5 bg-white border border-stone-300 rounded-lg text-xs font-mono text-stone-850 focus:border-brandpink-500 focus:outline-none shadow-xs"
+                            />
+                            {chipNumber.length >= 3 && (
+                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs" title="Herkunftsland">
+                                {getChipCountryInfo(chipNumber, lang).flag}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowBluetoothScanner(true)}
+                              className="px-3 py-2.5 bg-brandpink-50 hover:bg-brandpink-100 text-brandpink-700 border border-brandpink-250 rounded-lg text-xs font-bold transition-colors flex items-center space-x-1 shrink-0 cursor-pointer"
+                              title={lang === 'DE' ? '3s RFID Scan via Bluetooth' : '3s RFID Bluetooth skenavimas'}
+                            >
+                              <Wifi className="w-3.5 h-3.5" />
+                              <span>3s Bluetooth</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={handleCaptureGpsLocation}
+                              disabled={gpsLoading}
+                              className="px-3 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-750 border border-stone-300 rounded-lg text-xs font-bold transition-colors flex items-center space-x-1 shrink-0 cursor-pointer disabled:opacity-50"
+                              title={lang === 'DE' ? '1-Klick GPS-Fundort erfassen' : '1-paspaudimo GPS lokacija'}
+                            >
+                              <MapPin className="w-3.5 h-3.5 text-brandpink-600" />
+                              <span>{gpsLoading ? '...' : 'GPS'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Status Badge & European Registry links */}
+                        {chipNumber && (
+                          <div className="flex flex-wrap items-center justify-between text-[11px] pt-1 gap-1.5">
+                            <div className="flex items-center space-x-1.5 font-medium">
+                              {isCheckingTransponder ? (
+                                <>
+                                  <RefreshCw className="w-3.5 h-3.5 text-brandpink-500 animate-spin" />
+                                  <span className="text-stone-500">{lang === 'DE' ? 'Prüfe 30+ EU-Register...' : 'Tikrinama 30+ ES registrų...'}</span>
+                                </>
+                              ) : chipStatus === 'registered' ? (
+                                <>
+                                  <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+                                  <span className="text-emerald-700 font-bold">{lang === 'DE' ? 'Im Zentralregister gefunden' : 'Rasta registre'}</span>
+                                </>
+                              ) : chipStatus === 'unregistered' ? (
+                                <>
+                                  <span className="w-2.5 h-2.5 bg-amber-500 rounded-full" />
+                                  <span className="text-amber-700 font-medium">{lang === 'DE' ? 'Nicht in EU-Datenbanken registriert' : 'Neregistruota ES bazėse'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="w-2.5 h-2.5 bg-stone-400 rounded-full" />
+                                  <span className="text-stone-500">{lang === 'DE' ? 'Status: notChecked (Timeout/Offline)' : 'Būsena: notChecked'}</span>
+                                </>
+                              )}
+                            </div>
+
+                            {chipStatus === 'unregistered' && isValidIsoChip(chipNumber) && (
+                              <a
+                                href={getRegistrationPortalUrl(chipNumber, lang)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center space-x-1 text-brandpink-600 hover:text-brandpink-700 font-bold underline cursor-pointer"
+                              >
+                                <span>{lang === 'DE' ? '1-Klick Nachregistrieren' : '1-paspaudimo Registracija'}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {foundLocationAddress && (
+                          <div className="text-[10px] text-stone-500 flex items-center space-x-1 pt-1 font-mono">
+                            <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
+                            <span>{lang === 'DE' ? 'Fundort:' : 'Fundation:'} {foundLocationAddress}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* kastriert */}
                   <label className="flex items-center space-x-2.5 cursor-pointer select-none">
@@ -3323,6 +3384,17 @@ export default function CreateCatPage() {
             processAndUploadVideo(file);
           }}
         />
+
+        {showBluetoothScanner && (
+          <BluetoothChipScanner
+            lang={lang}
+            onClose={() => setShowBluetoothScanner(false)}
+            onScanComplete={(scannedChip) => {
+              setChipNumber(scannedChip);
+              setIsChipped(true);
+            }}
+          />
+        )}
       </main>
     </div>
   );

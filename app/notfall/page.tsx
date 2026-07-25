@@ -17,106 +17,47 @@ import {
   ArrowLeft,
   Search,
   Eye,
-  RefreshCw
+  Heart,
+  ShieldCheck,
+  UserCheck,
+  RefreshCw,
+  ExternalLink,
+  Wifi
 } from 'lucide-react';
 import PublicHeader from '@/components/PublicHeader';
-import { lookupChipInRegistries } from '@/lib/services/missingPetLookupService';
-
-function ChipFinderPublicWidget({ lang, shelterPhone, shelterEmail }: { lang: 'DE' | 'LT'; shelterPhone: string; shelterEmail: string }) {
-  const [chip, setChip] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-
-  const handleSearch = async () => {
-    const sanitized = chip.replace(/\D/g, '');
-    if (sanitized.length !== 15) {
-      alert(lang === 'DE' ? 'Bitte gib eine gültige 15-stellige Chipnummer ein.' : 'Įveskite 15 skaitmenų ID.');
-      return;
-    }
-    setLoading(true);
-    const res = await lookupChipInRegistries(sanitized);
-    setLoading(false);
-    setResult(res);
-  };
-
-  return (
-    <div className="space-y-3 pt-1">
-      <div className="flex items-center space-x-2">
-        <input
-          type="text"
-          maxLength={15}
-          value={chip}
-          onChange={(e) => setChip(e.target.value.replace(/\D/g, ''))}
-          placeholder="z. B. 276098100123456"
-          className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-mono font-bold text-stone-900 focus:outline-none focus:border-amber-500"
-        />
-        <button
-          type="button"
-          onClick={handleSearch}
-          disabled={loading || chip.replace(/\D/g, '').length !== 15}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center space-x-1 cursor-pointer"
-        >
-          {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-          <span>{lang === 'DE' ? 'Suchen' : 'Iškoti'}</span>
-        </button>
-      </div>
-
-      {result && (
-        <div className="p-3 bg-white border border-amber-300 rounded-xl text-xs space-y-2">
-          {result.status === 'foundRegistered' ? (
-            <div className="space-y-1.5 text-amber-900">
-              <div className="font-extrabold flex items-center space-x-1 text-emerald-700">
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>{lang === 'DE' ? 'In Vermissten-Datenbank registriert!' : 'Registruotas europinėje duomenų bazėje!'}</span>
-              </div>
-              <p className="text-[11px] text-stone-600">
-                {lang === 'DE'
-                  ? `Registriert in: ${result.matchedRegistries.join(', ')}. Tier: ${result.petName || 'Unbekannt'} (${result.petSpecies || 'Tier'})`
-                  : `Registruota: ${result.matchedRegistries.join(', ')}`}
-              </p>
-              <div className="p-2 bg-amber-50 rounded-lg text-[10px] text-amber-800 font-medium">
-                🔒 {lang === 'DE' ? 'Datenschutz: Halterdaten sind geschützt. Bitte melde den Fund direkt dem Tierheim.' : 'Duomenys apsaugoti. Praneškite prieglaidai.'}
-              </div>
-              <a
-                href={`tel:${shelterPhone}`}
-                className="block text-center py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs"
-              >
-                📞 {lang === 'DE' ? 'Fund beim Tierheim melden' : 'Pranešti prieglaidai'} ({shelterPhone})
-              </a>
-            </div>
-          ) : (
-            <div className="text-stone-600 space-y-1">
-              <div className="font-bold text-stone-800">
-                {lang === 'DE' ? 'Kein Vermisst-Eintrag gefunden.' : 'Nerasta dingusių įrašų.'}
-              </div>
-              <p className="text-[11px]">
-                {lang === 'DE' 
-                  ? 'Der Chip ist derzeit nicht als vermisst gemeldet. Kontaktiere das Tierheim für weitere Schritte.' 
-                  : 'Sausis nepažymėtas kaip dingęs.'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { lookupTransponder, isValidIsoChip, TransponderLookupResult } from '@/lib/transponderRegistry';
 
 export default function NotfallPage() {
   const [lang, setLang] = useState<'DE' | 'LT'>('DE');
 
-  // Load language from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('bmd_lang') as 'DE' | 'LT';
-    if (saved && (saved === 'DE' || saved === 'LT')) {
-      setLang(saved);
-    }
-  }, []);
+  const [searchChip, setSearchChip] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [lookupResult, setLookupResult] = useState<TransponderLookupResult | null>(null);
+  const [matchedAnimal, setMatchedAnimal] = useState<any>(null);
 
-  // Save language to localStorage
-  useEffect(() => {
-    localStorage.setItem('bmd_lang', lang);
-  }, [lang]);
+  // Query local Dexie animals database for matching chip
+  const allAnimals = useLiveQuery(() => db.animals.toArray());
+
+  const handleSearchChip = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = searchChip.replace(/\s+/g, '');
+    if (!clean) return;
+
+    setIsSearching(true);
+    setLookupResult(null);
+    setMatchedAnimal(null);
+
+    // 1. Check local shelter database
+    const localFound = (allAnimals || []).find(a => a.chip_number === clean);
+    if (localFound) {
+      setMatchedAnimal(localFound);
+    }
+
+    // 2. Query 30+ European Registries (with 4s timeout)
+    const res = await lookupTransponder(clean, lang);
+    setIsSearching(false);
+    setLookupResult(res);
+  };
 
   if (!APP_CONFIG.features.enableEmergencyPage) {
     return (
@@ -229,20 +170,121 @@ export default function NotfallPage() {
           </p>
         </div>
 
-        {/* PUBLIC FINDER MODE: PRIVACY-COMPLIANT CHIP LOOKUP */}
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border-2 border-amber-400/80 p-5 rounded-2xl space-y-3 shadow-sm">
-          <div className="flex items-center space-x-2">
-            <Search className="w-5 h-5 text-amber-600" />
-            <h2 className="text-sm font-extrabold text-amber-950 uppercase tracking-wider">
-              {lang === 'DE' ? '🔍 Fundtier-Mikrochip prüfen (Finder-Modus)' : '🔍 Mikrochip tikrinimas'}
-            </h2>
+        {/* Transponder Chip-Suche (Feature #12) */}
+        <div className="bg-white border border-stone-200 p-5 rounded-2xl space-y-4 shadow-sm">
+          <div className="flex items-center space-x-2 text-stone-900 font-bold text-base">
+            <ShieldCheck className="w-5 h-5 text-brandpink-600" />
+            <h2>{lang === 'DE' ? 'Fundtier Chip-Suche (30+ EU-Register)' : 'Rasto gyvūno čipo paieška (30+ ES registrų)'}</h2>
           </div>
-          <p className="text-xs text-stone-600 leading-relaxed font-light">
-            {lang === 'DE' 
-              ? 'Du hast ein Tier mit Chipnummer gefunden? Prüfe hier datenschutzkonform, ob es in europäischen Datenbanken als vermisst gemeldet ist.' 
-              : 'Šioje skiltyje galite patikrinti radusio gyvūno mikroschemos ID.'}
+          <p className="text-xs text-stone-600 leading-relaxed">
+            {lang === 'DE'
+              ? 'Hast du ein Tier gefunden? Gib die 15-stellige Mikrochip-Nummer ein, um abzugleichen, ob das Tier bei uns oder in europäischen Zentralregistern registriert ist.'
+              : 'Radote gyvūną? Įveskite 15-ženklį mikroschemos numerį, kad patikrintumėte registraciją prieglaudoje ir Europos registruose.'}
           </p>
-          <ChipFinderPublicWidget lang={lang} shelterPhone={currentShelterPhone} shelterEmail={currentShelterEmail} />
+
+          <form onSubmit={handleSearchChip} className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={searchChip}
+                onChange={(e) => setSearchChip(e.target.value)}
+                placeholder={lang === 'DE' ? '15-stellige ISO Chipnummer...' : '15-ženklis čipo numeris...'}
+                maxLength={15}
+                className="flex-1 px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-mono text-stone-850 focus:border-brandpink-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={isSearching || !searchChip.trim()}
+                className="px-5 py-2.5 bg-brandpink-600 hover:bg-brandpink-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+              >
+                {isSearching ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
+                <span>{lang === 'DE' ? 'Suchen' : 'Iškoti'}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Results Display */}
+          {(matchedAnimal || lookupResult) && (
+            <div className="pt-2 border-t border-stone-150 space-y-3 animate-in fade-in duration-200">
+              {matchedAnimal && (
+                <div className="p-3.5 bg-brandpink-50 border border-brandpink-200 rounded-xl text-brandpink-950 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center space-x-1.5">
+                      <Heart className="w-4 h-4 text-brandpink-600 fill-brandpink-600" />
+                      <span>{lang === 'DE' ? `Treffer im Tierheim: ${matchedAnimal.name}` : `Rasta prieglaudoje: ${matchedAnimal.name}`}</span>
+                    </span>
+                    <NextLink
+                      href={`/tiere/${matchedAnimal.id}`}
+                      className="px-3 py-1 bg-brandpink-600 hover:bg-brandpink-500 text-white font-bold text-[11px] rounded-lg shadow-xs transition-all flex items-center space-x-1"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{lang === 'DE' ? 'Profil ansehen' : 'Peržiūrėti'}</span>
+                    </NextLink>
+                  </div>
+                  <p className="text-[11px] text-stone-700">
+                    {lang === 'DE'
+                      ? `Dieses Tier ist bei uns im Tierheim registriert. Bitte kontaktiere uns direkt!`
+                      : `Šis gyvūnas yra registruotas mūsų prieglaudoje. Susisiekite su mumis!`}
+                  </p>
+                </div>
+              )}
+
+              {lookupResult && (
+                <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-stone-850 flex items-center space-x-1.5">
+                      <span>{lookupResult.countryFlag}</span>
+                      <span>{lookupResult.countryName || 'Zentralregister'}</span>
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      lookupResult.status === 'registered' 
+                        ? 'bg-emerald-100 text-emerald-800' 
+                        : lookupResult.status === 'unregistered'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-stone-200 text-stone-700'
+                    }`}>
+                      {lookupResult.status === 'registered'
+                        ? (lang === 'DE' ? 'Registriert' : 'Registruota')
+                        : lookupResult.status === 'unregistered'
+                        ? (lang === 'DE' ? 'Nicht registriert' : 'Neregistruota')
+                        : 'notChecked (Timeout)'}
+                    </span>
+                  </div>
+
+                  {lookupResult.status === 'registered' && lookupResult.ownerName && (
+                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 space-y-1">
+                      <div className="flex items-center space-x-1 font-bold text-[11px]">
+                        <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{lang === 'DE' ? 'Halter-Eintrag verifiziert (Datenschutzgeschützt)' : 'Savininko įrašas patvirtintas'}</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-800">
+                        {lookupResult.ownerName} • {lookupResult.ownerPhone} ({lookupResult.ownerCity})
+                      </p>
+                    </div>
+                  )}
+
+                  {lookupResult.status === 'unregistered' && lookupResult.registrationUrl && (
+                    <div className="pt-1 flex items-center justify-between text-[11px]">
+                      <span className="text-stone-600">{lang === 'DE' ? 'Chip noch nicht im Zentralregister hinterlegt?' : 'Čipas dar neregistruotas?'}</span>
+                      <a
+                        href={lookupResult.registrationUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1 text-brandpink-600 font-bold underline"
+                      >
+                        <span>{lang === 'DE' ? 'Jetzt registrieren' : 'Registruoti dabar'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content Sections */}
