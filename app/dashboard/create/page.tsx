@@ -34,9 +34,13 @@ import {
   Plus,
   Globe,
   Download,
-  RefreshCw
+  RefreshCw,
+  MapPin,
+  Navigation
 } from 'lucide-react';
 import { appendAudioBlobs } from '@/lib/audioStitcher';
+import ChipIdInputField from '@/components/ChipIdInputField';
+import { autoRegisterUnfoundChip } from '@/lib/services/registrySyncService';
 
 export default function CreateCatPage() {
   const router = useRouter();
@@ -317,6 +321,56 @@ export default function CreateCatPage() {
 
   // Form State
   const [name, setName] = useState('');
+  const [chipId, setChipId] = useState('');
+  const [registryStatus, setRegistryStatus] = useState<'notChecked' | 'checking' | 'foundRegistered' | 'notFound' | 'error' | 'indexedInShelter'>('notChecked');
+  const [matchedRegistries, setMatchedRegistries] = useState<string[]>([]);
+  const [matchedOwnerName, setMatchedOwnerName] = useState('');
+  const [matchedOwnerPhone, setMatchedOwnerPhone] = useState('');
+  const [matchedOwnerEmail, setMatchedOwnerEmail] = useState('');
+  const [matchedPetName, setMatchedPetName] = useState('');
+
+  // Rescue Spot & Geo-Tagging State
+  const [findLat, setFindLat] = useState<number | undefined>(undefined);
+  const [findLng, setFindLng] = useState<number | undefined>(undefined);
+  const [findAddress, setFindAddress] = useState('');
+  const [findAccuracy, setFindAccuracy] = useState<number | undefined>(undefined);
+  const [isCapturingGps, setIsCapturingGps] = useState(false);
+
+  const handleCaptureGps = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      alert('Geolokalisierung wird von deinem Gerät nicht unterstützt.');
+      return;
+    }
+
+    setIsCapturingGps(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setIsCapturingGps(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setFindLat(lat);
+        setFindLng(lng);
+        setFindAccuracy(pos.coords.accuracy);
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+          if (res.ok) {
+            const data = await res.json();
+            setFindAddress(data.display_name || `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+          } else {
+            setFindAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+          }
+        } catch {
+          setFindAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+        }
+      },
+      (err) => {
+        setIsCapturingGps(false);
+        alert('GPS-Standort konnte nicht ermittelt werden: ' + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
   const [gender, setGender] = useState<'Weiblich' | 'Männlich'>('Weiblich');
   const [statusAktuell, setStatusAktuell] = useState<'zu vermitteln' | 'reserviert' | 'vermittelt'>('zu vermitteln');
   const [ageYears, setAgeYears] = useState(0);
@@ -1355,11 +1409,15 @@ export default function CreateCatPage() {
     try {
       // Deduplication check: check if an animal with exact same name was created in the last 10 seconds
       const tenSecAgo = new Date(Date.now() - 10000).toISOString();
-      const duplicateCheck = await db.animals
-        .where('name')
-        .equals(name.trim())
-        .filter(a => a.created_at >= tenSecAgo)
-        .first();
+      let duplicateCheck = null;
+      if (db.animals && typeof db.animals.where === 'function') {
+        duplicateCheck = await db.animals
+          .where('name')
+          .equals(name.trim())
+          .filter(a => a.created_at >= tenSecAgo)
+          .first()
+          .catch(() => null);
+      }
 
       if (duplicateCheck) {
         console.warn('Duplicate creation blocked for recent profile:', name.trim());
@@ -1514,13 +1572,30 @@ export default function CreateCatPage() {
         })),
         local_audios: (resolvedLocalAudios || []).filter(a => a && a.blob && a.blob instanceof Blob),
 
+        chip_id: (chipId || '').trim() || undefined,
+        chip_scanned_at: (chipId || '').trim() ? new Date().toISOString() : undefined,
+        registry_status: registryStatus,
+        matched_registries: matchedRegistries,
+        matched_owner_name: matchedOwnerName || undefined,
+        matched_owner_phone: matchedOwnerPhone || undefined,
+        matched_owner_email: matchedOwnerEmail || undefined,
+        matched_pet_name: matchedPetName || undefined,
+        find_latitude: findLat,
+        find_longitude: findLng,
+        find_address: findAddress || undefined,
+        find_accuracy_meters: findAccuracy,
+        find_timestamp: findLat ? new Date().toISOString() : undefined,
+
         sync_pending: 1,
         media_pending: (photos.length > 0 || passportPhotos.length > 0 || videos.some(v => !v.isSynced) || audioItems.length > 0) ? 1 : 0,
         updated_at: new Date().toISOString()
       };
 
       try {
-        await db.animals.add(animalData);
+        const newId = await db.animals.add(animalData);
+        if ((chipId || '').trim() && registryStatus === 'notFound') {
+          autoRegisterUnfoundChip({ ...animalData, id: newId as number });
+        }
       } catch (dbErr) {
         console.error('Primary Dexie add failed, attempting fallback without local blobs:', dbErr);
         await logger.warn('AnimalCreation', `Primary IndexedDB save failed, falling back to clean data without blobs for: ${animalData.name}`);
@@ -1735,6 +1810,60 @@ export default function CreateCatPage() {
           {/* 1. BASIC INFORMATION */}
           {activeSection === 'basic' && (
             <div className="space-y-4">
+              {/* SMART INTAKE: MICROCHIP & EUROPEAN REGISTRY SEARCH */}
+              <div className="p-4 bg-stone-100/70 border border-stone-200 rounded-2xl space-y-3">
+                <ChipIdInputField
+                  value={chipId}
+                  onChange={setChipId}
+                  onLookupComplete={(res) => {
+                    setRegistryStatus(res.status);
+                    setMatchedRegistries(res.matchedRegistries);
+                    setMatchedOwnerName(res.ownerName || '');
+                    setMatchedOwnerPhone(res.ownerPhone || '');
+                    setMatchedOwnerEmail(res.ownerEmail || '');
+                    setMatchedPetName(res.petName || '');
+                  }}
+                  lang={lang}
+                />
+
+                {/* GPS Rescue Geo-Tagging Button & Address Field */}
+                <div className="pt-2 border-t border-stone-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center space-x-1">
+                      <MapPin className="w-3.5 h-3.5 text-brandpink-600" />
+                      <span>{lang === 'DE' ? 'Fundort / Rettungsort (GPS Geo-Tagging)' : 'Radimo vieta (GPS)'}</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleCaptureGps}
+                      disabled={isCapturingGps}
+                      className="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm flex items-center space-x-1.5 active:scale-95"
+                    >
+                      <Navigation className={`w-3.5 h-3.5 ${isCapturingGps ? 'animate-spin' : ''}`} />
+                      <span>{isCapturingGps ? (lang === 'DE' ? 'GPS wird geortet...' : 'Nustatoma...') : (lang === 'DE' ? '📍 GPS-Standort erfassen' : '📍 Gauti GPS')}</span>
+                    </button>
+                  </div>
+
+                  {findAddress && (
+                    <div className="p-2.5 bg-white border border-stone-200 rounded-xl text-xs space-y-1 text-stone-800">
+                      <div className="font-semibold text-stone-900 flex items-center justify-between">
+                        <span>📍 {findAddress}</span>
+                        {findAccuracy && (
+                          <span className="text-[10px] text-stone-500 font-mono">
+                            ±{Math.round(findAccuracy)}m
+                          </span>
+                        )}
+                      </div>
+                      {findLat && findLng && (
+                        <div className="text-[10px] text-stone-400 font-mono">
+                          {findLat.toFixed(5)}° N, {findLng.toFixed(5)}° E
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider">{ui.name}<HelpButton section="name" /></label>
                 <input

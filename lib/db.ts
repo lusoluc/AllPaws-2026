@@ -132,6 +132,24 @@ export interface Animal {
   sync_pending?: number;
   media_pending?: number; // 0 = synced, 1 = media files queued locally
   updated_at?: string;
+
+  // Smart Intake & Registry Extensions
+  chip_id?: string; // 15-digit ISO 11784/11785 FDX-B
+  chip_scanned_at?: string;
+  registry_status?: 'notChecked' | 'checking' | 'foundRegistered' | 'notFound' | 'error' | 'indexedInShelter';
+  matched_registries?: string[];
+  matched_owner_name?: string;
+  matched_owner_phone?: string;
+  matched_owner_email?: string;
+  matched_pet_name?: string;
+  is_synced_eu?: boolean;
+  auto_registered_shelter?: boolean;
+  find_latitude?: number;
+  find_longitude?: number;
+  find_address?: string;
+  find_accuracy_meters?: number;
+  find_timestamp?: string;
+  is_chip_unreadable?: boolean;
 }
 
 export interface InternalNote {
@@ -330,6 +348,19 @@ class TierheimDatabase extends Dexie {
     this.version(9).stores({
       shelters: '++id, name, code, sync_pending, updated_at',
       animals: '++id, name, type, status_aktuell, gender, is_published, is_emergency, room_name, cage_name, sync_pending, updated_at',
+      internalNotes: '++id, animal_id, created_at, sync_pending, updated_at',
+      inquiries: '++id, animal_id, status, created_at, sync_pending, updated_at',
+      uiTexts: 'key, sync_pending, updated_at',
+      guideItems: 'id, category',
+      customBlocks: '++id, page, type, sort_order, sync_pending, updated_at',
+      subscribers: '++id, &email, name, created_at, ip_address, sync_pending, updated_at',
+      newsletterCampaigns: '++id, status, created_at',
+      newsletterQueue: '++id, campaign_id, subscriber_email, status, scheduled_for',
+      animalRevisions: '++id, animal_id, created_at, sync_pending, updated_at',
+    });
+    this.version(10).stores({
+      shelters: '++id, name, code, sync_pending, updated_at',
+      animals: '++id, name, type, chip_id, registry_status, status_aktuell, gender, is_published, is_emergency, room_name, cage_name, sync_pending, updated_at',
       internalNotes: '++id, animal_id, created_at, sync_pending, updated_at',
       inquiries: '++id, animal_id, status, created_at, sync_pending, updated_at',
       uiTexts: 'key, sync_pending, updated_at',

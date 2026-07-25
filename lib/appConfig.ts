@@ -70,6 +70,9 @@ export const APP_CONFIG = {
     get enableInteractiveInquiryForm() { return getFeatureState('enableInteractiveInquiryForm', process.env.NEXT_PUBLIC_FEATURE_INTERACTIVE_INQUIRIES !== 'false'); },
     get enableSponsorship() { return getFeatureState('enableSponsorship', process.env.NEXT_PUBLIC_FEATURE_SPONSORSHIP !== 'false'); },
     get enableLiveStatsWidget() { return getFeatureState('enableLiveStatsWidget', process.env.NEXT_PUBLIC_FEATURE_LIVE_STATS !== 'false'); },
+    get enableSmartIntake() { return getFeatureState('enableSmartIntake', process.env.NEXT_PUBLIC_FEATURE_SMART_INTAKE !== 'false'); },
+    get enableEuropeanRegistryLookup() { return getFeatureState('enableEuropeanRegistryLookup', process.env.NEXT_PUBLIC_FEATURE_REGISTRY_LOOKUP !== 'false'); },
+    get enableAutoRegistryIndexing() { return getFeatureState('enableAutoRegistryIndexing', process.env.NEXT_PUBLIC_FEATURE_AUTO_INDEXING !== 'false'); },
   }
 };
 
